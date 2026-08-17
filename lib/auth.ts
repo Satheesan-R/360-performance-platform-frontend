@@ -3,6 +3,14 @@
 const TOKEN_KEY = "performance_platform_token";
 const USER_KEY = "performance_platform_user";
 
+const DASHBOARD_PATHS: Record<AuthUser["role"], string> = {
+  employee: "/employee/dashboard",
+  tech_lead: "/tech-lead/dashboard",
+  department_manager: "/manager/dashboard",
+  hr: "/hr/dashboard",
+  admin: "/admin/dashboard",
+};
+
 export function saveSession(data: LoginResponse) {
   sessionStorage.setItem(TOKEN_KEY, data.token);
   sessionStorage.setItem(USER_KEY, JSON.stringify(data.user));
@@ -24,6 +32,10 @@ export function getCurrentUser(): AuthUser | null {
     clearSession();
     return null;
   }
+}
+
+export function getDashboardPath(role: AuthUser["role"]) {
+  return DASHBOARD_PATHS[role];
 }
 
 export function clearSession() {
