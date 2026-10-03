@@ -3,14 +3,7 @@ import styles from "./landing.module.css";
 
 export default function Hero() {
   return <>
-    <header className={styles.header}>
-      <nav className={`${styles.container} ${styles.nav}`} aria-label="Main navigation">
-        <Link href="/" className={styles.brand}><span>◈</span> CorpDev <span>360</span></Link>
-        <div className={styles.links}><a href="#platform">Platform</a><a href="#solutions">Solutions</a><a href="#performance">OKRs &amp; Performance</a><a href="#get-started">Get started</a></div>
-        <Link href="/login" className={styles.button}>Employee Login ↗</Link>
-      </nav>
-    </header>
-    <main>
+
       <section className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.container}>
           <div className={styles.announcement}><b>NEW</b> One connected workspace for your team&apos;s growth <a href="#platform">Explore the platform →</a></div>
@@ -21,6 +14,5 @@ export default function Hero() {
           <div className={styles.trusted}><p className={styles.eyebrow}>Built for ambitious teams, at every stage</p><div className={styles.logos}><span>♧ Engineering</span><span>▥ People &amp; HR</span><span>▣ Operations</span><span>◈ Leadership</span><span>⌘ Product</span></div></div>
         </div>
       </section>
-    </main>
   </>;
 }
