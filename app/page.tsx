@@ -10,7 +10,8 @@ import LandingFooter from "@/components/landing/landing-footer";
 
 export const metadata: Metadata = {
   title: "CorpDev 360 | Build better teams",
-  description: "Connect goals, feedback, performance reviews, and career development in one workspace.",
+  description:
+    "Connect goals, feedback, performance reviews, and career development in one workspace.",
 };
 
 export default function HomePage() {
@@ -18,11 +19,11 @@ export default function HomePage() {
     <div className={styles.landing}>
       <LandingHeader />
       <main>
-      <Hero />
-      <PerformancePreview />
-      <PlatformFeatures />
-      <RoleWorkspaces />
-      <GrowthOutcomes />
+        <Hero />
+        <PerformancePreview />
+        <PlatformFeatures />
+        <RoleWorkspaces />
+        <GrowthOutcomes />
       </main>
       <LandingFooter />
     </div>
