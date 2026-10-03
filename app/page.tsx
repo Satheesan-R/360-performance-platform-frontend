@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import styles from "@/components/landing/landing.module.css";
 import Hero from "@/components/landing/hero";
 import PerformancePreview from "@/components/landing/performance-preview";
+import PlatformFeatures from "@/components/landing/platform-features";
 
 export const metadata: Metadata = {
   title: "CorpDev 360 | Build better teams",
@@ -13,6 +14,7 @@ export default function HomePage() {
     <div className={styles.landing}>
       <Hero />
       <PerformancePreview />
+      <PlatformFeatures />
     </div>
   );
 }
