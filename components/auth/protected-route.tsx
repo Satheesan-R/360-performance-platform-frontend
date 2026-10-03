@@ -12,7 +12,11 @@ interface ProtectedRouteProps {
 
 function subscribeToBrowserStorage(onStoreChange: () => void) {
   window.addEventListener("storage", onStoreChange);
-  return () => window.removeEventListener("storage", onStoreChange);
+  window.addEventListener("performance-auth-change", onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener("performance-auth-change", onStoreChange);
+  };
 }
 
 export default function ProtectedRoute({ role, children }: ProtectedRouteProps) {
