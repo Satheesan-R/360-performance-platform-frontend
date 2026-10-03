@@ -4,6 +4,7 @@ import Hero from "@/components/landing/hero";
 import PerformancePreview from "@/components/landing/performance-preview";
 import PlatformFeatures from "@/components/landing/platform-features";
 import RoleWorkspaces from "@/components/landing/role-workspaces";
+import GrowthOutcomes from "@/components/landing/growth-outcomes";
 
 export const metadata: Metadata = {
   title: "CorpDev 360 | Build better teams",
@@ -17,6 +18,7 @@ export default function HomePage() {
       <PerformancePreview />
       <PlatformFeatures />
       <RoleWorkspaces />
+      <GrowthOutcomes />
     </div>
   );
 }
