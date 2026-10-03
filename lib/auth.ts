@@ -14,6 +14,7 @@ const DASHBOARD_PATHS: Record<AuthUser["role"], string> = {
 export function saveSession(data: LoginResponse) {
   sessionStorage.setItem(TOKEN_KEY, data.token);
   sessionStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  window.dispatchEvent(new Event("performance-auth-change"));
 }
 
 export function getToken() {
@@ -42,4 +43,5 @@ export function clearSession() {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(USER_KEY);
+  window.dispatchEvent(new Event("performance-auth-change"));
 }
