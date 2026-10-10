@@ -30,3 +30,5 @@ export interface CreateEmployeeResponse {
   };
   activationUrl?: string;
 }
+
+export type Employee = CreateEmployeeResponse["employee"] & Partial<CreateEmployeeRequest>;

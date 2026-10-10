@@ -1,12 +1,12 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { getApiErrorMessage } from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import { createEmployee } from "@/services/employee.service";
-import type { CreateEmployeeRequest } from "@/types/employee";
+import { createEmployee, getEmployees } from "@/services/employee.service";
+import type { CreateEmployeeRequest, Employee } from "@/types/employee";
 
 const inputClass =
   "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -22,6 +22,26 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 }
 
 export default function EmployeeOnboardingPage() {
+  const [showForm, setShowForm] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [listError, setListError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    const token = getToken();
+    const request = token
+      ? getEmployees(token, controller.signal)
+      : Promise.reject(new Error("Your session has expired. Please log in again."));
+    request
+      .then(setEmployees)
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) setListError(getApiErrorMessage(error));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, []);
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [activationUrl, setActivationUrl] = useState("");
@@ -49,6 +69,8 @@ export default function EmployeeOnboardingPage() {
       const result = await createEmployee(values, token);
       setSuccessMessage(result.message);
       setActivationUrl(result.activationUrl ?? "");
+      setEmployees((current) => [{ ...values, ...result.employee }, ...current]);
+      setShowForm(false);
       reset({ role: "employee", employmentType: "full-time" });
     } catch (error) {
       setServerError(getApiErrorMessage(error));
@@ -65,17 +87,20 @@ export default function EmployeeOnboardingPage() {
 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-semibold text-blue-600">NEW EMPLOYEE</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">Create Talent Profile</h1>
-          <p className="mt-2 text-slate-500">Add employee details and send an account activation email.</p>
+          <p className="text-sm font-semibold text-blue-600">EMPLOYEE MANAGEMENT</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">Employee Onboarding</h1>
+          <p className="mt-2 text-slate-500">{showForm ? "Add employee details and send an account activation email." : "View employee details and manage onboarding."}</p>
         </div>
         <div className="flex gap-3">
+          {showForm ? <>
+          <button type="button" disabled={isSubmitting} onClick={() => { setShowForm(false); setServerError(""); }} className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 disabled:opacity-60">Back to employees</button>
           <button type="button" onClick={() => reset()} className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
             Clear
           </button>
           <button form="employee-form" type="submit" disabled={isSubmitting} className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
             {isSubmitting ? "Creating..." : "Save & Send Mail"}
           </button>
+          </> : <button type="button" onClick={() => { reset(); setServerError(""); setSuccessMessage(""); setActivationUrl(""); setShowForm(true); }} className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">Add Employee</button>}
         </div>
       </div>
 
@@ -91,7 +116,27 @@ export default function EmployeeOnboardingPage() {
       )}
       {serverError && <p role="alert" className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">{serverError}</p>}
 
-      <form id="employee-form" onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6" noValidate>
+      {!showForm && <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 p-6">
+          <h2 className="text-lg font-bold text-slate-900">Employee details</h2>
+          <p className="mt-1 text-sm text-slate-500">Employee profiles and account activation status.</p>
+        </div>
+        {loading ? <p role="status" className="p-8 text-center text-slate-500">Loading employees...</p> : listError ? <p role="alert" className="p-8 text-center text-red-600">{listError}</p> : employees.length === 0 ? <div className="p-12 text-center"><p className="font-semibold text-slate-700">No employees yet</p><p className="mt-2 text-sm text-slate-500">Click Add Employee to create your first employee profile.</p></div> : <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-600"><tr>{["Employee", "Employee number", "Email", "Department", "Designation", "Onboarding status"].map((label) => <th key={label} scope="col" className="whitespace-nowrap px-6 py-4 font-semibold">{label}</th>)}</tr></thead>
+            <tbody className="divide-y divide-slate-100">{employees.map((employee) => <tr key={employee._id} className="text-slate-700">
+              <td className="whitespace-nowrap px-6 py-4 font-semibold text-slate-900">{employee.fullName || `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "—"}</td>
+              <td className="px-6 py-4">{employee.employeeNumber || "—"}</td>
+              <td className="px-6 py-4">{employee.workEmail || employee.companyEmail || "—"}</td>
+              <td className="px-6 py-4">{employee.department || "—"}</td>
+              <td className="px-6 py-4">{employee.designation || "—"}</td>
+              <td className="px-6 py-4"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${employee.onboardingStatus === "completed" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{employee.onboardingStatus === "completed" ? "Completed" : "Pending"}</span></td>
+            </tr>)}</tbody>
+          </table>
+        </div>}
+      </section>}
+
+      {showForm && <form id="employee-form" onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6" noValidate>
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Personal details</h2>
@@ -165,7 +210,7 @@ export default function EmployeeOnboardingPage() {
             </Field>
           </div>
         </section>
-      </form>
+      </form>}
     </main>
   );
 }
