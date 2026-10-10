@@ -26,7 +26,7 @@ Change endpoint paths in `services/organization.service.ts`. Change field mappin
 | PATCH | `/employees/:id/reporting-manager` | Assign or remove a reporting manager |
 | GET | `/employees` | Existing employee selector endpoint |
 
-Details and summary responses can be returned directly or inside `{ "data": ... }`. List responses can be arrays, `{ "data": [...] }`, or named arrays: `departments`, `teams`, `employmentTypes`, `roles`, `permissions`, and `employees`. These pages currently expect complete lists; adapt the service and table controls if the backend paginates results.
+Details and summary responses can be returned directly or inside `{ "data": ... }`. Organization details additionally accept `{ "organization": ... }` and `{ "data": { "organization": ... } }`. Organization details are validated before rendering: a nonempty string `name` and a valid `status` are required. Unsupported responses display an error with a retry button instead of crashing. List responses can be arrays, `{ "data": [...] }`, or named arrays: `departments`, `teams`, `employmentTypes`, `roles`, `permissions`, and `employees`. These pages currently expect complete lists; adapt the service and table controls if the backend paginates results.
 
 Writes accept the bodies below. A successful HTTP response is sufficient; the page reloads its list/details after saving. Errors should return `{ "message": "A useful explanation" }` with the appropriate HTTP status.
 

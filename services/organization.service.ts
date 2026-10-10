@@ -1,5 +1,6 @@
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import { parseOrganizationResponse } from "@/lib/organization-response";
 import type { HierarchyEmployee, Organization, OrganizationSummary, Permission, StructureInput, StructureKind, StructureRecord } from "@/types/organization";
 
 // Paths are relative to NEXT_PUBLIC_API_URL. Keep backend contract changes here.
@@ -36,8 +37,8 @@ function list<T>(body: unknown, key: string): T[] {
 }
 
 export async function getOrganization(signal?: AbortSignal) {
-  const response = await api.get<Organization | { data: Organization }>(organizationEndpoints.organization, config(signal));
-  return unwrap(response.data);
+  const response = await api.get<unknown>(organizationEndpoints.organization, config(signal));
+  return parseOrganizationResponse(response.data);
 }
 
 export async function getOrganizationSummary(signal?: AbortSignal) {

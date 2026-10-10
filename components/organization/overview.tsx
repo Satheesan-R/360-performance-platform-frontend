@@ -29,9 +29,10 @@ export default function OrganizationOverview() {
     finally { setSaving(false); }
   }
   const organization = details.data;
+  const organizationName = organization?.name?.trim() || "Organization";
   return <>
     <PageHeading title="Organization Overview" description="Company details and your current organization structure.">
-      <button type="button" className={buttonClass} disabled={!organization || details.loading || Boolean(draft)} onClick={() => { setDraft(organization); setError(""); setSuccess(""); }}>Edit Organization</button>
+      <button type="button" className={buttonClass} disabled={!organization || details.loading || Boolean(details.error) || Boolean(draft)} onClick={() => { setDraft(organization); setError(""); setSuccess(""); }}>Edit Organization</button>
     </PageHeading>
     {success && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">{success}</p>}
     {error && <p role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
@@ -45,7 +46,20 @@ export default function OrganizationOverview() {
       </fieldset>
       <div className="mt-6 flex gap-3"><button type="submit" disabled={saving} className={buttonClass}>{saving ? "Saving..." : "Save changes"}</button><button type="button" disabled={saving} className={secondaryClass} onClick={() => { setDraft(null); setError(""); }}>Cancel</button></div>
     </form> : <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex items-center gap-4">{organization.logoUrl ? <Image unoptimized src={organization.logoUrl} alt={`${organization.name} logo`} width={64} height={64} className="h-16 w-16 rounded-xl object-contain" /> : <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-blue-50 text-2xl font-bold text-blue-600">{organization.name.slice(0, 2).toUpperCase()}</div>}<div><h2 className="text-xl font-bold">{organization.name}</h2><p className="mt-1 text-sm text-slate-500">{organization.code}</p></div><div className="ml-auto"><Status value={organization.status} /></div></div>
+      <div className="mb-6 flex items-center gap-4">
+        {organization.logoUrl ? (
+          <Image unoptimized src={organization.logoUrl} alt={`${organizationName} logo`} width={64} height={64} className="h-16 w-16 rounded-xl object-contain" />
+        ) : (
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-blue-50 text-2xl font-bold text-blue-600">
+            {organizationName.slice(0, 2).toUpperCase()}
+          </div>
+        )}
+        <div>
+          <h2 className="text-xl font-bold">{organizationName}</h2>
+          <p className="mt-1 text-sm text-slate-500">{organization.code}</p>
+        </div>
+        <div className="ml-auto"><Status value={organization.status} /></div>
+      </div>
       <dl className="grid gap-6 sm:grid-cols-2">{[["Industry", organization.industry], ["Contact email", organization.contactEmail], ["Country", organization.country], ["Timezone", organization.timezone], ["Description", organization.description]].map(([label, value]) => <div key={label}><dt className="text-sm text-slate-500">{label}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm font-medium">{value || "—"}</dd></div>)}</dl>
     </section>)}
     <section aria-label="Organization summary" className="mt-6">
