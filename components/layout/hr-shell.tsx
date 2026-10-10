@@ -10,6 +10,7 @@ import { organizationNavigation } from "@/components/organization/navigation";
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", short: "DB" },
   { label: "Employee Onboarding", href: "/hr/onboarding", short: "EO" },
+  { label: "Organization", href: "/hr/organization", short: "OR" },
   { label: "Review Cycles", href: "/hr/review-cycles", short: "RC" },
   { label: "Normalisation", href: "/hr/normalisation", short: "NM" },
   { label: "Promotion & Development", href: "/hr/promotion-development", short: "PD" },
@@ -21,6 +22,9 @@ export default function HrShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [organizationExpanded, setOrganizationExpanded] = useState<boolean | null>(null);
+  const organizationActive = pathname === "/hr/organization" || pathname.startsWith("/hr/organization/");
+  const organizationOpen = organizationExpanded ?? organizationActive;
   const user = getCurrentUser();
 
   function logout() {
@@ -54,11 +58,45 @@ export default function HrShell({ children }: { children: ReactNode }) {
           <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
             {navigation.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              if (item.href === "/hr/organization") {
+                return (
+                  <div key={item.href}>
+                    <button
+                      type="button"
+                      aria-expanded={organizationOpen}
+                      aria-controls="organization-submenu"
+                      onClick={() => {
+                        setOrganizationExpanded(!organizationOpen);
+                        if (!organizationOpen && !organizationActive) router.push(item.href);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+                    >
+                      <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${active ? "bg-white/15" : "bg-white/5"}`}>{item.short}</span>
+                      <span className="flex-1">{item.label}</span>
+                      <span aria-hidden="true" className={`transition-transform ${organizationOpen ? "rotate-180" : ""}`}>⌄</span>
+                    </button>
+                    <div id="organization-submenu" hidden={!organizationOpen} className="ml-7 mt-2 space-y-1 border-l border-white/15 pl-3">
+                      {organizationNavigation.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={() => setMenuOpen(false)}
+                          aria-current={pathname === child.href ? "page" : undefined}
+                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href ? "bg-blue-500/20 text-blue-200" : "text-slate-400 hover:bg-white/10 hover:text-white"}`}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() => { setMenuOpen(false); setOrganizationExpanded(null); }}
+                  aria-current={pathname === item.href ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                 >
                   <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${active ? "bg-white/15" : "bg-white/5"}`}>
@@ -68,10 +106,6 @@ export default function HrShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
-            <div className="mt-6 border-t border-white/10 pt-5">
-              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Organization</p>
-              {organizationNavigation.map((item) => <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`block rounded-xl px-3 py-2.5 text-sm font-medium ${pathname === item.href ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10"}`}>{item.label}</Link>)}
-            </div>
           </nav>
 
           <div className="border-t border-white/10 p-4">
