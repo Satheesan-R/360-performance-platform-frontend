@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession, getCurrentUser } from "@/lib/auth";
+import { organizationNavigation } from "@/components/organization/navigation";
 
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", short: "DB" },
@@ -67,6 +68,10 @@ export default function HrShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            <div className="mt-6 border-t border-white/10 pt-5">
+              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Organization</p>
+              {organizationNavigation.map((item) => <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} aria-current={pathname === item.href ? "page" : undefined} className={`block rounded-xl px-3 py-2.5 text-sm font-medium ${pathname === item.href ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10"}`}>{item.label}</Link>)}
+            </div>
           </nav>
 
           <div className="border-t border-white/10 p-4">
