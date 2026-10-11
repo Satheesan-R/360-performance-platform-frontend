@@ -9,7 +9,6 @@ export const organizationNavigation = [
   { label: "Teams", href: "/hr/organization/teams" },
   { label: "Employment Types", href: "/hr/organization/employment-types" },
   { label: "Reporting Hierarchy", href: "/hr/organization/hierarchy" },
-  { label: "Roles & Permissions", href: "/hr/organization/roles" },
 ];
 
 export default function OrganizationNavigation() {
