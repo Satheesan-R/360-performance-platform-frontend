@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, type FormEvent } from "react";
+import { isAxiosError } from "axios";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
 import { getFrameworks, getFrameworkSummary, getFrameworkEmploymentTypes, saveFramework } from "@/services/performance-framework.service";
@@ -50,12 +51,13 @@ function FrameworkForm({ framework, onCancel, onSaved }: { framework: Performanc
   const [draft, setDraft] = useState<FrameworkInput>({ name: framework?.name ?? "", description: framework?.description ?? "", status: framework?.status ?? "draft", applicableEmploymentTypeIds: initialIds, applicableJobRoles: framework?.applicableJobRoles ?? [] });
   const [rolesText, setRolesText] = useState(draft.applicableJobRoles.join("\n"));
   const [saving, setSaving] = useState(false);
+  const [conflict, setConflict] = useState(false);
   const [error, setError] = useState("");
   const options = [...(types.data ?? []), ...(framework?.applicableEmploymentTypeIds.filter((type) => !types.data?.some((option) => option._id === type._id)) ?? [])];
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
+    if (saving || conflict) return;
     const roles = rolesText.split("\n").map((role) => role.trim()).filter(Boolean);
     if (!draft.name.trim()) { setError("Enter a framework name."); return; }
     if (roles.length > 100 || roles.some((role) => role.length > 200) || new Set(roles.map((role) => role.toLowerCase())).size !== roles.length) {
@@ -69,15 +71,16 @@ function FrameworkForm({ framework, onCancel, onSaved }: { framework: Performanc
       if (framework && initialIds.length === draft.applicableEmploymentTypeIds.length && initialIds.every((id) => draft.applicableEmploymentTypeIds.includes(id))) delete values.applicableEmploymentTypeIds;
       await saveFramework(values, framework?._id);
       onSaved();
-    } catch (error) { setError(getApiErrorMessage(error)); setSaving(false); }
+    } catch (error) { setError(getApiErrorMessage(error)); setSaving(false); if (isAxiosError(error) && error.response?.status === 409) setConflict(true); }
   }
 
   return <form onSubmit={submit} className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
     <h2 className="mb-5 text-lg font-bold">{framework ? "Edit framework" : "Create framework"}</h2>
     {error && <p role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
-    <fieldset disabled={saving} className="grid gap-5 sm:grid-cols-2">
+    {conflict && <div role="alert" className="mb-5 text-sm text-red-700"><p>Reload the latest framework before retrying. Reloading discards unsaved changes.</p><button type="button" className={`${secondaryClass} mt-3`} onClick={() => window.location.reload()}>Reload latest framework</button></div>}
+    <fieldset disabled={saving || conflict} className="grid gap-5 sm:grid-cols-2">
       <Field label="Framework name *"><input autoFocus required maxLength={200} className={inputClass} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Engineering Framework" /></Field>
-      <Field label="Status"><select className={inputClass} value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as FrameworkStatus })}>{statuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></Field>
+      <Field label="Status"><select className={inputClass} value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as FrameworkStatus })}>{statuses.map((status) => <option key={status} value={status} disabled={status === "active" && !framework?.weightsValid}>{label(status)}</option>)}</select></Field>
       <div className="sm:col-span-2"><Field label="Description"><textarea rows={3} maxLength={2000} className={inputClass} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></Field></div>
       <div><p className="mb-2 text-sm font-medium text-slate-700">Applicable employment types</p>
         <LoadState loading={types.loading} error={types.error} retry={types.reload} />
@@ -85,8 +88,8 @@ function FrameworkForm({ framework, onCancel, onSaved }: { framework: Performanc
       </div>
       <Field label="Applicable job titles (one per line)"><textarea rows={5} className={inputClass} value={rolesText} onChange={(event) => setRolesText(event.target.value)} placeholder={"Software Engineer\nSenior Software Engineer"} /></Field>
     </fieldset>
-    <p className="mt-5 text-xs leading-5 text-slate-500">Groups and job titles describe the intended audience; they do not assign employees to reviews. Active status does not indicate that scoring or templates are ready.</p>
-    <div className="mt-6 flex gap-3"><button className={buttonClass} type="submit" disabled={saving}>{saving ? "Saving..." : framework ? "Save changes" : "Create Framework"}</button><button className={secondaryClass} type="button" disabled={saving} onClick={onCancel}>Cancel</button></div>
+    <p className="mt-5 text-xs leading-5 text-slate-500">Groups and job titles describe the intended audience; they do not assign employees to reviews. New frameworks start as draft or archived. Configure active criteria weights totaling 100% under Competencies &amp; KPIs before activation. Rating scales and templates are configured separately.</p>
+    <div className="mt-6 flex gap-3"><button className={buttonClass} type="submit" disabled={saving || conflict}>{saving ? "Saving..." : framework ? "Save changes" : "Create Framework"}</button><button className={secondaryClass} type="button" disabled={saving} onClick={onCancel}>Cancel</button></div>
   </form>;
 }
 
