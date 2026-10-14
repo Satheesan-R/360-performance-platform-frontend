@@ -6,11 +6,13 @@ import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession, getCurrentUser } from "@/lib/auth";
 import { organizationNavigation } from "@/components/organization/navigation";
+import { frameworkNavigation } from "@/components/performance-framework/navigation";
 
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", short: "DB" },
   { label: "Employee Onboarding", href: "/hr/onboarding", short: "EO" },
   { label: "Organization", href: "/hr/organization", short: "OR" },
+  { label: "Performance Framework", href: "/hr/performance-framework", short: "PF" },
   { label: "Review Cycles", href: "/hr/review-cycles", short: "RC" },
   { label: "Normalisation", href: "/hr/normalisation", short: "NM" },
   { label: "Promotion & Development", href: "/hr/promotion-development", short: "PD" },
@@ -23,6 +25,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [organizationExpanded, setOrganizationExpanded] = useState<boolean | null>(null);
+  const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(null);
   const organizationActive = pathname === "/hr/organization" || pathname.startsWith("/hr/organization/");
   const organizationOpen = organizationExpanded ?? organizationActive;
   const user = getCurrentUser();
@@ -58,25 +61,30 @@ export default function HrShell({ children }: { children: ReactNode }) {
           <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
             {navigation.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
-              if (item.href === "/hr/organization") {
+              if (item.href === "/hr/organization" || item.href === "/hr/performance-framework") {
+                const isOrganization = item.href === "/hr/organization";
+                const open = isOrganization ? organizationOpen : frameworkExpanded ?? active;
+                const setExpanded = isOrganization ? setOrganizationExpanded : setFrameworkExpanded;
+                const children = isOrganization ? organizationNavigation : frameworkNavigation;
+                const submenuId = isOrganization ? "organization-submenu" : "framework-submenu";
                 return (
                   <div key={item.href}>
                     <button
                       type="button"
-                      aria-expanded={organizationOpen}
-                      aria-controls="organization-submenu"
+                      aria-expanded={open}
+                      aria-controls={submenuId}
                       onClick={() => {
-                        setOrganizationExpanded(!organizationOpen);
-                        if (!organizationOpen && !organizationActive) router.push(item.href);
+                        setExpanded(!open);
+                        if (!open && !active) router.push(item.href);
                       }}
                       className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                     >
                       <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${active ? "bg-white/15" : "bg-white/5"}`}>{item.short}</span>
                       <span className="flex-1">{item.label}</span>
-                      <span aria-hidden="true" className={`transition-transform ${organizationOpen ? "rotate-180" : ""}`}>⌄</span>
+                      <span aria-hidden="true" className={`transition-transform ${open ? "rotate-180" : ""}`}>⌄</span>
                     </button>
-                    <div id="organization-submenu" hidden={!organizationOpen} className="ml-7 mt-2 space-y-1 border-l border-white/15 pl-3">
-                      {organizationNavigation.map((child) => (
+                    <div id={submenuId} hidden={!open} className="ml-7 mt-2 space-y-1 border-l border-white/15 pl-3">
+                      {children.map((child) => (
                         <Link
                           key={child.href}
                           href={child.href}
@@ -95,7 +103,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => { setMenuOpen(false); setOrganizationExpanded(null); }}
+                  onClick={() => { setMenuOpen(false); setOrganizationExpanded(null); setFrameworkExpanded(null); }}
                   aria-current={pathname === item.href ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                 >
