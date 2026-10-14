@@ -1,3 +1,5 @@
+import type { Competency, Kpi } from "./framework-criteria";
+
 export type FrameworkStatus = "draft" | "active" | "archived";
 
 export interface FrameworkEmploymentType {
@@ -16,6 +18,10 @@ export interface PerformanceFramework {
   status: FrameworkStatus;
   competencyCount: number;
   kpiCount: number;
+  competencies: Competency[];
+  kpis: Kpi[];
+  totalWeight: number;
+  weightsValid: boolean;
   ratingScale: { name: string } | null;
 }
 
