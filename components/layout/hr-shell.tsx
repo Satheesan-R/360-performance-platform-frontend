@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession, getCurrentUser } from "@/lib/auth";
 import { organizationNavigation } from "@/components/organization/navigation";
 import { frameworkNavigation } from "@/components/performance-framework/navigation";
+import type { SettingsRole } from "@/lib/settings-demo";
 
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", short: "DB" },
@@ -20,7 +21,7 @@ const navigation = [
   { label: "Audit", href: "/hr/audit", short: "AU" },
 ];
 
-export default function HrShell({ children }: { children: ReactNode }) {
+export default function HrShell({ children, role = "hr" }: { children: ReactNode; role?: SettingsRole }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -29,6 +30,10 @@ export default function HrShell({ children }: { children: ReactNode }) {
   const organizationActive = pathname === "/hr/organization" || pathname.startsWith("/hr/organization/");
   const organizationOpen = organizationExpanded ?? organizationActive;
   const user = getCurrentUser();
+  const workspaceLabel = role === "admin" ? "Admin" : "HR";
+  const workspaceNavigation = role === "admin"
+    ? [{ label: "Dashboard", href: "/admin/dashboard", short: "DB" }]
+    : navigation;
 
   function logout() {
     clearSession();
@@ -36,7 +41,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ProtectedRoute role="hr">
+    <ProtectedRoute role={role}>
       <div className="min-h-screen bg-slate-50 text-slate-900 lg:flex">
         {menuOpen && (
           <button
@@ -51,7 +56,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
           <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
             <div>
               <p className="text-lg font-bold">360 Performance</p>
-              <p className="text-xs text-slate-400">Human Resources</p>
+              <p className="text-xs text-slate-400">{role === "admin" ? "Administration" : "Human Resources"}</p>
             </div>
             <button type="button" className="text-2xl text-slate-400 lg:hidden" onClick={() => setMenuOpen(false)} aria-label="Close menu">
               ×
@@ -59,7 +64,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
           </div>
 
           <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
-            {navigation.map((item) => {
+            {workspaceNavigation.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
               if (item.href === "/hr/organization" || item.href === "/hr/performance-framework") {
                 const isOrganization = item.href === "/hr/organization";
@@ -118,7 +123,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
 
           <div className="border-t border-white/10 p-4">
             <div className="mb-3 rounded-xl bg-white/5 px-4 py-3">
-              <p className="text-xs text-slate-400">Signed in as HR</p>
+              <p className="text-xs text-slate-400">Signed in as {workspaceLabel}</p>
               <p className="mt-1 truncate text-sm font-medium">{user?.email}</p>
             </div>
             <button type="button" onClick={logout} className="w-full rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10">
@@ -134,11 +139,11 @@ export default function HrShell({ children }: { children: ReactNode }) {
                 ☰
               </button>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">HR workspace</p>
-                <p className="text-sm text-slate-500">Manage people and performance</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{workspaceLabel} workspace</p>
+                <p className="text-sm text-slate-500">{role === "admin" ? "Manage your organization settings" : "Manage people and performance"}</p>
               </div>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">HR</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">{role === "admin" ? "AD" : "HR"}</div>
           </header>
 
           <div className="p-5 sm:p-8">{children}</div>
