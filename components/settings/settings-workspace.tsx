@@ -12,6 +12,7 @@ import {
 
 const sections: { id: SettingsSection; label: string; detail: string; icon: string }[] = [
   { id: "general", label: "General", detail: "Your organization details", icon: "building" },
+  { id: "roles", label: "Roles & access", detail: "Labels and permissions", icon: "people" },
 ];
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-3 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-500";
@@ -149,6 +150,12 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
             </Panel>
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5"><div><h3 className="text-sm font-semibold text-slate-800">Organization structure</h3><p className="mt-1 text-sm text-slate-500">Departments, teams and reporting lines are managed in Organization.</p></div>{role === "hr" ? <Link href="/hr/organization" className={secondaryClass}>Open organization<Icon name="arrow" className="h-4 w-4" /></Link> : <span className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-500">Managed in the HR workspace</span>}</div>
           </>}
+
+          {section === "roles" && <Panel title="Roles & access" description="Use labels your organization knows while keeping each role's permissions consistent.">
+            <div className={`mb-6 flex items-start gap-3 rounded-xl p-4 ${canEditRoles ? "bg-slate-50 text-slate-600" : "bg-amber-50 text-amber-900"}`}><Icon name="shield" className="mt-0.5 h-5 w-5 shrink-0" /><p className="text-sm leading-6">{canEditRoles ? "Customize role labels in this demo. For example, rename Department Manager to HOD. Permission sets stay fixed." : "Only admins can edit role labels. Your HR access lets you view the role mapping and manage review policies."}</p></div>
+            <div className="space-y-5">{roleDefinitions.map((item) => <div key={item.id} className="grid gap-3 border-b border-slate-100 pb-5 last:border-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_220px] sm:items-start"><div><h3 className="text-sm font-semibold text-slate-900">{item.label}</h3><p className="mt-1 text-sm leading-6 text-slate-500">{item.access}</p></div><Field id={`settings-role.${item.id}`} label="Display label" error={errors[`role.${item.id}`]}><input {...fieldProps(`role.${item.id}`)} aria-label={`${item.label} display label`} className={inputClass} maxLength={40} disabled={!canEditRoles} value={draft.roleLabels[item.id]} onChange={(event) => { if (canEditRoles) update({ ...draft, roleLabels: { ...draft.roleLabels, [item.id]: event.target.value } }); }} /></Field></div>)}</div>
+            <div className="mt-7 rounded-xl border border-slate-200 p-4"><p className="text-sm font-semibold text-slate-800">Peer reviewers</p><p className="mt-1 text-sm leading-6 text-slate-500">Peer review is an assignment within a review cycle. Enable it in Review policies; it does not create a separate sign-in role.</p></div>
+          </Panel>}
 
 
         </div>
