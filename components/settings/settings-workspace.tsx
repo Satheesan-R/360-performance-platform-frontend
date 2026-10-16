@@ -67,8 +67,23 @@ function Panel({ title, description, children }: { title: string; description: s
   </section>;
 }
 
+function loadDemoState(role: SettingsRole) {
+  const user = getCurrentUser();
+  const storageKey = `performance-settings-demo:v1:${role}:${user?.id ?? user?.email ?? "preview"}`;
+  const initial = { settings: createDemoSettings(), savedAt: "", storageKey, notice: "" };
+  if (typeof window === "undefined") return initial;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return initial;
+    const stored = parseDemoSettings(raw);
+    return stored ? { ...initial, ...stored } : { ...initial, notice: "The saved demo could not be read. The example settings have been restored." };
+  } catch {
+    return { ...initial, notice: "Browser storage is unavailable. You can explore the forms, but saving may be unavailable." };
+  }
+}
+
 export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
-  const [initial] = useState(() => ({ settings: createDemoSettings(), savedAt: "", storageKey: "", notice: "" }));
+  const [initial] = useState(() => loadDemoState(role));
   const [saved, setSaved] = useState(initial.settings);
   const [draft, setDraft] = useState(initial.settings);
   const [savedAt, setSavedAt] = useState(initial.savedAt);
@@ -80,6 +95,25 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
   const isDirty = JSON.stringify(saved) !== JSON.stringify(draft);
   const policy = draft.reviews[employment];
   const canEditRoles = role === "admin";
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const beforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    const beforeNavigate = (event: MouseEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const link = event.target.closest<HTMLAnchorElement>("a[href]");
+      if (!link || link.target === "_blank" || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      if (link.origin === window.location.origin && link.pathname !== window.location.pathname && !window.confirm("Leave settings? Your unsaved changes will be discarded.")) {
+        event.preventDefault(); event.stopPropagation();
+      }
+    };
+    window.addEventListener("beforeunload", beforeUnload);
+    document.addEventListener("click", beforeNavigate, true);
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload);
+      document.removeEventListener("click", beforeNavigate, true);
+    };
+  }, [isDirty]);
 
   function update(next: DemoSettings) {
     setDraft(next); setErrors({}); setMessage(""); setSaveError("");
@@ -123,8 +157,13 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
     // HR cannot change role labels, including values loaded from a modified demo.
     if (!canEditRoles) next.roleLabels = createDemoSettings().roleLabels;
     const timestamp = new Date().toISOString();
-    setSaved(next); setDraft(next); setSavedAt(timestamp);
-    setMessage("Preview settings updated for this session.");
+    try {
+      localStorage.setItem(initial.storageKey, JSON.stringify({ version: 1, settings: next, savedAt: timestamp }));
+      setSaved(next); setDraft(next); setSavedAt(timestamp);
+      setMessage("Demo settings saved in this browser. Your live organization has not been changed.");
+    } catch {
+      setSaveError("Your browser could not save these settings. Your changes are still here; allow browser storage and try again.");
+    }
   }
 
   function cancel() {
