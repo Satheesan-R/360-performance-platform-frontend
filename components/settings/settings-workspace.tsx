@@ -13,6 +13,7 @@ import {
 const sections: { id: SettingsSection; label: string; detail: string; icon: string }[] = [
   { id: "general", label: "General", detail: "Your organization details", icon: "building" },
   { id: "roles", label: "Roles & access", detail: "Labels and permissions", icon: "people" },
+  { id: "reviews", label: "Review policies", detail: "How your reviews flow", icon: "workflow" },
 ];
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-3 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-500";
@@ -80,6 +81,24 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
 
   function update(next: DemoSettings) {
     setDraft(next); setErrors({}); setMessage(""); setSaveError("");
+  }
+
+  function updatePolicy(next: Partial<DemoSettings["reviews"][EmploymentType]>) {
+    update({ ...draft, reviews: { ...draft.reviews, [employment]: { ...policy, ...next } } });
+  }
+
+  function toggleStage(stage: "self" | "peer", enabled: boolean) {
+    const stages = policy.stages.filter((value) => value !== stage);
+    if (enabled) stages.splice(Math.max(0, stages.indexOf("manager")), 0, stage);
+    updatePolicy({ stages });
+  }
+
+  function moveStage(index: number, direction: -1 | 1) {
+    const stages = [...policy.stages];
+    const target = index + direction;
+    if (target < 0 || target >= stages.length) return;
+    [stages[index], stages[target]] = [stages[target], stages[index]];
+    updatePolicy({ stages });
   }
 
   function save(event: FormEvent<HTMLFormElement>) {
@@ -156,6 +175,22 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
             <div className="space-y-5">{roleDefinitions.map((item) => <div key={item.id} className="grid gap-3 border-b border-slate-100 pb-5 last:border-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_220px] sm:items-start"><div><h3 className="text-sm font-semibold text-slate-900">{item.label}</h3><p className="mt-1 text-sm leading-6 text-slate-500">{item.access}</p></div><Field id={`settings-role.${item.id}`} label="Display label" error={errors[`role.${item.id}`]}><input {...fieldProps(`role.${item.id}`)} aria-label={`${item.label} display label`} className={inputClass} maxLength={40} disabled={!canEditRoles} value={draft.roleLabels[item.id]} onChange={(event) => { if (canEditRoles) update({ ...draft, roleLabels: { ...draft.roleLabels, [item.id]: event.target.value } }); }} /></Field></div>)}</div>
             <div className="mt-7 rounded-xl border border-slate-200 p-4"><p className="text-sm font-semibold text-slate-800">Peer reviewers</p><p className="mt-1 text-sm leading-6 text-slate-500">Peer review is an assignment within a review cycle. Enable it in Review policies; it does not create a separate sign-in role.</p></div>
           </Panel>}
+
+          {section === "reviews" && <>
+            <Panel title="Review policies" description="Set a review path for each employment type. These examples do not change published cycles.">
+              <fieldset><legend className="mb-3 text-sm font-semibold text-slate-700">Employment type</legend><div className="grid grid-cols-1 gap-3 sm:grid-cols-3">{employmentTypes.map((item) => <label key={item.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${employment === item.id ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-300"}`}><input type="radio" name="employmentType" value={item.id} checked={employment === item.id} onChange={() => setEmployment(item.id)} className="mt-1 accent-blue-600" /><span><span className="block text-sm font-semibold text-slate-800">{item.label}</span><span className="mt-1 block text-xs text-slate-500">{item.description}</span></span></label>)}</div></fieldset>
+              <div className="mt-6 divide-y divide-slate-100">
+                <Toggle id="review-self" title="Self review" description="Let employees reflect on their goals and performance." checked={policy.stages.includes("self")} onChange={(value) => toggleStage("self", value)} />
+                <Toggle id="review-peer" title="Peer review" description="Include feedback from assigned peer reviewers." checked={policy.stages.includes("peer")} onChange={(value) => toggleStage("peer", value)} />
+                <Toggle id="review-calibration" title="Calibration stage" description="Allow HR to review scores with a required justification for adjustments." checked={policy.calibration} onChange={(value) => updatePolicy({ calibration: value })} />
+              </div>
+              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5"><h3 className="text-sm font-semibold text-slate-900">Reviewer sequence</h3><p className="mt-1 text-xs leading-5 text-slate-500">Use the arrows to arrange the active reviewers. Manager review is required.</p><ol className="mt-4 space-y-2">{policy.stages.map((stage, index) => <li key={stage} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">{index + 1}</span><span className="flex-1 text-sm font-medium text-slate-700">{stageLabels[stage]}</span>{stage === "manager" && <span className="hidden text-xs text-slate-400 sm:inline">Required</span>}<div className="flex gap-1"><button type="button" aria-label={`Move ${stageLabels[stage]} up`} disabled={index === 0} onClick={() => moveStage(index, -1)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-25"><Icon name="up" className="h-4 w-4" /></button><button type="button" aria-label={`Move ${stageLabels[stage]} down`} disabled={index === policy.stages.length - 1} onClick={() => moveStage(index, 1)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-25"><Icon name="down" className="h-4 w-4" /></button></div></li>)}</ol>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">{policy.calibration && <><span className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-violet-700">Calibration</span><Icon name="arrow" className="h-4 w-4" /></>}<span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700"><Icon name="check" className="h-3.5 w-3.5" />Finalization</span><span className="ml-auto font-normal">After all reviewer stages</span></div>
+              </div>
+              {errors[`review.${employment}`] && <p role="alert" className="mt-3 text-sm text-red-600">{errors[`review.${employment}`]}</p>}
+            </Panel>
+            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-5"><Icon name="shield" className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" /><div><h3 className="text-sm font-semibold text-slate-800">Evidence is always required</h3><p className="mt-1 text-sm leading-6 text-slate-500">Every submitted rating needs supporting evidence. Original scores, adjustments and justifications remain in the audit history.</p></div></div>
+          </>}
 
 
         </div>
