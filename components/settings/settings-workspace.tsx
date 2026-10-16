@@ -14,6 +14,7 @@ const sections: { id: SettingsSection; label: string; detail: string; icon: stri
   { id: "general", label: "General", detail: "Your organization details", icon: "building" },
   { id: "roles", label: "Roles & access", detail: "Labels and permissions", icon: "people" },
   { id: "reviews", label: "Review policies", detail: "How your reviews flow", icon: "workflow" },
+  { id: "notifications", label: "Notifications", detail: "Keep everyone up to date", icon: "bell" },
 ];
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-3 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-500";
@@ -129,6 +130,10 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
     setDraft(saved); setErrors({}); setSaveError(""); setMessage("Unsaved changes discarded.");
   }
 
+  function notification(key: keyof DemoSettings["notifications"], value: boolean | string) {
+    update({ ...draft, notifications: { ...draft.notifications, [key]: value } });
+  }
+
   function fieldProps(key: string) {
     return { id: `settings-${key}`, "aria-invalid": Boolean(errors[key]), "aria-describedby": errors[key] ? `settings-${key}-error` : undefined };
   }
@@ -190,6 +195,11 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
               {errors[`review.${employment}`] && <p role="alert" className="mt-3 text-sm text-red-600">{errors[`review.${employment}`]}</p>}
             </Panel>
             <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-5"><Icon name="shield" className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" /><div><h3 className="text-sm font-semibold text-slate-800">Evidence is always required</h3><p className="mt-1 text-sm leading-6 text-slate-500">Every submitted rating needs supporting evidence. Original scores, adjustments and justifications remain in the audit history.</p></div></div>
+          </>}
+
+          {section === "notifications" && <>
+            <Panel title="Delivery channels" description="Choose how review updates reach people in your organization."><div className="divide-y divide-slate-100"><Toggle id="notification-email" title="Email notifications" description="Send review updates to employees' company email addresses." checked={draft.notifications.email} onChange={(value) => notification("email", value)} /><Toggle id="notification-inApp" title="In-app notifications" description="Show updates inside the performance workspace." checked={draft.notifications.inApp} onChange={(value) => notification("inApp", value)} /></div>{errors.channels && <p role="alert" className="mt-3 text-sm text-red-600">{errors.channels}</p>}</Panel>
+            <Panel title="Review reminders" description="Keep reviews moving with timely prompts throughout the cycle."><div className="divide-y divide-slate-100"><Toggle id="notification-assigned" title="Review assignments" description="Notify reviewers when a review is assigned and ready to complete." checked={draft.notifications.reviewAssigned} onChange={(value) => notification("reviewAssigned", value)} /><Toggle id="notification-deadline" title="Upcoming deadlines" description="Remind reviewers before their submission deadline." checked={draft.notifications.deadlineReminder} onChange={(value) => notification("deadlineReminder", value)} />{draft.notifications.deadlineReminder && <div className="py-5"><div className="max-w-xs"><Field id="settings-reminderDays" label="Send a reminder before the deadline" error={errors.reminderDays} hint="Choose from 1 to 30 days."><div className="flex items-center gap-3"><input {...fieldProps("reminderDays")} className={inputClass} type="number" min={1} max={30} step={1} value={draft.notifications.reminderDays} onChange={(event) => notification("reminderDays", event.target.value)} /><span className="mt-2 text-sm text-slate-500">days</span></div></Field></div></div>}<Toggle id="notification-overdue" title="Overdue reviews" description="Notify reviewers when a submission deadline has passed." checked={draft.notifications.overdueReminder} onChange={(value) => notification("overdueReminder", value)} /></div><p className="mt-4 rounded-lg bg-slate-50 p-3 text-xs leading-5 text-slate-500">This demo does not send email, create notifications or schedule reminders.</p></Panel>
           </>}
 
 
