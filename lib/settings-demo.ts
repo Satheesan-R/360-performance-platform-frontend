@@ -75,3 +75,46 @@ export function createDemoSettings(): DemoSettings {
     },
   };
 }
+
+export type SettingsErrors = Partial<Record<string, string>>;
+
+export function validateDemoSettings(settings: DemoSettings): SettingsErrors {
+  const errors: SettingsErrors = {};
+  const { general, roleLabels, reviews, notifications } = settings;
+  if (!general.organizationName.trim() || general.organizationName.trim().length > 120) {
+    errors.organizationName = "Enter an organization name of 1–120 characters.";
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(general.contactEmail.trim())) {
+    errors.contactEmail = "Enter a valid contact email address.";
+  }
+  if (!general.country.trim()) errors.country = "Enter your organization's country.";
+  if (!general.timezone.trim()) errors.timezone = "Choose a timezone.";
+  else {
+    try { new Intl.DateTimeFormat("en", { timeZone: general.timezone }); }
+    catch { errors.timezone = "Choose a valid timezone."; }
+  }
+  const labels = roleDefinitions.map(({ id }) => roleLabels[id].trim().toLowerCase());
+  for (const { id } of roleDefinitions) {
+    const label = roleLabels[id].trim();
+    if (!label || label.length > 40) errors[`role.${id}`] = "Use a label of 1–40 characters.";
+    else if (labels.filter((value) => value === label.toLowerCase()).length > 1) {
+      errors[`role.${id}`] = "Each role must have a unique label.";
+    }
+  }
+  for (const { id } of employmentTypes) {
+    const stages = reviews[id].stages;
+    if (!stages.includes("manager") || new Set(stages).size !== stages.length ||
+        stages.some((stage) => typeof stage !== "string" || !Object.prototype.hasOwnProperty.call(stageLabels, stage))) {
+      errors[`review.${id}`] = "The workflow must include one manager review and no repeated stages.";
+    }
+  }
+  if (notifications.deadlineReminder &&
+      (!/^\d+$/.test(notifications.reminderDays) || Number(notifications.reminderDays) < 1 || Number(notifications.reminderDays) > 30)) {
+    errors.reminderDays = "Enter a whole number from 1 to 30 days.";
+  }
+  if ((notifications.reviewAssigned || notifications.deadlineReminder || notifications.overdueReminder) &&
+      !notifications.email && !notifications.inApp) {
+    errors.channels = "Enable at least one delivery channel for your selected notifications.";
+  }
+  return errors;
+}
