@@ -1,4 +1,8 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+
+/* Scan application code only; temporary tools can contain locked files. */
+@source "./";
+@source "../components";
 
 :root {
   --background: #ffffff;
