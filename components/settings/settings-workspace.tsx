@@ -15,6 +15,7 @@ const sections: { id: SettingsSection; label: string; detail: string; icon: stri
   { id: "roles", label: "Roles & access", detail: "Labels and permissions", icon: "people" },
   { id: "reviews", label: "Review policies", detail: "How your reviews flow", icon: "workflow" },
   { id: "notifications", label: "Notifications", detail: "Keep everyone up to date", icon: "bell" },
+  { id: "performance", label: "Performance", detail: "Frameworks and governance", icon: "chart" },
 ];
 
 const inputClass = "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-3 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-500";
@@ -138,6 +139,13 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
     return { id: `settings-${key}`, "aria-invalid": Boolean(errors[key]), "aria-describedby": errors[key] ? `settings-${key}-error` : undefined };
   }
 
+  const modules = [
+    { title: "Rating scales & weightages", description: "Define rating scales and the balance between technical and behavioral performance.", href: "/hr/performance-framework/scoring", label: "View scoring", icon: "chart", upcoming: true },
+    { title: "Competencies & KPIs", description: "Manage the criteria used to evaluate skills, delivery and individual impact.", href: "/hr/performance-framework/competencies", label: "Manage criteria", icon: "people", upcoming: false },
+    { title: "Normalization", description: "Team thresholds, fallback pools and score alignment belong in this module.", href: "/hr/normalisation", label: "View normalization", icon: "workflow", upcoming: true },
+    { title: "Promotion & development", description: "Configure eligibility rules and review recommendations. Interns are excluded from promotion eligibility.", href: "/hr/promotion-development", label: "View promotions", icon: "chart", upcoming: true },
+  ];
+
   return <main className="mx-auto max-w-7xl pb-4">
     <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
       <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Workspace preferences</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Settings</h1><p className="mt-2 text-sm leading-6 text-slate-500">Shape how your organization manages people and performance.</p></div>
@@ -202,7 +210,10 @@ export default function SettingsWorkspace({ role }: { role: SettingsRole }) {
             <Panel title="Review reminders" description="Keep reviews moving with timely prompts throughout the cycle."><div className="divide-y divide-slate-100"><Toggle id="notification-assigned" title="Review assignments" description="Notify reviewers when a review is assigned and ready to complete." checked={draft.notifications.reviewAssigned} onChange={(value) => notification("reviewAssigned", value)} /><Toggle id="notification-deadline" title="Upcoming deadlines" description="Remind reviewers before their submission deadline." checked={draft.notifications.deadlineReminder} onChange={(value) => notification("deadlineReminder", value)} />{draft.notifications.deadlineReminder && <div className="py-5"><div className="max-w-xs"><Field id="settings-reminderDays" label="Send a reminder before the deadline" error={errors.reminderDays} hint="Choose from 1 to 30 days."><div className="flex items-center gap-3"><input {...fieldProps("reminderDays")} className={inputClass} type="number" min={1} max={30} step={1} value={draft.notifications.reminderDays} onChange={(event) => notification("reminderDays", event.target.value)} /><span className="mt-2 text-sm text-slate-500">days</span></div></Field></div></div>}<Toggle id="notification-overdue" title="Overdue reviews" description="Notify reviewers when a submission deadline has passed." checked={draft.notifications.overdueReminder} onChange={(value) => notification("overdueReminder", value)} /></div><p className="mt-4 rounded-lg bg-slate-50 p-3 text-xs leading-5 text-slate-500">This demo does not send email, create notifications or schedule reminders.</p></Panel>
           </>}
 
-
+          {section === "performance" && <Panel title="Performance configuration" description="Find the controls for how performance is measured, aligned and developed.">
+            <div className="grid gap-4 sm:grid-cols-2">{modules.map((item) => <article key={item.href} className="flex flex-col rounded-xl border border-slate-200 p-5"><div className="mb-4 flex items-center justify-between gap-2"><span className="rounded-xl bg-blue-50 p-2.5 text-blue-600"><Icon name={item.icon} /></span>{item.upcoming && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">Module coming soon</span>}</div><h3 className="text-sm font-bold text-slate-900">{item.title}</h3><p className="mt-2 flex-1 text-sm leading-6 text-slate-500">{item.description}</p>{role === "hr" ? <Link href={item.href} className="mt-5 inline-flex items-center gap-2 self-start rounded text-sm font-semibold text-blue-600 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600">{item.label}<Icon name="arrow" className="h-4 w-4" /></Link> : <p className="mt-5 text-xs font-medium text-slate-400">Managed in the HR workspace</p>}</article>)}</div>
+            <div className="mt-6 flex items-start gap-3 rounded-xl bg-slate-50 p-4"><Icon name="shield" className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" /><p className="text-sm leading-6 text-slate-600">Audit records are immutable. Performance changes must retain their original values, who changed them and the reason for the change.</p></div>
+          </Panel>}
         </div>
       </div>
 
