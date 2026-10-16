@@ -122,6 +122,15 @@ export default function HrShell({ children, role = "hr" }: { children: ReactNode
           </nav>
 
           <div className="border-t border-white/10 p-4">
+            <Link
+              href={`/${role}/settings`}
+              onClick={() => setMenuOpen(false)}
+              aria-current={pathname === `/${role}/settings` ? "page" : undefined}
+              className={`mb-4 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${pathname === `/${role}/settings` ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-5 w-5"><path d="m9 3-1 3-3 1-2 5 2 5 3 1 1 3h6l1-3 3-1 2-5-2-5-3-1-1-3Z" /><circle cx="12" cy="12" r="3" /></svg>
+              Settings
+            </Link>
             <div className="mb-3 rounded-xl bg-white/5 px-4 py-3">
               <p className="text-xs text-slate-400">Signed in as {workspaceLabel}</p>
               <p className="mt-1 truncate text-sm font-medium">{user?.email}</p>
