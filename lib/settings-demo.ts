@@ -1,11 +1,8 @@
 import type { UserRole } from "@/types/auth";
 
 export type SettingsRole = Extract<UserRole, "hr" | "admin">;
-
 export type SettingsSection = "general" | "roles" | "reviews" | "notifications" | "performance";
-
 export type ReviewerStage = "self" | "peer" | "manager";
-
 export type EmploymentType = "intern" | "probationary" | "permanent";
 
 export const employmentTypes: { id: EmploymentType; label: string; description: string }[] = [
@@ -117,4 +114,29 @@ export function validateDemoSettings(settings: DemoSettings): SettingsErrors {
     errors.channels = "Enable at least one delivery channel for your selected notifications.";
   }
   return errors;
+}
+
+// Check browser data before using it. This is a demo format, not an API contract.
+export function parseDemoSettings(raw: string): { settings: DemoSettings; savedAt: string } | null {
+  try {
+    const value = JSON.parse(raw);
+    if (value?.version !== 1 || typeof value.savedAt !== "string" || !Number.isFinite(Date.parse(value.savedAt))) return null;
+    const settings = value.settings;
+    const defaults = createDemoSettings();
+    if (!settings || typeof settings !== "object") return null;
+    for (const key of Object.keys(defaults.general)) {
+      if (typeof settings.general?.[key] !== "string") return null;
+    }
+    for (const { id } of roleDefinitions) {
+      if (typeof settings.roleLabels?.[id] !== "string") return null;
+    }
+    for (const { id } of employmentTypes) {
+      if (!Array.isArray(settings.reviews?.[id]?.stages) || typeof settings.reviews[id].calibration !== "boolean") return null;
+    }
+    for (const [key, defaultValue] of Object.entries(defaults.notifications)) {
+      if (typeof settings.notifications?.[key] !== typeof defaultValue) return null;
+    }
+    if (Object.keys(validateDemoSettings(settings)).length) return null;
+    return { settings, savedAt: value.savedAt };
+  } catch { return null; }
 }
