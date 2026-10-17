@@ -25,7 +25,7 @@ export interface TemplateInput {
 }
 export interface TemplateFramework {
   name: string;
-  status: FrameworkStatus;
+  status?: FrameworkStatus;
   competencies: Competency[];
   kpis: Kpi[];
   applicableEmploymentTypeIds: (string | FrameworkEmploymentType)[];
