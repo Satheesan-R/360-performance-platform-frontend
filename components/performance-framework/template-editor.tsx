@@ -13,6 +13,7 @@ import type { FrameworkEmploymentType, PerformanceFramework } from "@/types/perf
 import type { ReviewTemplate, TemplatePreview } from "@/types/review-template";
 import { buttonClass, Field, inputClass, secondaryClass } from "@/components/organization/ui";
 import TemplateSectionsEditor from "./template-sections-editor";
+import { TemplatePreviewContent } from "./template-preview";
 
 function Editor({ template, frameworks, types, onSaved, onCancel, onReload }: { template?: ReviewTemplate; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[]; onSaved: () => void; onCancel: () => void; onReload: () => void }) {
   const [draft, setDraft] = useState(() => templateDraft(template));
@@ -55,7 +56,7 @@ function Editor({ template, frameworks, types, onSaved, onCancel, onReload }: { 
     <TemplateSectionsEditor sections={draft.sections} competencies={framework?.competencies ?? []} kpis={framework?.kpis ?? []} disabled={disabled} onChange={(sections) => change({ ...draft, sections })} />
     <div className="mt-6 flex flex-wrap gap-3"><button type="button" className={buttonClass} disabled={disabled || !draft.frameworkId} onClick={() => void submit(false)}>{busy ? "Working..." : template ? "Save template" : "Create Draft"}</button>{template && <button type="button" className={secondaryClass} disabled={disabled} onClick={() => void submit(true)}>Preview changes</button>}</div>
     {!template && <p className="mt-3 text-xs text-slate-500">Save the draft first to preview and activate it.</p>}
-    {preview && <div className="mt-6 rounded-xl bg-blue-50 p-5 text-sm"><h3 className="font-semibold">Unsaved template preview</h3><p className="mt-2">{preview.validation.ready ? "Ready for activation" : preview.validation.message}</p><p className="mt-2">{preview.sections.length} sections · {preview.frameworkName} · Framework version {preview.frameworkVersion}</p></div>}
+    {preview && <TemplatePreviewContent preview={preview} proposed />}
   </>;
 }
 
