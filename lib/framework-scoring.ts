@@ -19,7 +19,7 @@ export function scoringDraft(settings: FrameworkScoring): ScoringDraft {
     max: settings.ratingScale?.max ?? "",
     labels: Array.from({ length: 5 }, (_, index) => settings.ratingScale?.levels.find((level) => level.value === index + 1)?.label ?? ""),
     categories: { technical: settings.categoryWeights ? String(settings.categoryWeights.technical) : "", behavioral: settings.categoryWeights ? String(settings.categoryWeights.behavioral) : "" },
-    reviewers: { self: settings.reviewerWeights ? String(settings.reviewerWeights.self) : "", peer: settings.reviewerWeights ? String(settings.reviewerWeights.peer) : "", manager: settings.reviewerWeights ? String(settings.reviewerWeights.manager) : "" },
+    reviewers: { self: settings.reviewerWeights ? String(settings.reviewerWeights.self) : "0", peer: settings.reviewerWeights ? String(settings.reviewerWeights.peer) : "0", manager: settings.reviewerWeights ? String(settings.reviewerWeights.manager) : "0" },
     enabledReviewers: [...settings.enabledReviewers],
   };
 }
