@@ -2,8 +2,7 @@
 
 The HR sidebar contains Framework Overview, Competencies & KPIs, Rating Scales &
 Weightages, and Review Templates. Framework Overview and Competencies & KPIs are
-connected to the backend, along with Rating Scales & Weightages. Review Templates
-still displays an upcoming-module notice.
+connected to the backend, along with Rating Scales & Weightages and Review Templates.
 
 Set `NEXT_PUBLIC_API_URL` to the backend API root, for example
 `http://localhost:5000/api`. Requests use the existing Bearer session token.
@@ -103,3 +102,51 @@ The saved configuration version is shown for reference. This UI does not publish
 cycles or create snapshots. The backend snapshot endpoints remain available for
 future review-cycle integration; publication must store a snapshot ID/version and
 use its detached configuration rather than mutable live framework settings.
+
+## Review Templates
+
+`/hr/performance-framework/templates` uses `/review-templates` relative to the API
+root. The list uses server search, status/framework filters, and pagination. List
+references are populated; the editor fetches detail with raw reference IDs. All
+framework and active employment-type selector pages are loaded.
+
+New templates start as draft. The editor supports framework targeting, global
+evidence requirements, up to 50 ordered sections, and 200 questions (20 per
+section). Each section selects competencies/KPIs once across the whole template,
+with required, comments, required comments, and evidence flags. Global evidence
+requirements take precedence in the backend preview. Empty employment-type
+selections inherit framework targeting. Explicit types must be active and within
+framework restrictions. Unchanged existing employment selections are omitted from
+PATCH so metadata edits can preserve later-deactivated classifications.
+
+Sections are sent as a whole replacement array, preserving existing section and
+question IDs. New nested entries omit IDs; local UI keys and server-owned fields
+are removed. Client validation checks text/reference limits, nested identities,
+duplicate criteria, comments policy, and the backend's 20 KB UTF-8 JSON limit.
+Changing a draft's framework clears criterion/type selections while keeping
+section identities, titles, and questions.
+
+Active templates edit against their pinned frameworkSnapshot. Moving to draft
+clears that pin and uses current live criteria. Archived templates can be
+previewed or returned to draft; their section editor is disabled. Activation is a
+separate confirmed action offered after saved preview reports readiness. The
+server revalidates complete coverage of all positive-effective-weight criteria.
+Archive and status changes send only status. A 409 conflict requires reloading
+before retrying; mutations are never automatically retried.
+
+Saved preview uses GET `/:id/preview`; proposed edits use POST to the same path.
+Create a draft before previewing a new template. Returned sections, pinned/live
+version, rating labels, effective weights, missing references, comments, and
+effective evidence flags are rendered without answer fields or upload controls.
+Editing a field clears any proposed preview. No review responses are collected.
+
+Snapshots uses POST `/:id/snapshots` with `{}` for saved active templates. It
+displays the resulting ID, template/framework versions, timestamp, and detached
+section content. GET `/:id/snapshots/:snapshotId` opens an earlier snapshot by ID;
+there is no listing API. Snapshot contents resolve criteria from their own frozen
+framework, never from live records. Repeated creation for the same version is
+idempotent. This page does not publish cycles or edit/delete snapshots.
+
+Restart the updated backend before testing. Live authenticated frontend/MongoDB
+verification remains necessary; automated tests use mock API responses and also
+render preview content to verify pinned/missing criteria and evidence rules.
