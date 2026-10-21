@@ -6,24 +6,11 @@ export default function Hero() {
     <>
       <section className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.container}>
-          <div className={styles.announcement}>
-            <b>NEW</b> One connected workspace for your team&apos;s growth{" "}
-            <a href="#platform">Explore the platform →</a>
-          </div>
           <div>
-            <span className={styles.badge}>
-              ✧ Unified Talent, OKR &amp; People Operating System
-            </span>
+            <span className={styles.badge}>Performance &amp; Development</span>
           </div>
-          <h1 id="hero-title">
-            The Complete 360° Operating System for{" "}
-            <span className={styles.blue}>High-Performing</span> Engineering
-            &amp; Corporate Teams
-          </h1>
-          <p className={styles.lead}>
-            Unify quarterly OKRs, real-time feedback, 360° evaluation cycles,
-            skill development, and career growth in one seamless workspace.
-          </p>
+          <h1 id="hero-title">Build stronger teams. <span className={styles.blue}>Drive better performance.</span></h1>
+          <p className={styles.lead}>Align goals, share feedback, and grow talent in one connected workspace.</p>
           <div className={styles.actions}>
             <Link href="/login" className={styles.button}>
               Get Started →
