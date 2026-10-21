@@ -2,6 +2,7 @@
 
 import { useCallback, useState, type FormEvent } from "react";
 import { isAxiosError } from "axios";
+import Link from "next/link";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
 import { getFrameworks, getFrameworkSummary, getFrameworkEmploymentTypes, saveFramework } from "@/services/performance-framework.service";
@@ -10,6 +11,12 @@ import { buttonClass, secondaryClass, inputClass, Field, PageHeading } from "@/c
 
 const statuses: FrameworkStatus[] = ["draft", "active", "archived"];
 const label = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+const summaryCards = [
+  { key: "total", label: "Total frameworks", description: "All saved configurations", tone: "bg-blue-50 text-blue-700" },
+  { key: "draft", label: "Draft", description: "Still being configured", tone: "bg-amber-50 text-amber-700" },
+  { key: "active", label: "Active", description: "Available for reviews", tone: "bg-emerald-50 text-emerald-700" },
+  { key: "archived", label: "Archived", description: "Kept for reference", tone: "bg-slate-100 text-slate-600" },
+] as const;
 
 function LoadState({ loading, error, retry }: { loading: boolean; error: string; retry: () => void }) {
   if (loading) return <p role="status" className="rounded-xl bg-white p-6 text-sm text-slate-500">Loading performance frameworks...</p>;
@@ -111,10 +118,17 @@ export default function FrameworkOverview() {
 
   return <>
     <PageHeading title="Framework Overview" description="Create and manage performance frameworks for your organization's employee groups and job roles."><button type="button" className={buttonClass} disabled={Boolean(editor)} onClick={() => { setEditor({ framework: null }); setSuccess(""); }}>+ Create Framework</button></PageHeading>
+    {!editor && <section aria-label="Framework setup guidance" className="mb-6 flex flex-col gap-4 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm font-semibold text-blue-900">Set up a review-ready framework</p>
+        <p className="mt-1 max-w-2xl text-sm text-blue-800/70">Start with your audience, then add criteria, configure scoring, and finish with a review template.</p>
+      </div>
+      <Link href="/hr/performance-framework/competencies" className="whitespace-nowrap text-sm font-semibold text-blue-700 hover:underline">Configure criteria</Link>
+    </section>}
     {success && <p role="status" className="mb-5 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">{success}</p>}
     <section aria-label="Framework summary" className="mb-6">
       <LoadState loading={summary.loading} error={summary.error} retry={summary.reload} />
-      {!summary.loading && !summary.error && summary.data && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{(["total", ...statuses] as const).map((key) => <div key={key} className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-sm text-slate-500">{key === "total" ? "Total frameworks" : label(key)}</p><p className="mt-3 text-3xl font-bold">{summary.data![key]}</p></div>)}</div>}
+      {!summary.loading && !summary.error && summary.data && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{summaryCards.map((card) => <div key={card.key} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><p className="text-sm font-semibold text-slate-600">{card.label}</p><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${card.tone}`}>{summary.data![card.key]}</span></div><p className="mt-4 text-xs text-slate-500">{card.description}</p></div>)}</div>}
     </section>
     {editor && <FrameworkForm key={editor.framework?._id ?? "new"} framework={editor.framework} onCancel={() => setEditor(null)} onSaved={saved} />}
     <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end">
