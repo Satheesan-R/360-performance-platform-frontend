@@ -1,3 +1,94 @@
+.heroSplit {
+  padding: 88px 0 72px;
+  background: #fff;
+  color: #0f1b3d;
+}
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 56px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.heroBadge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #e2f4f1;
+  color: #0a6b60;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.heroCopy h1 {
+  margin: 20px 0 0;
+  font-size: clamp(40px, 4.75vw, 56px);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.heroCopy h1 span { color: #0a6b60; }
+.heroDescription {
+  max-width: 540px;
+  margin: 22px 0 0;
+  color: #3a4764;
+  font-size: 19px;
+  line-height: 1.75;
+}
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 32px;
+}
+.heroPrimary,
+.heroSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 13px 26px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.heroPrimary { background: #0a6b60; color: #fff; }
+.heroPrimary:hover { background: #075449; }
+.heroSecondary { border-color: #0f1b3d; color: #0f1b3d; background: #fff; }
+.heroSecondary:hover { background: #f1f7f6; }
+.heroVisual {
+  position: relative;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 24px;
+  background: #e2f4f1;
+}
+.heroPhoto { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 16px; }
+.heroImage { object-fit: cover; object-position: center; }
+@media (max-width: 800px) {
+  .heroSplit { padding: 56px 0; }
+  .heroGrid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .heroCopy { max-width: 620px; }
+  .heroCopy h1 { font-size: clamp(38px, 7vw, 56px); }
+  .heroVisual { width: 100%; max-width: 620px; }
+  .heroPhoto { aspect-ratio: 5 / 4; }
+}
+@media (max-width: 480px) {
+  .heroSplit { padding: 40px 0 48px; }
+  .heroGrid { padding-inline: 20px; gap: 28px; }
+  .heroBadge { font-size: 11px; }
+  .heroDescription { font-size: 17px; line-height: 1.7; }
+  .heroActions { align-items: stretch; flex-direction: column; }
+  .heroVisual { padding: 8px; border-radius: 20px; }
+  .heroPhoto { aspect-ratio: 1; border-radius: 14px; }
+}
 .landing {
   --blue: #0649ed;
   --ink: #101828;
