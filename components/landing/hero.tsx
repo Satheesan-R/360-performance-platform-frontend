@@ -1,41 +1,25 @@
-import Link from "next/link";
+import Image from "next/image";
 import styles from "./landing.module.css";
 
 export default function Hero() {
   return (
-    <>
-      <section className={styles.hero} aria-labelledby="hero-title">
-        <div className={styles.container}>
-          <div>
-            <span className={styles.badge}>Performance &amp; Development</span>
+      <section className={styles.heroSplit} aria-labelledby="hero-title">
+        <div className={styles.heroGrid}>
+          <div className={styles.heroCopy}>
+            <span className={styles.heroBadge}>Configurable performance management SaaS</span>
+            <h1 id="hero-title">Your review process.<br />Your rules. <span>No code.</span></h1>
+            <p className={styles.heroDescription}>Design your own review workflows, scoring models and governance, then run fair, traceable 360° evaluations for interns, probationers and permanent staff.</p>
+            <div className={styles.heroActions}>
+              <a href="#get-started" className={styles.heroPrimary}>Request a demo</a>
+              <a href="#platform" className={styles.heroSecondary}>See how it works <span aria-hidden="true">↗</span></a>
+            </div>
           </div>
-          <h1 id="hero-title">Build stronger teams. <span className={styles.blue}>Drive better performance.</span></h1>
-          <p className={styles.lead}>Align goals, share feedback, and grow talent in one connected workspace.</p>
-          <div className={styles.actions}>
-            <Link href="/login" className={styles.button}>
-              Get Started →
-            </Link>
-            <a
-              href="#performance"
-              className={`${styles.button} ${styles.secondary}`}
-            >
-              Explore the Platform ↗
-            </a>
-          </div>
-          <div className={styles.trusted}>
-            <p className={styles.eyebrow}>
-              Built for ambitious teams, at every stage
-            </p>
-            <div className={styles.logos}>
-              <span>♧ Engineering</span>
-              <span>▥ People &amp; HR</span>
-              <span>▣ Operations</span>
-              <span>◈ Leadership</span>
-              <span>⌘ Product</span>
+          <div className={styles.heroVisual}>
+            <div className={styles.heroPhoto}>
+              <Image src="/images/landing-team.webp" alt="Colleagues sharing ideas around a table in a bright, modern office" fill sizes="(max-width: 800px) calc(100vw - 48px), (max-width: 1180px) 44vw, 490px" preload className={styles.heroImage} />
             </div>
           </div>
         </div>
       </section>
-    </>
   );
 }
