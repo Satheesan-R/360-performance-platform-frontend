@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { authService } from "@/services/auth.service";
 import { getApiErrorMessage } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
@@ -39,7 +40,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen bg-slate-50 lg:grid-cols-2">
+    <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[0.95fr_1.05fr]">
       <section className="hidden bg-blue-700 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
         <p className="text-xl font-bold tracking-tight">360 Performance</p>
         <div className="max-w-lg">
@@ -56,21 +57,24 @@ export default function LoginPage() {
         <p className="text-sm text-blue-200">Secure access for every role in your organization.</p>
       </section>
 
-      <section className="flex items-center justify-center px-6 py-12 sm:px-10">
-        <div className="w-full max-w-md">
+      <section aria-labelledby="login-heading" className="flex items-center justify-center bg-white px-6 py-10 sm:px-10 sm:py-14 lg:px-12 xl:px-20">
+        <div className="w-full max-w-xl">
+          <Link href="/" className="mb-10 inline-flex items-center gap-2 rounded-md text-sm font-medium text-slate-500 transition hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mb-12">
+            <span aria-hidden="true">←</span> Back to home
+          </Link>
           <div className="mb-8 lg:hidden">
             <p className="text-xl font-bold text-blue-700">360 Performance</p>
           </div>
 
-          <p className="text-sm font-semibold text-blue-600">WELCOME BACK</p>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Sign in to your account</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-500">
-            Use your company email and password to continue.
+          <p className="inline-flex rounded-full bg-blue-50 px-4 py-2 text-xs font-bold tracking-[0.14em] text-blue-700">WELCOME BACK</p>
+          <h2 id="login-heading" className="mt-5 max-w-lg text-4xl font-bold leading-[1.12] tracking-tight text-slate-900 sm:text-5xl">Sign in to your account</h2>
+          <p className="mt-5 max-w-lg text-base leading-7 text-slate-500 sm:text-lg sm:leading-8">
+            Your team, your goals, your next step forward. Use your company email and password to continue.
           </p>
 
-          <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+          <form className="mt-9 space-y-6 sm:mt-10" onSubmit={handleSubmit} noValidate aria-busy={isLoading}>
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
+              <label htmlFor="email" className="mb-2.5 block text-base font-semibold text-slate-700">
                 Company email
               </label>
               <input
@@ -81,13 +85,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="name@company.com"
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                className="min-h-14 w-full rounded-xl border border-slate-300 bg-slate-50/60 px-5 py-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 sm:min-h-16"
               />
             </div>
 
             <div>
-              <div className="mb-2 flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium text-slate-700">
+              <div className="mb-2.5 flex items-center justify-between">
+                <label htmlFor="password" className="text-base font-semibold text-slate-700">
                   Password
                 </label>
               </div>
@@ -100,12 +104,14 @@ export default function LoginPage() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter your password"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-20 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="min-h-14 w-full rounded-xl border border-slate-300 bg-slate-50/60 px-5 py-4 pr-20 text-base text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 sm:min-h-16"
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
                   onClick={() => setShowPassword((visible) => !visible)}
-                  className="absolute inset-y-0 right-0 px-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                  className="absolute inset-y-0 right-0 rounded-r-xl px-5 text-sm font-semibold text-blue-600 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
@@ -121,11 +127,16 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-16 sm:text-lg"
             >
               {isLoading ? "Signing in..." : "Sign in"}
+              {!isLoading && <span aria-hidden="true">→</span>}
             </button>
           </form>
+          <div className="mt-8 border-t border-slate-200 pt-6 sm:mt-10">
+            <p className="text-sm font-semibold text-slate-700">Signing in for the first time?</p>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Set up your account using the activation link sent to your company email. If you need help accessing your account, contact your HR team.</p>
+          </div>
         </div>
       </section>
     </main>
