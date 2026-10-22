@@ -10,7 +10,7 @@ export default function Hero() {
             <h1 id="hero-title">Your review process.<br />Your rules. <span>No code.</span></h1>
             <p className={styles.heroDescription}>Design your own review workflows, scoring models and governance, then run fair, traceable 360° evaluations for interns, probationers and permanent staff.</p>
             <div className={styles.heroActions}>
-              <a href="#get-started" className={styles.heroPrimary}>Request a demo</a>
+              <a href="/login" className={styles.heroPrimary}>Request login</a>
               <a href="#platform" className={styles.heroSecondary}>See how it works <span aria-hidden="true">↗</span></a>
             </div>
           </div>
