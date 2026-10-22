@@ -6,7 +6,11 @@ import { useForm } from "react-hook-form";
 import { getApiErrorMessage } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { createEmployee, getEmployees } from "@/services/employee.service";
-import type { CreateEmployeeRequest, Employee } from "@/types/employee";
+import type {
+  ActivationEmailDelivery,
+  CreateEmployeeRequest,
+  Employee,
+} from "@/types/employee";
 
 const inputClass =
   "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -70,6 +74,8 @@ export default function EmployeeOnboardingPage() {
 
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [emailDelivery, setEmailDelivery] =
+    useState<ActivationEmailDelivery | null>(null);
   const [activationUrl, setActivationUrl] = useState("");
 
   const {
@@ -87,6 +93,7 @@ export default function EmployeeOnboardingPage() {
   async function onSubmit(values: CreateEmployeeRequest) {
     setServerError("");
     setSuccessMessage("");
+    setEmailDelivery(null);
     setActivationUrl("");
 
     const token = getToken();
@@ -98,6 +105,7 @@ export default function EmployeeOnboardingPage() {
     try {
       const result = await createEmployee(values, token);
       setSuccessMessage(result.message);
+      setEmailDelivery(result.emailDelivery ?? null);
       setActivationUrl(result.activationUrl ?? "");
       setEmployees((current) => [{ ...values, ...result.employee }, ...current]);
       setShowForm(false);
@@ -178,6 +186,7 @@ export default function EmployeeOnboardingPage() {
                 reset();
                 setServerError("");
                 setSuccessMessage("");
+                setEmailDelivery(null);
                 setActivationUrl("");
                 setShowForm(true);
               }}
@@ -191,10 +200,34 @@ export default function EmployeeOnboardingPage() {
 
       {successMessage && (
         <div
-          role="status"
-          className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800"
+          role={emailDelivery?.status === "failed" ? "alert" : "status"}
+          className={`mt-6 rounded-2xl border px-5 py-4 text-sm ${
+            emailDelivery?.status === "failed"
+              ? "border-amber-200 bg-amber-50 text-amber-900"
+              : "border-emerald-200 bg-emerald-50 text-emerald-800"
+          }`}
         >
           <p className="font-semibold">{successMessage}</p>
+
+          {emailDelivery?.status === "accepted" && (
+            <p className="mt-2">
+              Activation email accepted for {emailDelivery.recipient}. Mail server
+              acceptance does not confirm inbox delivery.
+            </p>
+          )}
+
+          {emailDelivery?.status === "failed" && (
+            <div className="mt-2 space-y-2">
+              {emailDelivery.message && (
+                <p>{emailDelivery.message}</p>
+              )}
+              <p>
+                The employee has already been created. Do not add them again.
+                Contact your administrator to resolve the activation email issue
+                for {emailDelivery.recipient}.
+              </p>
+            </div>
+          )}
 
           {activationUrl && (
             <p className="mt-2 break-all text-xs">
