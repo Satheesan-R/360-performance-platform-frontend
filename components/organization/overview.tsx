@@ -24,7 +24,7 @@ export default function OrganizationOverview() {
       void _id;
       await updateOrganization(values);
       setDraft(null); setSuccess("Organization details updated.");
-      await details.reload();
+      await Promise.all([details.reload(), summary.reload()]);
     } catch (error) { setError(getApiErrorMessage(error)); }
     finally { setSaving(false); }
   }
@@ -34,6 +34,36 @@ export default function OrganizationOverview() {
     <PageHeading title="Organization Overview" description="Company details and your current organization structure.">
       <button type="button" className={buttonClass} disabled={!organization || details.loading || Boolean(details.error) || Boolean(draft)} onClick={() => { setDraft(organization); setError(""); setSuccess(""); }}>Edit Organization</button>
     </PageHeading>
+    <section aria-label="Organization summary" className="mb-7">
+      <ResourceState
+        loading={summary.loading}
+        error={summary.error}
+        retry={summary.reload}
+      />
+
+      {!summary.loading && !summary.error && summary.data && (
+        <dl className="grid gap-4 sm:grid-cols-3 sm:gap-5">
+          {([
+            ["Total employees", summary.data.totalEmployees],
+            ["Departments", summary.data.departments],
+            ["Teams", summary.data.teams],
+          ] as const).map(([label, value]) => (
+            <div
+              key={label}
+              className="flex min-h-36 flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+            >
+              <dt className="text-sm font-semibold text-slate-500">
+                {label}
+              </dt>
+              <dd className="mt-5 text-4xl font-bold leading-none tracking-tight text-slate-950 tabular-nums">
+                {value.toLocaleString()}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </section>
+
     {success && <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{success}</p>}
     {error && <p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     <ResourceState loading={details.loading} error={details.error} retry={details.reload} />
@@ -46,7 +76,7 @@ export default function OrganizationOverview() {
       </fieldset>
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" disabled={saving} className={`${secondaryClass} w-full sm:w-auto`} onClick={() => { setDraft(null); setError(""); }}>Cancel</button><button type="submit" disabled={saving} className={`${buttonClass} w-full sm:w-auto`}>{saving ? "Saving..." : "Save changes"}</button></div>
     </form> : <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-slate-100 pb-6">
+      <div className="mb-6 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 border-b border-slate-100 pb-6 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         {organization.logoUrl ? (
           <Image unoptimized src={organization.logoUrl} alt={`${organizationName} logo`} width={64} height={64} className="h-16 w-16 rounded-xl object-contain" />
         ) : (
@@ -55,16 +85,12 @@ export default function OrganizationOverview() {
           </div>
         )}
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-950">{organizationName}</h2>
+          <h2 className="break-words text-xl font-bold tracking-tight text-slate-950">{organizationName}</h2>
           <p className="mt-1 text-sm font-medium text-slate-500">{organization.code}</p>
         </div>
-        <div className="ml-auto"><Status value={organization.status} /></div>
+        <div className="col-span-2 sm:col-span-1 sm:justify-self-end"><Status value={organization.status} /></div>
       </div>
-      <dl className="grid gap-x-8 gap-y-6 sm:grid-cols-2">{[["Industry", organization.industry], ["Contact email", organization.contactEmail], ["Country", organization.country], ["Timezone", organization.timezone], ["Description", organization.description]].map(([label, value]) => <div key={label}><dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</dt><dd className="mt-2 whitespace-pre-wrap break-words text-sm font-medium leading-6 text-slate-800">{value || "—"}</dd></div>)}</dl>
+      <dl className="grid gap-x-8 gap-y-6 sm:grid-cols-2">{[["Industry", organization.industry], ["Contact email", organization.contactEmail], ["Country", organization.country], ["Timezone", organization.timezone], ["Description", organization.description]].map(([label, value]) => <div key={label} className={label === "Description" ? "sm:col-span-2" : "min-w-0"}><dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</dt><dd className="mt-2 whitespace-pre-wrap break-words text-sm font-medium leading-6 text-slate-800">{value || "—"}</dd></div>)}</dl>
     </section>)}
-    <section aria-label="Organization summary" className="mt-6">
-      <ResourceState loading={summary.loading} error={summary.error} retry={summary.reload} />
-      {!summary.loading && !summary.error && summary.data && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["Total employees", summary.data.totalEmployees], ["Departments", summary.data.departments], ["Teams", summary.data.teams], ["Active review frameworks", summary.data.activeReviewFrameworks]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-medium text-slate-500">{label}</p><p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{value}</p></div>)}</div>}
-    </section>
   </>;
 }

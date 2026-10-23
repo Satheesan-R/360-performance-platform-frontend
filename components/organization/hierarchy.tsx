@@ -1,50 +1,111 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useState } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
-import { getHierarchy, updateReportingManager } from "@/services/organization.service";
-import { getApiErrorMessage } from "@/lib/api";
-import { hierarchyRows, unavailableManagers } from "@/lib/organization-hierarchy";
+import { getHierarchy } from "@/services/organization.service";
+import { departmentKey, hierarchyRows, teamKey, visibleHierarchyRows } from "@/lib/organization-hierarchy";
 import type { HierarchyEmployee } from "@/types/organization";
-import { buttonClass, secondaryClass, inputClass, Field, PageHeading, ResourceState } from "./ui";
-
-const indentationClasses = ["sm:ml-0", "sm:ml-6", "sm:ml-12", "sm:ml-[4.5rem]", "sm:ml-24", "sm:ml-[7.5rem]", "sm:ml-36", "sm:ml-[10.5rem]", "sm:ml-48", "sm:ml-[13.5rem]", "sm:ml-60"];
+import { Field, inputClass, PageHeading, ResourceState, secondaryClass } from "./ui";
+import ReportingManagerEditor from "./reporting-manager-editor";
+import ReportingViews from "./reporting-views";
 
 export default function ReportingHierarchy() {
   const resource = useOrganizationResource(getHierarchy);
   const [selected, setSelected] = useState<HierarchyEmployee | null>(null);
-  const [managerId, setManagerId] = useState("");
-  const [search, setSearch] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [filters, setFilters] = useState({ search: "", department: "", team: "" });
+  const [mode, setMode] = useState<"hierarchy" | "table">("hierarchy");
   const [success, setSuccess] = useState("");
   const employees = resource.data ?? [];
-  const blocked = selected ? unavailableManagers(employees, selected._id) : new Set<string>();
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!selected || saving) return;
-    if (managerId && blocked.has(managerId)) { setError("Choose a manager outside this employee's reporting chain."); return; }
-    setSaving(true); setError(""); setSuccess("");
-    try {
-      await updateReportingManager(selected._id, managerId || null);
-      setSelected(null); setSuccess("Reporting manager updated.");
-      await resource.reload();
-    } catch (error) { setError(getApiErrorMessage(error)); }
-    finally { setSaving(false); }
+  const graph = hierarchyRows(employees);
+  const rows = visibleHierarchyRows(employees, filters);
+  const issues = graph.filter((row) => row.disconnected).length;
+  const knownIds = new Set(employees.map((employee) => employee._id));
+  const managers = new Set(employees.map((employee) => employee.reportingManagerId).filter((id): id is string => Boolean(id && knownIds.has(id))));
+  const topLevel = employees.filter((employee) => !employee.reportingManagerId).length;
+  const matched = rows.filter((row) => !row.contextOnly).length;
+  const context = rows.length - matched;
+  const filtered = Boolean(filters.search.trim() || filters.department || filters.team);
+  const departments = new Map<string, string>();
+  const teams = new Map<string, string>();
+
+  for (const employee of employees) {
+    const department = departmentKey(employee);
+    const team = teamKey(employee);
+    if (department) departments.set(department, employee.departmentName || `Department ${department.slice(-6)}`);
+    if (team && (!filters.department || department === filters.department)) teams.set(team, employee.teamName || `Team ${team.slice(-6)}`);
   }
-  const rows = hierarchyRows(employees).filter(({ employee }) => `${employee.fullName} ${employee.designation ?? ""} ${employee.departmentName ?? ""}`.toLowerCase().includes(search.trim().toLowerCase()));
+
+  function edit(employee: HierarchyEmployee) {
+    setSelected(employee);
+    setSuccess("");
+  }
+
+  function saved() {
+    setSelected(null);
+    setSuccess("Reporting manager updated. The hierarchy has been refreshed.");
+    void resource.reload();
+  }
+
   return <>
-    <PageHeading title="Reporting Hierarchy" description="Explore reporting relationships and assign each employee's manager." />
+    <PageHeading title="Reporting Hierarchy" description="Manage who reports to whom across your departments and teams.">
+      <button type="button" className={secondaryClass} disabled={resource.loading || Boolean(selected)} onClick={resource.reload}>Refresh hierarchy</button>
+    </PageHeading>
+
     {success && <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{success}</p>}
-    {error && <p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
-    {selected && <form onSubmit={save} className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><h2 className="mb-5 text-lg font-bold tracking-tight text-slate-950">Reporting manager for {selected.fullName}</h2><fieldset disabled={saving}><Field label="Reporting manager"><select className={inputClass} value={managerId} onChange={(event) => setManagerId(event.target.value)}><option value="">No manager (top level)</option>{employees.filter((employee) => !blocked.has(employee._id)).map((employee) => <option key={employee._id} value={employee._id}>{employee.fullName}{employee.designation ? ` — ${employee.designation}` : ""}</option>)}</select></Field><p className="mt-3 text-xs leading-5 text-slate-500">The employee and their direct or indirect reports cannot be selected as their manager.</p></fieldset><div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" className={`${secondaryClass} w-full sm:w-auto`} disabled={saving} onClick={() => { setSelected(null); setError(""); }}>Cancel</button><button type="submit" className={`${buttonClass} w-full sm:w-auto`} disabled={saving}>{saving ? "Saving..." : "Save manager"}</button></div></form>}
-    <label className="mb-5 block"><span className="sr-only">Search employees</span><input type="search" className={inputClass} placeholder="Search employees, departments or designations" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
     <ResourceState loading={resource.loading} error={resource.error} retry={resource.reload} />
-    {!resource.loading && !resource.error && <section aria-label="Reporting relationships" className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm sm:p-5">
-      <p className="mb-4 text-sm text-slate-500">{employees.length} employees · Indentation shows reporting levels.</p>
-      {rows.some((row) => row.disconnected) && <p role="alert" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Some reporting relationships have a missing manager or a cycle. Review the marked employees.</p>}
-      <ul className="space-y-3">{rows.map(({ employee, depth, disconnected }) => <li key={employee._id} className={`flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 border-l-4 border-l-blue-500 bg-white p-4 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50/30 ${search ? "sm:ml-0" : indentationClasses[Math.min(depth, 10)]}`}><div className="min-w-0"><p className="break-words font-semibold text-slate-900">{employee.fullName}</p><p className="mt-1 text-xs text-slate-500">{[employee.designation, employee.departmentName].filter(Boolean).join(" · ") || "Employee"}</p><p className="mt-2 text-xs text-slate-600">Reports to: {employee.reportingManagerId ? employees.find((manager) => manager._id === employee.reportingManagerId)?.fullName ?? "Manager unavailable" : "Top level"}</p>{disconnected && <p className="mt-1 text-xs font-medium text-amber-700">Review reporting relationship</p>}</div><button type="button" className={`${secondaryClass} w-full sm:w-auto`} disabled={Boolean(selected)} aria-label={`Change manager for ${employee.fullName}`} onClick={() => { setSelected(employee); const invalid = unavailableManagers(employees, employee._id); setManagerId(employee.reportingManagerId && !invalid.has(employee.reportingManagerId) && employees.some((manager) => manager._id === employee.reportingManagerId) ? employee.reportingManagerId : ""); setError(""); setSuccess(""); }}>Change manager</button></li>)}</ul>
-      {rows.length === 0 && <p className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center text-sm text-slate-500">{employees.length ? "No employees match your search." : "No employees yet. Add employees through Employee Onboarding."}</p>}
-    </section>}
+
+    {!resource.loading && !resource.error && <>
+      <section aria-label="Reporting summary" className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {([
+          ["Total employees", employees.length],
+          ["Reporting managers", managers.size],
+          ["Top-level employees", topLevel],
+          ["Relationships to review", issues],
+        ] as const).map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{label}</p><p className={`mt-3 text-3xl font-bold tabular-nums ${label === "Relationships to review" && value > 0 ? "text-amber-700" : "text-slate-950"}`}>{value}</p></div>)}
+      </section>
+
+      <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
+        These are saved employee-to-manager relationships. Department heads and team leads are assigned separately on the <Link href="/hr/organization/departments" className="font-semibold underline">Departments</Link> and <Link href="/hr/organization/teams" className="font-semibold underline">Teams</Link> pages.
+      </div>
+
+      {selected && <ReportingManagerEditor key={selected._id} employee={selected} employees={employees} onSaved={saved} onCancel={() => setSelected(null)} />}
+
+      <fieldset disabled={Boolean(selected)} className="mb-5 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <Field label="Search employees">
+          <input type="search" maxLength={200} className={inputClass} value={filters.search} onChange={(event) => setFilters({ ...filters, search: event.target.value })} placeholder="Name, employee number, job title, department, or team" />
+        </Field>
+        <Field label="Department">
+          <select className={inputClass} value={filters.department} onChange={(event) => setFilters({ ...filters, department: event.target.value, team: "" })}>
+            <option value="">All departments</option>
+            {[...departments].sort((a, b) => a[1].localeCompare(b[1])).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+          </select>
+        </Field>
+        <Field label="Team">
+          <select className={inputClass} value={filters.team} onChange={(event) => setFilters({ ...filters, team: event.target.value })}>
+            <option value="">All teams</option>
+            {[...teams].sort((a, b) => a[1].localeCompare(b[1])).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+          </select>
+        </Field>
+      </fieldset>
+
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-slate-500">{matched} {filtered ? "matching" : "total"} employees{context > 0 ? ` · ${context} managers included for context` : ""}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {filtered && <button type="button" className={secondaryClass} disabled={Boolean(selected)} onClick={() => setFilters({ search: "", department: "", team: "" })}>Clear filters</button>}
+          <div role="group" aria-label="Reporting view" className="flex gap-2">
+            {(["hierarchy", "table"] as const).map((value) => <button key={value} type="button" aria-pressed={mode === value} disabled={Boolean(selected)} className={`${secondaryClass} capitalize ${mode === value ? "border-blue-600 bg-blue-50 text-blue-700" : ""}`} onClick={() => setMode(value)}>{value === "hierarchy" ? "Hierarchy view" : "Table view"}</button>)}
+          </div>
+        </div>
+      </div>
+
+      {issues > 0 && <p role="alert" className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{issues} employees have a reporting chain with a missing manager or a cycle. Review their marked relationships.</p>}
+
+      {rows.length ? <ReportingViews rows={rows} employees={employees} mode={mode} disabled={Boolean(selected)} onEdit={edit} /> : <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+        <h2 className="font-semibold text-slate-900">{employees.length ? "No matching employees" : "No reporting relationships yet"}</h2>
+        <p className="mt-2 text-sm text-slate-500">{employees.length ? "Try another search, department, or team." : "Add employees through onboarding, then assign their reporting managers here."}</p>
+        {!employees.length && <Link className={`${secondaryClass} mt-5 inline-flex`} href="/hr/onboarding">Go to Employee Onboarding</Link>}
+      </section>}
+    </>}
   </>;
 }

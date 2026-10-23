@@ -23,7 +23,7 @@ Change endpoint paths in `services/organization.service.ts`. Change field mappin
 | PATCH | `/roles/:id` | Update a role |
 | GET | `/permissions` | Available assignable permissions |
 | GET | `/organization/hierarchy` | Flat employee list with reporting relationships |
-| PATCH | `/employees/:id/reporting-manager` | Assign or remove a reporting manager |
+| PATCH | `/employees/:id/manager` | Assign or remove a reporting manager |
 | GET | `/employees` | Existing employee selector endpoint |
 
 Details and summary responses can be returned directly or inside `{ "data": ... }`. Organization details additionally accept `{ "organization": ... }` and `{ "data": { "organization": ... } }`. Organization details are validated before rendering: a nonempty string `name` and a valid `status` are required. Unsupported responses display an error with a retry button instead of crashing. List responses can be arrays, `{ "data": [...] }`, or named arrays: `departments`, `teams`, `employmentTypes`, `roles`, `permissions`, and `employees`. These pages currently expect complete lists; adapt the service and table controls if the backend paginates results.
@@ -106,10 +106,10 @@ Each hierarchy entry contains:
 Manager assignment body:
 
 ```json
-{ "reportingManagerId": "manager-employee-id" }
+{ "managerId": "manager-employee-id" }
 ```
 
-Send `null` to make an employee top level. The UI prevents selecting the employee or their descendants. The backend must also reject cycles, self-reporting, and nonexistent employees. Missing relationships and existing cycles are displayed for correction.
+Send this body to `PATCH /employees/:id/manager`; send `managerId: null` to make an employee top level. `reportingManagerId` is an internal display field, not the API write field. The UI prevents selecting the employee, descendants, or candidates in invalid chains. The backend must also reject cycles, self-reporting, and nonexistent employees. Missing relationships and existing cycles are displayed for correction. See [Reporting hierarchy frontend](reporting-hierarchy.md) for raw response mapping, filters, and page behavior.
 
 ## Existing onboarding
 
