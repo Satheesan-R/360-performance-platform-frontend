@@ -47,3 +47,44 @@ export function hierarchyRows(employees: HierarchyEmployee[]) {
   for (const employee of employees) if (!visited.has(employee._id)) visit(employee, true);
   return rows;
 }
+
+export function departmentKey(employee: HierarchyEmployee): string {
+  return employee.departmentId || employee.departmentName || "";
+}
+
+export function teamKey(employee: HierarchyEmployee): string {
+  return employee.teamId || employee.teamName || "";
+}
+
+export function reportingManagerChoices(employees: HierarchyEmployee[], employeeId: string) {
+  const blocked = unavailableManagers(employees, employeeId);
+  const invalidChains = new Set(hierarchyRows(employees).filter((row) => row.disconnected).map((row) => row.employee._id));
+  return employees.filter((employee) => !blocked.has(employee._id) && !invalidChains.has(employee._id));
+}
+
+export function visibleHierarchyRows(employees: HierarchyEmployee[], filters: { search: string; department: string; team: string }) {
+  const query = filters.search.trim().toLowerCase();
+  const matches = new Set(employees.filter((employee) =>
+    (!filters.department || departmentKey(employee) === filters.department) &&
+    (!filters.team || teamKey(employee) === filters.team) &&
+    `${employee.fullName} ${employee.employeeNumber ?? ""} ${employee.designation ?? ""} ${employee.departmentName ?? ""} ${employee.teamName ?? ""}`.toLowerCase().includes(query)
+  ).map((employee) => employee._id));
+  const included = new Set(matches);
+  const byId = new Map(employees.map((employee) => [employee._id, employee]));
+
+  for (const employeeId of matches) {
+    const visited = new Set([employeeId]);
+    let managerId = byId.get(employeeId)?.reportingManagerId;
+    while (managerId && !visited.has(managerId)) {
+      visited.add(managerId);
+      const manager = byId.get(managerId);
+      if (!manager) break;
+      included.add(managerId);
+      managerId = manager.reportingManagerId;
+    }
+  }
+
+  return hierarchyRows(employees)
+    .filter((row) => included.has(row.employee._id))
+    .map((row) => ({ ...row, contextOnly: !matches.has(row.employee._id) }));
+}
