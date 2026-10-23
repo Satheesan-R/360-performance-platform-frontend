@@ -1,7 +1,8 @@
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { parseOrganizationResponse } from "@/lib/organization-response";
-import type { HierarchyEmployee, Organization, OrganizationSummary, Permission, StructureInput, StructureKind, StructureRecord } from "@/types/organization";
+import { parseHierarchyEmployees } from "@/lib/organization-hierarchy-response";
+import type { Organization, OrganizationSummary, Permission, StructureInput, StructureKind, StructureRecord } from "@/types/organization";
 
 // Paths are relative to NEXT_PUBLIC_API_URL. Keep backend contract changes here.
 export const organizationEndpoints = {
@@ -13,7 +14,7 @@ export const organizationEndpoints = {
   roles: "/roles",
   permissions: "/permissions",
   hierarchy: "/organization/hierarchy",
-  reportingManager: (id: string) => `/employees/${encodeURIComponent(id)}/reporting-manager`,
+  reportingManager: (id: string) => `/employees/${encodeURIComponent(id)}/manager`,
 };
 
 function config(signal?: AbortSignal) {
@@ -84,11 +85,11 @@ export async function saveStructure(kind: StructureKind, values: StructureInput,
 
 export async function getHierarchy(signal?: AbortSignal) {
   const response = await api.get(organizationEndpoints.hierarchy, config(signal));
-  return list<HierarchyEmployee>(response.data, "employees");
+  return parseHierarchyEmployees(list<unknown>(response.data, "employees"));
 }
 
-export async function updateReportingManager(id: string, reportingManagerId: string | null) {
-  await api.patch(organizationEndpoints.reportingManager(id), { reportingManagerId }, config());
+export async function updateReportingManager(id: string, managerId: string | null) {
+  await api.patch(organizationEndpoints.reportingManager(id), { managerId }, config());
 }
 
 export async function getPermissions(signal?: AbortSignal) {
