@@ -41,6 +41,11 @@ export interface HierarchyEmployee {
   fullName: string;
   designation?: string;
   departmentName?: string;
+  departmentId?: string;
+  teamName?: string;
+  teamId?: string;
+  employeeNumber?: string;
+  reportingManagerName?: string;
   reportingManagerId: string | null;
 }
 
