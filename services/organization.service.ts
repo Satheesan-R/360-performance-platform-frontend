@@ -42,8 +42,21 @@ export async function getOrganization(signal?: AbortSignal) {
 }
 
 export async function getOrganizationSummary(signal?: AbortSignal) {
-  const response = await api.get<OrganizationSummary | { data: OrganizationSummary }>(organizationEndpoints.summary, config(signal));
-  return unwrap(response.data);
+  type SummaryBody = OrganizationSummary | { summary: OrganizationSummary };
+  const response = await api.get<SummaryBody | { data: SummaryBody }>(
+    organizationEndpoints.summary,
+    config(signal),
+  );
+  const body = unwrap<SummaryBody>(response.data);
+  const summary = "summary" in body ? body.summary : body;
+
+  for (const key of ["totalEmployees", "departments", "teams"] as const) {
+    if (!Number.isInteger(summary[key]) || summary[key] < 0) {
+      throw new Error("The organization summary is missing valid database counts.");
+    }
+  }
+
+  return summary;
 }
 
 export async function updateOrganization(values: Omit<Organization, "_id">) {

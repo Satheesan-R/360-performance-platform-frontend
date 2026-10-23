@@ -17,7 +17,7 @@ export interface OrganizationSummary {
   totalEmployees: number;
   departments: number;
   teams: number;
-  activeReviewFrameworks: number;
+  activeReviewFrameworks: number | null;
 }
 
 export interface StructureRecord {
