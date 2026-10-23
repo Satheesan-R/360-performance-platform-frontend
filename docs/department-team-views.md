@@ -32,6 +32,11 @@ unassigned heads/leads send `null`. Only editable fields are sent; counts and
 populated objects are not written back. All department-option pages are loaded.
 Create and edit use POST/PATCH and refresh affected views on success.
 
+Department-head choices include only employees whose account role is
+`department_manager`; team-lead choices include only `tech_lead`. Unknown roles
+are excluded. Existing assignments with a different role must be replaced by an
+eligible employee or cleared to Unassigned before saving the form.
+
 Department deactivation uses DELETE `departments/:id`, preceded by an inline
 confirmation explaining that the head, teams, and employee assignments remain.
 There is no permanent-delete UI. Reactivate through the department edit form.

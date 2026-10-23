@@ -3,7 +3,7 @@
 import { useCallback, useState, type FormEvent } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
-import { directoryName, referenceId } from "@/lib/organization-views";
+import { directoryName, eligibleLeader, referenceId } from "@/lib/organization-views";
 import { getDepartmentOptions, getEmployeeOptions, saveOrganizationStructure } from "@/services/organization-views.service";
 import type { DepartmentRecord, StructureValues, TeamRecord } from "@/types/organization-views";
 import { buttonClass, Field, inputClass, ResourceState, secondaryClass } from "./ui";
@@ -33,11 +33,15 @@ export default function StructureEditor({ kind, record, departmentId, onSaved, o
   const options = useOrganizationResource(load);
   const noun = kind === "departments" ? "Department" : "Team";
   const leaderId = kind === "departments" ? draft.headEmployeeId : draft.teamLeadEmployeeId;
+  const leaderRole = kind === "departments" ? "department manager" : "tech lead";
+  const eligibleEmployees = options.data?.employees.filter((employee) => eligibleLeader(employee, kind)) ?? [];
+  const invalidLeader = Boolean(leaderId && options.data && !eligibleEmployees.some((employee) => employee._id === leaderId));
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
+    if (saving || options.loading || options.error) return;
     if (!draft.name.trim() || !draft.code.trim()) { setError("Name and code are required."); return; }
+    if (invalidLeader) { setError(`Select a ${leaderRole} or choose Unassigned.`); return; }
     setSaving(true);
     setError("");
     try {
@@ -73,9 +77,15 @@ export default function StructureEditor({ kind, record, departmentId, onSaved, o
         <Field label={kind === "departments" ? "Department head" : "Team lead"}>
           <select className={inputClass} value={leaderId ?? ""} onChange={(event) => setDraft({ ...draft, [kind === "departments" ? "headEmployeeId" : "teamLeadEmployeeId"]: event.target.value })}>
             <option value="">Unassigned</option>
-            {options.data?.employees.map((employee) => <option key={employee._id} value={employee._id}>{directoryName(employee)} · {employee.employeeNumber || employee.workEmail}</option>)}
-            {leaderId && options.data && !options.data.employees.some((employee) => employee._id === leaderId) && <option value={leaderId}>Previously selected employee</option>}
+            {eligibleEmployees.map((employee) => (
+              <option key={employee._id} value={employee._id}>
+                {directoryName(employee)} · {employee.employeeNumber || employee.workEmail}
+              </option>
+            ))}
+            {invalidLeader && <option value={leaderId!} disabled hidden>Choose a {leaderRole}</option>}
           </select>
+          {invalidLeader && <span className="block text-xs font-normal text-amber-700">The current assignment does not match the required role. Select a {leaderRole} or choose Unassigned.</span>}
+          {!options.loading && !options.error && eligibleEmployees.length === 0 && <span className="block text-xs font-normal text-slate-500">No employees with the {leaderRole} role are available.</span>}
         </Field>
         <Field label="Status">
           <select className={inputClass} value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as StructureValues["status"] })}>

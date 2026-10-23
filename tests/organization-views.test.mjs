@@ -18,6 +18,17 @@ function module(file, imports = {}) {
   return context.exports;
 }
 const labels = module("../lib/organization-views.ts");
+
+test("department heads require department_manager and team leads require tech_lead", () => {
+  for (const role of ["department_manager", "tech_lead", "employee", "hr", "admin"]) {
+    assert.equal(labels.eligibleLeader({ user: { role } }, "departments"), role === "department_manager");
+    assert.equal(labels.eligibleLeader({ user: { role } }, "teams"), role === "tech_lead");
+  }
+  assert.equal(labels.eligibleLeader({ user: null }, "departments"), false);
+  assert.equal(labels.eligibleLeader({}, "teams"), false);
+  assert.equal(labels.eligibleLeader({ role: "department_manager" }, "departments"), true);
+  assert.equal(labels.eligibleLeader({ role: "tech_lead", user: { role: "employee" } }, "teams"), false);
+});
 const plain = (value) => JSON.parse(JSON.stringify(value));
 function service(api, token = "test-token") {
   return module("../services/organization-views.service.ts", { "@/lib/api": { __esModule: true, default: api }, "@/lib/auth": { getToken: () => token } });
@@ -186,4 +197,39 @@ test("pagination disables both directions for an empty directory", () => {
   const html = renderToStaticMarkup(React.createElement(ViewPagination, { pagination: { page: 1, total: 0, totalPages: 0, limit: 20 }, onPage: () => {} }));
   assert.match(html, /Page 1 of 1/);
   assert.equal((html.match(/disabled=""/g) || []).length, 2);
+});
+
+const leaderCandidates = [
+  { _id: "manager", firstName: "ManagerOnly", user: { role: "department_manager" } },
+  { _id: "lead", firstName: "TechLeadOnly", user: { role: "tech_lead" } },
+  { _id: "employee", firstName: "EmployeeExcluded", user: { role: "employee" } },
+  { _id: "hr", firstName: "HrExcluded", user: { role: "hr" } },
+];
+const { default: StructureEditor } = module("../components/organization/structure-editor.tsx", {
+  react: React,
+  "react/jsx-runtime": jsx,
+  "@/hooks/use-organization-resource": { useOrganizationResource: () => ({ data: { employees: leaderCandidates, departments: [] }, loading: false, error: "", reload: () => {} }) },
+  "@/lib/api": {},
+  "@/lib/organization-views": labels,
+  "@/services/organization-views.service": {},
+  "./ui": { ResourceState: () => null, Field: ({ label, children }) => React.createElement("label", null, label, children) },
+});
+
+test("rendered head and lead dropdowns exclude employees with other roles", () => {
+  const common = { onSaved: () => {}, onCancel: () => {} };
+  const department = renderToStaticMarkup(React.createElement(StructureEditor, { kind: "departments", ...common }));
+  assert.match(department, /ManagerOnly/);
+  assert.doesNotMatch(department, /TechLeadOnly|EmployeeExcluded|HrExcluded/);
+  const team = renderToStaticMarkup(React.createElement(StructureEditor, { kind: "teams", ...common }));
+  assert.match(team, /TechLeadOnly/);
+  assert.doesNotMatch(team, /ManagerOnly|EmployeeExcluded|HrExcluded/);
+});
+
+test("editing an ineligible previous head does not reintroduce that employee as an option", () => {
+  const html = renderToStaticMarkup(React.createElement(StructureEditor, {
+    kind: "departments", record: { _id: "dept", name: "Engineering", code: "ENG", status: "active", headEmployeeId: leaderCandidates[2] }, onSaved: () => {}, onCancel: () => {},
+  }));
+  assert.doesNotMatch(html, /EmployeeExcluded/);
+  assert.match(html, /current assignment does not match the required role/);
+  assert.match(html, /Unassigned/);
 });

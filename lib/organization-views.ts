@@ -1,5 +1,13 @@
 import type { DirectoryPerson, NamedReference, PersonReference } from "@/types/organization-views";
 
+export function eligibleLeader(
+  employee: { user?: { role?: string } | null; role?: string },
+  kind: "departments" | "teams",
+): boolean {
+  const role = employee.user?.role ?? employee.role;
+  return role === (kind === "departments" ? "department_manager" : "tech_lead");
+}
+
 export function referenceId(value: NamedReference | PersonReference | undefined): string {
   return typeof value === "string" ? value : value?._id ?? "";
 }
