@@ -9,6 +9,9 @@ import { PageHeading, ResourceState, secondaryClass, Status } from "./ui";
 import EmployeeDirectory from "./employee-directory";
 import StructureDirectory, { DeactivateDepartment } from "./structure-directory";
 import StructureEditor from "./structure-editor";
+import DepartmentTree from "./department-tree";
+import EmployeeDepartment from "./employee-department";
+import type { DirectoryPerson } from "@/types/organization-views";
 
 export default function DepartmentDetail({ id }: { id: string }) {
   const load = useCallback((signal: AbortSignal) => getDepartment(id, signal), [id]);
@@ -17,10 +20,11 @@ export default function DepartmentDetail({ id }: { id: string }) {
   const [editing, setEditing] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
   const [message, setMessage] = useState("");
+  const [moving, setMoving] = useState<DirectoryPerson | null>(null);
   const department = details.data;
-  const locked = editing || deactivating;
+  const locked = editing || deactivating || Boolean(moving);
   function changed(message: string) {
-    setEditing(false); setDeactivating(false); setMessage(message);
+    setEditing(false); setDeactivating(false); setMoving(null); setMessage(message);
     void details.reload();
   }
   return <>
@@ -38,8 +42,11 @@ export default function DepartmentDetail({ id }: { id: string }) {
       </div>
       {tab === "overview" && <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="mb-6 flex items-center justify-between gap-3"><h2 className="text-lg font-bold">Department overview</h2><Status value={department.status} /></div><dl className="grid gap-6 sm:grid-cols-2">{[["Department head", personLabel(department.headEmployeeId)], ["Teams", department.teamCount], ["Employees", department.employeeCount], ["Description", department.description || "No description"]].map(([label, value]) => <div key={label}><dt className="text-sm text-slate-500">{label}</dt><dd className="mt-2 whitespace-pre-wrap text-sm font-semibold">{value}</dd></div>)}</dl><p className="mt-6 text-xs text-slate-500">Heads, team leads, and reporting managers are separate relationships. Counts include pending onboarding and disabled accounts.</p></section>}
       {tab === "teams" && <StructureDirectory kind="teams" departmentId={id} onChanged={() => void details.reload()} />}
-      {tab === "employees" && <EmployeeDirectory kind="departments" id={id} disabled={locked} />}
-      {tab === "hierarchy" && <p className="text-sm text-slate-500">Department hierarchy</p>}
+      {tab === "employees" && <>
+        {moving && <EmployeeDepartment employee={moving} currentDepartmentId={id} onDone={() => changed("Employee department saved. Counts refreshed.")} onCancel={() => setMoving(null)} />}
+        <EmployeeDirectory kind="departments" id={id} disabled={locked} onMove={setMoving} />
+      </>}
+      {tab === "hierarchy" && <DepartmentTree id={id} />}
     </>}
   </>;
 }

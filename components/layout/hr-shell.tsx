@@ -82,7 +82,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
                           href={child.href}
                           onClick={() => setMenuOpen(false)}
                           aria-current={pathname === child.href ? "page" : undefined}
-                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href ? "bg-blue-500/20 text-blue-200" : "text-slate-400 hover:bg-white/10 hover:text-white"}`}
+                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href || (child.href !== "/hr/organization" && pathname.startsWith(child.href + "/")) ? "bg-blue-500/20 text-blue-200" : "text-slate-400 hover:bg-white/10 hover:text-white"}`}
                         >
                           {child.label}
                         </Link>
