@@ -57,8 +57,16 @@ export async function getStructure(kind: StructureKind, signal?: AbortSignal) {
 
 export async function saveStructure(kind: StructureKind, values: StructureInput, id?: string) {
   const path = organizationEndpoints[kind];
-  if (id) await api.patch(`${path}/${encodeURIComponent(id)}`, values, config());
-  else await api.post(path, values, config());
+  const { departmentHeadId, ...departmentValues } = values;
+  const payload = kind === "departments"
+    ? {
+        ...departmentValues,
+        ...(departmentHeadId === undefined ? {} : { headEmployeeId: departmentHeadId }),
+      }
+    : values;
+
+  if (id) await api.patch(`${path}/${encodeURIComponent(id)}`, payload, config());
+  else await api.post(path, payload, config());
 }
 
 export async function getHierarchy(signal?: AbortSignal) {

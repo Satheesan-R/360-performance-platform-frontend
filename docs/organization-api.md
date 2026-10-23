@@ -91,7 +91,9 @@ Permission response entry:
 
 Employee selector entries use the existing `/employees` contract: `_id`, `firstName`, `lastName`, `workEmail`, and `employeeNumber`, optionally `fullName`.
 
-Empty `departmentHeadId` or `teamLeadId` means unassigned. Adapt those values to `null` in the service if required by your backend. Team department selection is required. The backend should validate references, unique codes, counts, deactivation rules, and permission grants; it must prevent users granting permissions they are not authorized to manage.
+Department create/update requests send the form's `departmentHeadId` as `headEmployeeId`; `departmentHeadId` is not included in the request body. The form and response model still use `departmentHeadId` internally.
+
+Empty `headEmployeeId` or `teamLeadId` means unassigned. Adapt those values to `null` in the service if required by your backend. Team department selection is required. The backend should validate references, unique codes, counts, deactivation rules, and permission grants; it must prevent users granting permissions they are not authorized to manage.
 
 ## Reporting hierarchy
 
