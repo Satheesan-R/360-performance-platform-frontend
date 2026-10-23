@@ -1,54 +1,25 @@
-import Link from "next/link";
+import Image from "next/image";
 import styles from "./landing.module.css";
 
 export default function Hero() {
   return (
-    <>
-      <section className={styles.hero} aria-labelledby="hero-title">
-        <div className={styles.container}>
-          <div className={styles.announcement}>
-            <b>NEW</b> One connected workspace for your team&apos;s growth{" "}
-            <a href="#platform">Explore the platform →</a>
+      <section className={styles.heroSplit} aria-labelledby="hero-title">
+        <div className={styles.heroGrid}>
+          <div className={styles.heroCopy}>
+            <span className={styles.heroBadge}>Configurable performance management SaaS</span>
+            <h1 id="hero-title">Your review process.<br />Your rules. <span>No code.</span></h1>
+            <p className={styles.heroDescription}>Design your own review workflows, scoring models and governance, then run fair, traceable 360° evaluations for interns, probationers and permanent staff.</p>
+            <div className={styles.heroActions}>
+              <a href="/login" className={styles.heroPrimary}>Request login</a>
+              <a href="#platform" className={styles.heroSecondary}>See how it works <span aria-hidden="true">↗</span></a>
+            </div>
           </div>
-          <div>
-            <span className={styles.badge}>
-              ✧ Unified Talent, OKR &amp; People Operating System
-            </span>
-          </div>
-          <h1 id="hero-title">
-            The Complete 360° Operating System for{" "}
-            <span className={styles.blue}>High-Performing</span> Engineering
-            &amp; Corporate Teams
-          </h1>
-          <p className={styles.lead}>
-            Unify quarterly OKRs, real-time feedback, 360° evaluation cycles,
-            skill development, and career growth in one seamless workspace.
-          </p>
-          <div className={styles.actions}>
-            <Link href="/login" className={styles.button}>
-              Get Started →
-            </Link>
-            <a
-              href="#performance"
-              className={`${styles.button} ${styles.secondary}`}
-            >
-              Explore the Platform ↗
-            </a>
-          </div>
-          <div className={styles.trusted}>
-            <p className={styles.eyebrow}>
-              Built for ambitious teams, at every stage
-            </p>
-            <div className={styles.logos}>
-              <span>♧ Engineering</span>
-              <span>▥ People &amp; HR</span>
-              <span>▣ Operations</span>
-              <span>◈ Leadership</span>
-              <span>⌘ Product</span>
+          <div className={styles.heroVisual}>
+            <div className={styles.heroPhoto}>
+              <Image src="/images/landing-team.webp" alt="Colleagues sharing ideas around a table in a bright, modern office" fill sizes="(max-width: 800px) calc(100vw - 48px), (max-width: 1180px) 44vw, 490px" preload className={styles.heroImage} />
             </div>
           </div>
         </div>
       </section>
-    </>
   );
 }

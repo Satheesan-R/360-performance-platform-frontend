@@ -18,8 +18,15 @@ export interface CreateEmployeeRequest {
   role?: UserRole;
 }
 
+export interface ActivationEmailDelivery {
+  status: "accepted" | "failed";
+  recipient: string;
+  message?: string;
+}
+
 export interface CreateEmployeeResponse {
   message: string;
+  emailDelivery?: ActivationEmailDelivery;
   employee: {
     _id: string;
     employeeNumber: string;
