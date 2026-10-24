@@ -21,14 +21,27 @@ export interface FrameworkScoring {
   enabledReviewers: ReviewerRole[];
   validation: { ready: boolean; message: string | null };
 }
-export type ReviewerRatings = Partial<Record<ReviewerRole, Record<string, number>>>;
+export type ReviewerRatings = Partial<
+  Record<ReviewerRole, Record<string, number>>
+>;
 export interface ScoringPreview {
   frameworkId: string;
   version: number;
-  criteria: { criterionId: string; type: "competency" | "kpi"; name: string; category?: string; weight: number; effectiveWeight: number }[];
+  criteria: {
+    criterionId: string;
+    type: "competency" | "kpi";
+    name: string;
+    category?: string;
+    weight: number;
+    effectiveWeight: number;
+  }[];
   totalEffectiveWeight: number;
   ratingScale: RatingScale;
   reviewerWeights: ReviewerWeights;
   enabledReviewers: ReviewerRole[];
-  sample: { score: number; normalizedPercent: number; reviewerScores: Partial<Record<ReviewerRole, number>> } | null;
+  sample: {
+    score: number;
+    normalizedPercent: number;
+    reviewerScores: Partial<Record<ReviewerRole, number>>;
+  } | null;
 }

@@ -12,10 +12,18 @@ const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", short: "DB" },
   { label: "Employee Onboarding", href: "/hr/onboarding", short: "EO" },
   { label: "Organization", href: "/hr/organization", short: "OR" },
-  { label: "Performance Framework", href: "/hr/performance-framework", short: "PF" },
+  {
+    label: "Performance Framework",
+    href: "/hr/performance-framework",
+    short: "PF",
+  },
   { label: "Review Cycles", href: "/hr/review-cycles", short: "RC" },
   { label: "Normalisation", href: "/hr/normalisation", short: "NM" },
-  { label: "Promotion & Development", href: "/hr/promotion-development", short: "PD" },
+  {
+    label: "Promotion & Development",
+    href: "/hr/promotion-development",
+    short: "PD",
+  },
   { label: "Analytics", href: "/hr/analytics", short: "AN" },
   { label: "Audit", href: "/hr/audit", short: "AU" },
 ];
@@ -24,9 +32,14 @@ export default function HrShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [organizationExpanded, setOrganizationExpanded] = useState<boolean | null>(null);
-  const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(null);
-  const organizationActive = pathname === "/hr/organization" || pathname.startsWith("/hr/organization/");
+  const [organizationExpanded, setOrganizationExpanded] = useState<
+    boolean | null
+  >(null);
+  const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(
+    null,
+  );
+  const organizationActive =
+    pathname === "/hr/organization" || pathname.startsWith("/hr/organization/");
   const organizationOpen = organizationExpanded ?? organizationActive;
   const user = getCurrentUser();
 
@@ -47,26 +60,45 @@ export default function HrShell({ children }: { children: ReactNode }) {
           />
         )}
 
-        <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-slate-950 text-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <aside
+          className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-slate-950 text-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        >
           <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
             <div>
               <p className="text-lg font-bold">360 Performance</p>
               <p className="text-xs text-slate-400">Human Resources</p>
             </div>
-            <button type="button" className="text-2xl text-slate-400 lg:hidden" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+            <button
+              type="button"
+              className="text-2xl text-slate-400 lg:hidden"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Close menu"
+            >
               ×
             </button>
           </div>
 
           <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
             {navigation.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(item.href + "/");
-              if (item.href === "/hr/organization" || item.href === "/hr/performance-framework") {
+              const active =
+                pathname === item.href || pathname.startsWith(item.href + "/");
+              if (
+                item.href === "/hr/organization" ||
+                item.href === "/hr/performance-framework"
+              ) {
                 const isOrganization = item.href === "/hr/organization";
-                const open = isOrganization ? organizationOpen : frameworkExpanded ?? active;
-                const setExpanded = isOrganization ? setOrganizationExpanded : setFrameworkExpanded;
-                const children = isOrganization ? organizationNavigation : frameworkNavigation;
-                const submenuId = isOrganization ? "organization-submenu" : "framework-submenu";
+                const open = isOrganization
+                  ? organizationOpen
+                  : (frameworkExpanded ?? active);
+                const setExpanded = isOrganization
+                  ? setOrganizationExpanded
+                  : setFrameworkExpanded;
+                const children = isOrganization
+                  ? organizationNavigation
+                  : frameworkNavigation;
+                const submenuId = isOrganization
+                  ? "organization-submenu"
+                  : "framework-submenu";
                 return (
                   <div key={item.href}>
                     <button
@@ -79,17 +111,32 @@ export default function HrShell({ children }: { children: ReactNode }) {
                       }}
                       className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                     >
-                      <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${active ? "bg-white/15" : "bg-white/5"}`}>{item.short}</span>
+                      <span
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${active ? "bg-white/15" : "bg-white/5"}`}
+                      >
+                        {item.short}
+                      </span>
                       <span className="flex-1">{item.label}</span>
-                      <span aria-hidden="true" className={`transition-transform ${open ? "rotate-180" : ""}`}>⌄</span>
+                      <span
+                        aria-hidden="true"
+                        className={`transition-transform ${open ? "rotate-180" : ""}`}
+                      >
+                        ⌄
+                      </span>
                     </button>
-                    <div id={submenuId} hidden={!open} className="ml-7 mt-2 space-y-1 border-l border-white/15 pl-3">
+                    <div
+                      id={submenuId}
+                      hidden={!open}
+                      className="ml-7 mt-2 space-y-1 border-l border-white/15 pl-3"
+                    >
                       {children.map((child) => (
                         <Link
                           key={child.href}
                           href={child.href}
                           onClick={() => setMenuOpen(false)}
-                          aria-current={pathname === child.href ? "page" : undefined}
+                          aria-current={
+                            pathname === child.href ? "page" : undefined
+                          }
                           className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href || (child.href !== "/hr/organization" && pathname.startsWith(child.href + "/")) ? "bg-blue-500/20 text-blue-200" : "text-slate-400 hover:bg-white/10 hover:text-white"}`}
                         >
                           {child.label}
@@ -103,11 +150,17 @@ export default function HrShell({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => { setMenuOpen(false); setOrganizationExpanded(null); setFrameworkExpanded(null); }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setOrganizationExpanded(null);
+                    setFrameworkExpanded(null);
+                  }}
                   aria-current={pathname === item.href ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                 >
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${active ? "bg-white/15" : "bg-white/5"}`}>
+                  <span
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${active ? "bg-white/15" : "bg-white/5"}`}
+                  >
                     {item.short}
                   </span>
                   {item.label}
@@ -121,7 +174,11 @@ export default function HrShell({ children }: { children: ReactNode }) {
               <p className="text-xs text-slate-400">Signed in as HR</p>
               <p className="mt-1 truncate text-sm font-medium">{user?.email}</p>
             </div>
-            <button type="button" onClick={logout} className="w-full rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10">
+            <button
+              type="button"
+              onClick={logout}
+              className="w-full rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+            >
               Log out
             </button>
           </div>
@@ -130,15 +187,26 @@ export default function HrShell({ children }: { children: ReactNode }) {
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-slate-200 bg-white/95 px-5 backdrop-blur sm:px-8">
             <div className="flex items-center gap-4">
-              <button type="button" onClick={() => setMenuOpen(true)} className="rounded-lg border border-slate-200 px-3 py-2 text-lg lg:hidden" aria-label="Open menu">
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-lg lg:hidden"
+                aria-label="Open menu"
+              >
                 ☰
               </button>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">HR workspace</p>
-                <p className="text-sm text-slate-500">Manage people and performance</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+                  HR workspace
+                </p>
+                <p className="text-sm text-slate-500">
+                  Manage people and performance
+                </p>
               </div>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">HR</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+              HR
+            </div>
           </header>
 
           <div className="p-5 sm:p-8">{children}</div>
