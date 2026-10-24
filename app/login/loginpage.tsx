@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import styles from "./login.module.css";
 import { authService } from "@/services/auth.service";
 import { getApiErrorMessage } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
@@ -40,104 +42,54 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[0.95fr_1.05fr]">
-      <section className="hidden bg-blue-700 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
-        <p className="text-xl font-bold tracking-tight">360 Performance</p>
-        <div className="max-w-lg">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-blue-200">
-            Grow together
-          </p>
-          <h1 className="text-5xl font-bold leading-tight">
-            Build stronger teams through meaningful performance.
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-blue-100">
-            Manage onboarding, reviews, development, and employee growth in one place.
-          </p>
+    <main className={styles.page}>
+      <section className={styles.brandPanel} aria-labelledby="brand-heading">
+        <Link href="/" className={styles.brand} aria-label="CorpDev 360 home">
+          <Image src="/images/corpdev360-mark.png" alt="" width={72} height={72} className={styles.loginBrandMark} />
+          <span><strong>CorpDev <b>360°</b></strong><small>Performance &amp; Talent Governance</small></span>
+        </Link>
+        <div className={styles.brandStory}>
+          <span className={styles.edition}><i aria-hidden="true" />GROW TOGETHER · CORPDEV 360</span>
+          <h1 id="brand-heading">Build stronger teams through meaningful, measurable performance.</h1>
+          <p>Bring clarity to performance expectations with configurable competencies, rating scales and review templates.</p>
+          <div className={styles.processCard}>
+            <div className={styles.processHeading}><span className={styles.check} aria-hidden="true">✓</span><div><small>Your performance process</small><strong>Your rules. No code changes.</strong></div><span className={styles.configTag}>Configurable</span></div>
+            <div className={styles.processSteps}><span>Define criteria</span><span aria-hidden="true">→</span><span>Set weights</span><span aria-hidden="true">→</span><span>Preview scoring</span></div>
+            <p>Framework and scoring configuration supported by the backend.</p>
+          </div>
         </div>
-        <p className="text-sm text-blue-200">Secure access for every role in your organization.</p>
+        <div className={styles.brandFoot}><span aria-hidden="true">◇</span> Role-based access <span aria-hidden="true">·</span> Configurable frameworks <span aria-hidden="true">·</span> Review templates</div>
       </section>
 
-      <section aria-labelledby="login-heading" className="flex items-center justify-center bg-white px-6 py-10 sm:px-10 sm:py-14 lg:px-12 xl:px-20">
-        <div className="w-full max-w-xl">
-          <Link href="/" className="mb-10 inline-flex items-center gap-2 rounded-md text-sm font-medium text-slate-500 transition hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mb-12">
-            <span aria-hidden="true">←</span> Back to home
-          </Link>
-          <div className="mb-8 lg:hidden">
-            <p className="text-xl font-bold text-blue-700">360 Performance</p>
-          </div>
-
-          <p className="inline-flex rounded-full bg-blue-50 px-4 py-2 text-xs font-bold tracking-[0.14em] text-blue-700">WELCOME BACK</p>
-          <h2 id="login-heading" className="mt-5 max-w-lg text-4xl font-bold leading-[1.12] tracking-tight text-slate-900 sm:text-5xl">Sign in to your account</h2>
-          <p className="mt-5 max-w-lg text-base leading-7 text-slate-500 sm:text-lg sm:leading-8">
-            Your team, your goals, your next step forward. Use your company email and password to continue.
-          </p>
-
-          <form className="mt-9 space-y-6 sm:mt-10" onSubmit={handleSubmit} noValidate aria-busy={isLoading}>
+      <section className={styles.formPanel} aria-labelledby="login-heading">
+        <div className={styles.topBar}><Link href="/" className={styles.back}><span aria-hidden="true">←</span> Back to website</Link><span className={styles.accessBadge}><span aria-hidden="true">◇</span> ROLE-BASED ACCESS</span></div>
+        <div className={styles.formContent}>
+          <p className={styles.mobileBrand}><Image src="/images/corpdev360-mark.png" alt="" width={36} height={36} className={styles.mobileBrandMark} />CorpDev <span>360°</span></p>
+          <h2 id="login-heading">Sign in to your account</h2>
+          <p className={styles.intro}>Your team, your goals, your next step forward. Use your company credentials to continue.</p>
+          <div className={styles.formDivider}><span />SIGN IN WITH EMAIL<span /></div>
+          <form className={styles.form} onSubmit={handleSubmit} noValidate aria-busy={isLoading}>
             <div>
-              <label htmlFor="email" className="mb-2.5 block text-base font-semibold text-slate-700">
-                Company email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="name@company.com"
-                className="min-h-14 w-full rounded-xl border border-slate-300 bg-slate-50/60 px-5 py-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 sm:min-h-16"
-              />
-            </div>
-
-            <div>
-              <div className="mb-2.5 flex items-center justify-between">
-                <label htmlFor="password" className="text-base font-semibold text-slate-700">
-                  Password
-                </label>
-              </div>
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Enter your password"
-                  className="min-h-14 w-full rounded-xl border border-slate-300 bg-slate-50/60 px-5 py-4 pr-20 text-base text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 sm:min-h-16"
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  className="absolute inset-y-0 right-0 rounded-r-xl px-5 text-sm font-semibold text-blue-600 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
+              <label htmlFor="email">Company email</label>
+              <div className={styles.inputWrap}>
+                <svg className={styles.inputIcon} aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+                <input id="email" name="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@company.com" aria-describedby={error ? "login-error" : undefined} />
               </div>
             </div>
-
-            {error && (
-              <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex min-h-14 w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-16 sm:text-lg"
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
-              {!isLoading && <span aria-hidden="true">→</span>}
-            </button>
+            <div>
+              <div className={styles.passwordLabel}><label htmlFor="password">Password</label><details className={styles.passwordHelp}><summary>Forgot password?</summary><p>Contact your organization&apos;s HR team for help recovering access to your account.</p></details></div>
+              <div className={styles.inputWrap}>
+                <svg className={styles.inputIcon} aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+                <input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={styles.passwordInput} aria-describedby={error ? "login-error" : undefined} />
+                <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)} className={styles.showPassword}>{showPassword ? "Hide" : "Show"}</button>
+              </div>
+            </div>
+            {error && <p id="login-error" role="alert" className={styles.error}>{error}</p>}
+            <button type="submit" disabled={isLoading} className={styles.submit}>{isLoading ? "Signing in..." : "Sign in to CorpDev 360"}{!isLoading && <span aria-hidden="true">→</span>}</button>
           </form>
-          <div className="mt-8 border-t border-slate-200 pt-6 sm:mt-10">
-            <p className="text-sm font-semibold text-slate-700">Signing in for the first time?</p>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Set up your account using the activation link sent to your company email. If you need help accessing your account, contact your HR team.</p>
-          </div>
+          <aside className={styles.firstTime}><h3><span aria-hidden="true">ⓘ</span> Signing in for the first time?</h3><p>Set up your account using the activation link sent to your work email. Need assistance? Contact your organization&apos;s <strong>HR team</strong>.</p></aside>
         </div>
+        <footer className={styles.formFoot}>© {new Date().getFullYear()} CorpDev 360. All rights reserved.</footer>
       </section>
     </main>
   );
