@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:organization": "node --test tests/organization-hierarchy.test.mjs tests/organization-response.test.mjs",
+    "test:framework": "node --test tests/performance-framework-service.test.mjs tests/framework-criteria.test.mjs tests/framework-scoring.test.mjs tests/review-template.test.mjs"
   },
   "dependencies": {
     "axios": "^1.19.0",
