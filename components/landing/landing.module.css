@@ -1779,3 +1779,7 @@
 .heroTeamPhoto { position: relative; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 16px; background: #edf3ff; }
 .heroTeamImage { object-fit: cover; object-position: center; }
 @media (max-width: 800px) { .heroTeamPhoto { aspect-ratio: 5 / 4; } }
+.brandWithMark { display: inline-flex; align-items: center; gap: 9px; }
+.brandMark { display: block; width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; background: transparent; }
+.brand .brandWordmark { color: var(--ink); white-space: nowrap; }
+@media (max-width: 560px) { .brandMark { width: 30px; height: 30px; } .brandWithMark { gap: 7px; } }
