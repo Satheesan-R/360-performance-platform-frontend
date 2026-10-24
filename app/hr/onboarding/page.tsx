@@ -13,6 +13,15 @@ import type {
   CreateEmployeeRequest,
   Employee,
 } from "@/types/employee";
+import type { UserRole } from "@/types/auth";
+
+const roleLabels: Record<UserRole, string> = {
+  employee: "Employee",
+  tech_lead: "Tech Lead",
+  department_manager: "Department Manager",
+  hr: "HR",
+  admin: "Admin",
+};
 
 const inputClass =
   "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -154,7 +163,9 @@ export default function EmployeeOnboardingPage() {
       setSuccessMessage(result.message);
       setEmailDelivery(result.emailDelivery ?? null);
       setActivationUrl(result.activationUrl ?? "");
-      setEmployees((current) => [{ ...values, ...result.employee }, ...current]);
+      setLoading(true);
+      setListError("");
+      setLookupRequest((value) => value + 1);
       setShowForm(false);
       reset({
         role: "employee",
@@ -329,6 +340,7 @@ export default function EmployeeOnboardingPage() {
                       "Email",
                       "Department",
                       "Designation",
+                      "User role",
                       "Onboarding status",
                     ].map((label) => (
                       <th
@@ -360,11 +372,22 @@ export default function EmployeeOnboardingPage() {
                       </td>
 
                       <td className="px-6 py-4">
-                        {employee.department || "—"}
+                        {typeof employee.departmentId === "object" && employee.departmentId
+                          ? employee.departmentId.name
+                          : employee.departmentId
+                            ? departments.find((department) => department._id === employee.departmentId)?.name
+                              ?? "Department unavailable"
+                            : "Unassigned"}
                       </td>
 
                       <td className="px-6 py-4">
                         {employee.jobTitle || employee.designation || "—"}
+                      </td>
+
+                      <td className="whitespace-nowrap px-6 py-4">
+                        {employee.user?.role
+                          ? roleLabels[employee.user.role] ?? "Unavailable"
+                          : "Unavailable"}
                       </td>
 
                       <td className="px-6 py-4">
