@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,7 +45,7 @@ export default function LoginPage() {
     <main className={styles.page}>
       <section className={styles.brandPanel} aria-labelledby="brand-heading">
         <Link href="/" className={styles.brand} aria-label="CorpDev 360 home">
-          <Image src="/images/corpdev360-mark.png" alt="" width={72} height={72} className={styles.loginBrandMark} />
+          <Image src="/images/corpdev360-mark.png" alt="" width={48} height={48} className={styles.loginBrandMark} />
           <span><strong>CorpDev <b>360°</b></strong><small>Performance &amp; Talent Governance</small></span>
         </Link>
         <div className={styles.brandStory}>
@@ -64,7 +64,7 @@ export default function LoginPage() {
       <section className={styles.formPanel} aria-labelledby="login-heading">
         <div className={styles.topBar}><Link href="/" className={styles.back}><span aria-hidden="true">←</span> Back to website</Link><span className={styles.accessBadge}><span aria-hidden="true">◇</span> ROLE-BASED ACCESS</span></div>
         <div className={styles.formContent}>
-          <p className={styles.mobileBrand}><Image src="/images/corpdev360-mark.png" alt="" width={36} height={36} className={styles.mobileBrandMark} />CorpDev <span>360°</span></p>
+          <p className={styles.mobileBrand}><Image src="/images/corpdev360-mark.png" alt="" width={28} height={28} className={styles.mobileBrandMark} />CorpDev <span>360°</span></p>
           <h2 id="login-heading">Sign in to your account</h2>
           <p className={styles.intro}>Your team, your goals, your next step forward. Use your company credentials to continue.</p>
           <div className={styles.formDivider}><span />SIGN IN WITH EMAIL<span /></div>
