@@ -1,8 +1,15 @@
 import type { Competency, Kpi } from "./framework-criteria";
 import type { RatingScale, ScoringPreview } from "./framework-scoring";
-import type { FrameworkEmploymentType, FrameworkStatus } from "./performance-framework";
+import type {
+  FrameworkEmploymentType,
+  FrameworkStatus,
+} from "./performance-framework";
 
-export interface TemplateQuestion { _id?: string; prompt: string; required: boolean }
+export interface TemplateQuestion {
+  _id?: string;
+  prompt: string;
+  required: boolean;
+}
 export interface TemplateSection {
   _id?: string;
   title: string;
@@ -42,14 +49,21 @@ export interface ReviewTemplate extends TemplateInput {
   frameworkVersion: number | null;
   frameworkSnapshot: TemplateFramework | null;
 }
-export interface TemplateListItem extends Omit<ReviewTemplate, "frameworkId" | "employmentTypeIds" | "frameworkSnapshot" | "departmentIds"> {
-  departmentIds?: (string | TemplateDepartment)[];
+export interface TemplateListItem extends Omit<
+  ReviewTemplate,
+  "frameworkId" | "employmentTypeIds" | "frameworkSnapshot"
+> {
   frameworkId: { _id: string; name: string; status: FrameworkStatus } | null;
   employmentTypeIds: FrameworkEmploymentType[];
 }
 export interface TemplateList {
   templates: TemplateListItem[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 export type MissingCriterion = { _id: string; missing: true };
 export interface ResolvedTemplateSection extends TemplateSection {
@@ -80,5 +94,8 @@ export interface TemplateSnapshot {
   templateId: string;
   sourceVersion: number;
   createdAt: string;
-  configuration: Omit<TemplateInput, "status"> & { frameworkVersion: number; framework: TemplateFramework };
+  configuration: Omit<TemplateInput, "status"> & {
+    frameworkVersion: number;
+    framework: TemplateFramework;
+  };
 }
