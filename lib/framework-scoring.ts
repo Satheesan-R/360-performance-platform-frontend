@@ -6,7 +6,13 @@ import type {
   ScoringPreview,
 } from "@/types/framework-scoring";
 
-export const reviewerRoles: ReviewerRole[] = ["self", "peer", "manager"];
+export const reviewerRoles: ReviewerRole[] = ["self", "peer", "manager", "tech_lead"];
+export const reviewerLabels: Record<ReviewerRole, string> = {
+  self: "Self",
+  peer: "Peer",
+  manager: "Manager",
+  tech_lead: "Team Lead Review",
+};
 export interface ScoringDraft {
   editScale: boolean;
   editCategories: boolean;

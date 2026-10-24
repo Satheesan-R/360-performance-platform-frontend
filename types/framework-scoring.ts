@@ -1,11 +1,13 @@
-export type ReviewerRole = "self" | "peer" | "manager";
+export type ReviewerRole = "self" | "peer" | "manager" | "tech_lead";
 export interface RatingScale {
   min: 1;
   max: 3 | 4 | 5;
   levels: { value: number; label: string }[];
 }
 export type CategoryWeights = Record<"technical" | "behavioral", number>;
-export type ReviewerWeights = Record<ReviewerRole, number>;
+export type ReviewerWeights = Record<Exclude<ReviewerRole, "tech_lead">, number> & {
+  tech_lead?: number;
+};
 export interface ScoringConfiguration {
   ratingScale: RatingScale;
   categoryWeights: CategoryWeights;

@@ -21,7 +21,12 @@ export interface TemplateSection {
   commentsRequired: boolean;
   evidenceRequired: boolean;
 }
+export type ReviewType = "annual" | "probation" | "internship";
+export interface TemplateDepartment { _id: string; name: string; code?: string; status?: string }
 export interface TemplateInput {
+  reviewType?: ReviewType | null;
+  departmentIds?: string[];
+  targetRole?: "department_manager" | null;
   name: string;
   description: string;
   frameworkId: string;
@@ -66,6 +71,9 @@ export interface ResolvedTemplateSection extends TemplateSection {
   kpis: (Kpi | MissingCriterion)[];
 }
 export interface TemplatePreview {
+  reviewType?: ReviewType | null;
+  departmentIds?: string[];
+  targetRole?: "department_manager" | null;
   templateId: string;
   name: string;
   description: string;

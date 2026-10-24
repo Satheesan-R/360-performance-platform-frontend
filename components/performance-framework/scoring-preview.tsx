@@ -1,5 +1,7 @@
 "use client";
 
+import { reviewerLabels } from "@/lib/framework-scoring";
+
 import { useState } from "react";
 import { getApiErrorMessage } from "@/lib/api";
 import { sampleRatings } from "@/lib/framework-scoring";

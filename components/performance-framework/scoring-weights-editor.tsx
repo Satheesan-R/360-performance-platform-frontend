@@ -1,6 +1,6 @@
 "use client";
 
-import { reviewerRoles, type ScoringDraft } from "@/lib/framework-scoring";
+import { reviewerLabels, reviewerRoles, type ScoringDraft } from "@/lib/framework-scoring";
 import { Field, inputClass } from "@/components/organization/ui";
 
 function Total({ values }: { values: string[] }) {
