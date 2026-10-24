@@ -141,6 +141,28 @@ function service(api, token = "test-token") {
   return module("../services/review-template.service.ts", { "@/lib/api": { __esModule: true, default: api }, "@/lib/auth": { getToken: () => token } });
 }
 
+test("template department loader follows pagination and requests active departments", async () => {
+  const signal = new AbortController().signal;
+  const pages = [];
+  const client = service({ get: async (path, config) => {
+    assert.equal(path, "/departments");
+    assert.equal(config.headers.Authorization, "Bearer test-token");
+    assert.equal(config.signal, signal);
+    assert.equal(config.params.status, "active");
+    assert.equal(config.params.limit, 100);
+    pages.push(config.params.page);
+    return { data: {
+      departments: [{ _id: String(config.params.page), name: `Department ${config.params.page}` }],
+      pagination: { totalPages: 2 },
+    } };
+  } });
+  const departments = await client.getTemplateDepartments(signal);
+  assert.deepEqual(pages, [1, 2]);
+  assert.equal(departments.length, 2);
+  assert.equal(departments[1].name, "Department 2");
+  await assert.rejects(service({}, null).getTemplateDepartments(), /session has expired/);
+});
+
 test("list sends server pagination search and filters with Bearer auth", async () => {
   const signal = new AbortController().signal;
   const body = { templates: [], pagination: { page: 2, totalPages: 3 } };

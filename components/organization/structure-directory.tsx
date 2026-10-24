@@ -13,6 +13,7 @@ import {
   deactivateDepartment,
   getDepartments,
   getDepartmentSummary,
+  getTeamSummary,
   getTeams,
 } from "@/services/organization-views.service";
 import type { DepartmentRecord, TeamRecord } from "@/types/organization-views";
@@ -99,12 +100,19 @@ export function DeactivateDepartment({
   );
 }
 
-function DepartmentSummaryCards({ revision }: { revision: number }) {
-  void revision;
-  const resource = useOrganizationResource(getDepartmentSummary);
+function StructureSummaryCards({ kind, departmentId }: {
+  kind: "departments" | "teams";
+  departmentId?: string;
+}) {
+  const load = useCallback((signal: AbortSignal) => (
+    kind === "departments"
+      ? getDepartmentSummary(signal)
+      : getTeamSummary(departmentId, signal)
+  ), [kind, departmentId]);
+  const resource = useOrganizationResource(load);
   return (
     <section
-      aria-label="Department summary"
+      aria-label={kind === "departments" ? "Department summary" : "Team summary"}
       className="mb-6"
     >
       <ResourceState
@@ -120,7 +128,7 @@ function DepartmentSummaryCards({ revision }: { revision: number }) {
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
             >
               <p className="text-sm capitalize text-slate-500">
-                {key} departments
+                {key} {kind}
               </p>
               <p className="mt-2 text-3xl font-bold">{resource.data![key]}</p>
             </div>
@@ -360,12 +368,11 @@ export default function StructureDirectory({
           {add}
         </PageHeading>
       )}
-      {kind === "departments" && (
-        <DepartmentSummaryCards
-          key={revision}
-          revision={revision}
-        />
-      )}
+      <StructureSummaryCards
+        key={`${kind}:${departmentId ?? "all"}:${revision}`}
+        kind={kind}
+        departmentId={departmentId}
+      />
       {message && (
         <p
           role="status"

@@ -80,6 +80,20 @@ export async function getTeam(idValue: string, signal?: AbortSignal) {
     await api.get<{ team: TeamRecord }>(`/teams/${id(idValue)}`, config(signal))
   ).data.team;
 }
+
+export async function getTeamSummary(departmentId?: string, signal?: AbortSignal) {
+  const [all, active, inactive] = await Promise.all([
+    getTeams({ limit: 1 }, departmentId, signal),
+    getTeams({ status: "active", limit: 1 }, departmentId, signal),
+    getTeams({ status: "inactive", limit: 1 }, departmentId, signal),
+  ]);
+
+  return {
+    total: all.pagination.total,
+    active: active.pagination.total,
+    inactive: inactive.pagination.total,
+  };
+}
 export async function getDirectory(
   kind: "departments" | "teams",
   idValue: string,
