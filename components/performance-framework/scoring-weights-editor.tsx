@@ -1,6 +1,6 @@
 "use client";
 
-import { reviewerRoles, type ScoringDraft } from "@/lib/framework-scoring";
+import { reviewerLabels, reviewerRoles, type ScoringDraft } from "@/lib/framework-scoring";
 import { Field, inputClass } from "@/components/organization/ui";
 
 function Total({ values }: { values: string[] }) {
@@ -23,7 +23,7 @@ export default function ScoringWeightsEditor({ draft, disabled, onChange }: { dr
       <h3 className="text-lg font-semibold">Reviewer weights</h3>
       <p className="mb-4 mt-2 text-sm text-slate-500">Choose who contributes to the final score and set their shares.</p>
       <label className="mb-5 flex items-center gap-3 text-sm font-medium"><input type="checkbox" disabled={disabled} checked={draft.editReviewers} onChange={(event) => onChange({ ...draft, editReviewers: event.target.checked })} />Include reviewer settings in this save</label>
-      <fieldset disabled={disabled || !draft.editReviewers} className="space-y-4">{reviewerRoles.map((role) => <div key={role} className="grid grid-cols-2 items-end gap-4"><label className="flex items-center gap-3 py-3 text-sm font-medium capitalize"><input type="checkbox" checked={draft.enabledReviewers.includes(role)} onChange={(event) => onChange({ ...draft, enabledReviewers: event.target.checked ? [...draft.enabledReviewers, role] : draft.enabledReviewers.filter((value) => value !== role), reviewers: event.target.checked ? draft.reviewers : { ...draft.reviewers, [role]: "0" } })} />{role}</label><Field label={`${role.charAt(0).toUpperCase() + role.slice(1)} (%)`}><input type="number" min={0} max={100} step="any" disabled={!draft.enabledReviewers.includes(role)} className={inputClass} value={draft.reviewers[role]} onChange={(event) => onChange({ ...draft, reviewers: { ...draft.reviewers, [role]: event.target.value } })} /></Field></div>)}</fieldset>
+      <fieldset disabled={disabled || !draft.editReviewers} className="space-y-4">{reviewerRoles.map((role) => <div key={role} className="grid grid-cols-2 items-end gap-4"><label className="flex items-center gap-3 py-3 text-sm font-medium capitalize"><input type="checkbox" checked={draft.enabledReviewers.includes(role)} onChange={(event) => onChange({ ...draft, enabledReviewers: event.target.checked ? [...draft.enabledReviewers, role] : draft.enabledReviewers.filter((value) => value !== role), reviewers: event.target.checked ? draft.reviewers : { ...draft.reviewers, [role]: "0" } })} />{reviewerLabels[role]}</label><Field label={`${reviewerLabels[role]} (%)`}><input type="number" min={0} max={100} step="any" disabled={!draft.enabledReviewers.includes(role)} className={inputClass} value={draft.reviewers[role]} onChange={(event) => onChange({ ...draft, reviewers: { ...draft.reviewers, [role]: event.target.value } })} /></Field></div>)}</fieldset>
       <Total values={Object.values(draft.reviewers)} />
       <p className="mt-3 text-xs text-slate-500">Enabled reviewers need positive weights; disabled reviewers need 0%. Disabling a reviewer sets their weight to zero; redistribute the remaining shares yourself.</p>
     </section>

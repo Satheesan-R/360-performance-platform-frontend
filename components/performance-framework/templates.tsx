@@ -22,8 +22,19 @@ function TemplatesTable({ filters, disabled, onView, onStatus, onPage }: { filte
   if (resource.error) return <div role="alert" className="rounded-xl bg-red-50 p-5 text-sm text-red-700"><p>{resource.error}</p><button type="button" className={`${secondaryClass} mt-3`} onClick={resource.reload}>Try again</button></div>;
   const data = resource.data;
   return data && <>
-    {!data.templates.length ? <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center"><h2 className="font-semibold">No review templates found</h2><p className="mt-2 text-sm text-slate-500">{filters.search || filters.status || filters.frameworkId ? "Try another search or filter." : "Create your first template to organize review criteria and questions."}</p></div> : <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr>{["Template", "Framework", "Employment types", "Sections", "Status", "Actions"].map((heading) => <th key={heading} scope="col" className="whitespace-nowrap px-5 py-4 font-semibold">{heading}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{data.templates.map((item) => <tr key={item._id}>
+    {!data.templates.length ? <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center"><h2 className="font-semibold">No review templates found</h2><p className="mt-2 text-sm text-slate-500">{filters.search || filters.status || filters.frameworkId ? "Try another search or filter." : "Create your first template to organize review criteria and questions."}</p></div> : <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr>{["Template", "Review targeting", "Framework", "Employment types", "Sections", "Status", "Actions"].map((heading) => <th key={heading} scope="col" className="whitespace-nowrap px-5 py-4 font-semibold">{heading}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{data.templates.map((item) => <tr key={item._id}>
       <td className="min-w-56 px-5 py-4"><p className="font-semibold">{item.name}</p><p className="mt-1 max-w-sm whitespace-pre-wrap break-words text-xs text-slate-500">{item.description || "No description"}</p><p className="mt-2 text-xs text-slate-500">Version {item.__v ?? 0}</p></td>
+      <td className="min-w-48 px-5 py-4 text-slate-600">
+        <p className="capitalize">{item.reviewType ?? "Review type not configured"}</p>
+        <p className="mt-1">{item.targetRole === "department_manager" ? "Department Manager" : "Target role not configured"}</p>
+        <p className="mt-1 text-xs">
+          {item.departmentIds?.length
+            ? item.departmentIds.map((department) => typeof department === "string"
+              ? department
+              : `${department.name}${department.status === "inactive" ? " (inactive)" : ""}`).join(", ")
+            : "No department restriction"}
+        </p>
+      </td>
       <td className="px-5 py-4"><p>{item.frameworkId?.name || "Unavailable framework"}</p>{item.frameworkVersion != null && <p className="mt-1 text-xs text-slate-500">Pinned version {item.frameworkVersion}</p>}</td>
       <td className="px-5 py-4 text-slate-600">{item.employmentTypeIds.length ? item.employmentTypeIds.map((type) => `${type.name}${type.isActive ? "" : " (inactive)"}`).join(", ") : "Inherit framework targeting"}</td><td className="px-5 py-4">{item.sections.length}</td>
       <td className="px-5 py-4"><span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${item.status === "active" ? "bg-emerald-50 text-emerald-700" : item.status === "draft" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}>{item.status}</span></td>

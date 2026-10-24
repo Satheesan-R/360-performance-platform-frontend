@@ -1,6 +1,12 @@
 import type { FrameworkScoring, ReviewerRatings, ReviewerRole, ScoringConfiguration, ScoringPreview } from "@/types/framework-scoring";
 
-export const reviewerRoles: ReviewerRole[] = ["self", "peer", "manager"];
+export const reviewerRoles: ReviewerRole[] = ["self", "peer", "manager", "tech_lead"];
+export const reviewerLabels: Record<ReviewerRole, string> = {
+  self: "Self",
+  peer: "Peer",
+  manager: "Manager",
+  tech_lead: "Team Lead Review",
+};
 export interface ScoringDraft {
   editScale: boolean;
   editCategories: boolean;
@@ -19,7 +25,12 @@ export function scoringDraft(settings: FrameworkScoring): ScoringDraft {
     max: settings.ratingScale?.max ?? "",
     labels: Array.from({ length: 5 }, (_, index) => settings.ratingScale?.levels.find((level) => level.value === index + 1)?.label ?? ""),
     categories: { technical: settings.categoryWeights ? String(settings.categoryWeights.technical) : "", behavioral: settings.categoryWeights ? String(settings.categoryWeights.behavioral) : "" },
-    reviewers: { self: settings.reviewerWeights ? String(settings.reviewerWeights.self) : "0", peer: settings.reviewerWeights ? String(settings.reviewerWeights.peer) : "0", manager: settings.reviewerWeights ? String(settings.reviewerWeights.manager) : "0" },
+    reviewers: {
+      self: String(settings.reviewerWeights?.self ?? 0),
+      peer: String(settings.reviewerWeights?.peer ?? 0),
+      manager: String(settings.reviewerWeights?.manager ?? 0),
+      tech_lead: String(settings.reviewerWeights?.tech_lead ?? 0),
+    },
     enabledReviewers: [...settings.enabledReviewers],
   };
 }
@@ -51,7 +62,12 @@ export function scoringInput(draft: ScoringDraft): Partial<ScoringConfiguration>
   }
   if (draft.editReviewers) {
     if (!draft.enabledReviewers.length || new Set(draft.enabledReviewers).size !== draft.enabledReviewers.length || draft.enabledReviewers.some((role) => !reviewerRoles.includes(role))) throw new Error("Enable at least one reviewer type.");
-    const reviewers = { self: weight(draft.reviewers.self), peer: weight(draft.reviewers.peer), manager: weight(draft.reviewers.manager) };
+    const reviewers = {
+      self: weight(draft.reviewers.self),
+      peer: weight(draft.reviewers.peer),
+      manager: weight(draft.reviewers.manager),
+      tech_lead: weight(draft.reviewers.tech_lead ?? "0"),
+    };
     total(Object.values(reviewers), "Reviewer weights");
     for (const role of reviewerRoles) {
       if (draft.enabledReviewers.includes(role) ? reviewers[role] <= 0 : reviewers[role] !== 0) throw new Error("Enabled reviewers need positive weights; disabled reviewers need 0%.");

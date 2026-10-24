@@ -1,6 +1,6 @@
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import type { ReviewTemplate, TemplateInput, TemplateList, TemplatePreview, TemplateSnapshot } from "@/types/review-template";
+import type { ReviewTemplate, TemplateDepartment, TemplateInput, TemplateList, TemplatePreview, TemplateSnapshot } from "@/types/review-template";
 
 function config(signal?: AbortSignal) {
   const token = getToken();
@@ -8,6 +8,24 @@ function config(signal?: AbortSignal) {
   return { headers: { Authorization: `Bearer ${token}` }, signal };
 }
 function path(id: string) { return `/review-templates/${encodeURIComponent(id)}`; }
+
+export async function getTemplateDepartments(signal?: AbortSignal) {
+  const departments: TemplateDepartment[] = [];
+  let page = 1;
+  let totalPages = 1;
+  do {
+    const response = await api.get<{
+      departments: TemplateDepartment[];
+      pagination: { totalPages: number };
+    }>("/departments", {
+      ...config(signal), params: { status: "active", page, limit: 100 },
+    });
+    departments.push(...response.data.departments);
+    totalPages = response.data.pagination.totalPages;
+    page += 1;
+  } while (page <= totalPages);
+  return departments;
+}
 
 export async function getReviewTemplates(filters: { search: string; status: string; frameworkId: string; page: number }, signal?: AbortSignal) {
   const response = await api.get<TemplateList>("/review-templates", { ...config(signal), params: { ...filters, status: filters.status || undefined, frameworkId: filters.frameworkId || undefined, limit: 20 } });

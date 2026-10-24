@@ -11,7 +11,10 @@ export default function CriterionForm({ kind, item, disabled, onSave, onCancel }
   onSave: (values: CompetencyInput | KpiInput) => Promise<void>; onCancel: () => void;
 }) {
   const [draft, setDraft] = useState<CriterionDraft>({
-    name: item?.name ?? "", description: item?.description ?? "", weight: item ? String(item.weight) : "", status: item?.status ?? "active",
+    name: item?.name ?? "",
+    description: item?.description ?? "",
+    weight: item ? String(item.weight) : "",
+    status: item?.status ?? "active",
     category: item && "category" in item ? item.category : "technical",
     measurementUnit: item && "measurementUnit" in item ? item.measurementUnit : "",
     targetValue: item && "targetValue" in item ? String(item.targetValue) : "",
@@ -41,11 +44,27 @@ export default function CriterionForm({ kind, item, disabled, onSave, onCancel }
       <Field label={`${noun} name *`}><input autoFocus required maxLength={200} className={inputClass} value={draft.name} onChange={(event) => set("name", event.target.value)} /></Field>
       {kind === "competencies" ? <Field label="Category"><select className={inputClass} value={draft.category} onChange={(event) => set("category", event.target.value)}><option value="technical">Technical</option><option value="behavioral">Behavioral</option></select></Field> : <Field label="Measurement unit *"><input required maxLength={200} className={inputClass} value={draft.measurementUnit} onChange={(event) => set("measurementUnit", event.target.value)} placeholder="percentage, tickets, days..." /></Field>}
       <div className="sm:col-span-2"><Field label="Description"><textarea rows={3} maxLength={2000} className={inputClass} value={draft.description} onChange={(event) => set("description", event.target.value)} /></Field></div>
-      <Field label="Weight percentage *"><input required type="number" min={0} max={100} step="any" className={inputClass} value={draft.weight} onChange={(event) => set("weight", event.target.value)} /></Field>
+      <Field label="Weightage percentage *">
+        <input
+          aria-label="Weightage percentage"
+          required
+          type="number"
+          min={0}
+          max={100}
+          step="any"
+          className={inputClass}
+          value={draft.weight}
+          onChange={(event) => set("weight", event.target.value)}
+          placeholder="e.g. 20"
+        />
+      </Field>
       <Field label="Status"><select className={inputClass} value={draft.status} onChange={(event) => set("status", event.target.value)}><option value="active">Active</option><option value="inactive">Inactive</option></select></Field>
       {kind === "kpis" && <><Field label="Target value *"><input required type="number" step="any" className={inputClass} value={draft.targetValue} onChange={(event) => set("targetValue", event.target.value)} /></Field><Field label="Target period (optional)"><input maxLength={200} className={inputClass} value={draft.targetPeriod} onChange={(event) => set("targetPeriod", event.target.value)} placeholder="Quarter 1" /></Field></>}
     </fieldset>
-    <p className="mt-5 text-xs text-slate-500">Active competencies and KPIs share one 100% weight budget. KPI targets may be zero or negative when appropriate for the measurement unit.</p>
+    <p className="mt-5 text-xs text-slate-500">
+      Enter a weightage between 0 and 100%. Active competencies and KPIs must share a combined 100% weight before framework activation.
+      {kind === "kpis" && " KPI targets may be zero or negative when appropriate for the measurement unit."}
+    </p>
     <div className="mt-6 flex gap-3"><button type="submit" className={buttonClass} disabled={saving || disabled}>{saving ? "Saving..." : item ? "Save changes" : `Add ${noun}`}</button><button type="button" className={secondaryClass} disabled={saving} onClick={onCancel}>Cancel</button></div>
   </form>;
 }

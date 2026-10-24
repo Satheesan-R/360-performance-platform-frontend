@@ -27,6 +27,27 @@ function createDraft() {
   return { ...templateDraft(), name: " New template ", frameworkId: ids.framework, sections: [{ ...newTemplateSection("local-section"), title: " Skills ", questions: [{ key: "local-question", prompt: " Achievements? ", required: true }] }] };
 }
 
+test("HR targeting defaults and write fields follow the template API", () => {
+  const values = templateInput({ ...createDraft(), departmentIds: [ids.type] });
+  assert.equal(values.reviewType, "annual");
+  assert.equal(values.targetRole, "department_manager");
+  assert.deepEqual(plain(values.departmentIds), [ids.type]);
+  assert.throws(() => templateInput({ ...createDraft(), reviewType: "monthly" }), /Choose annual/);
+  assert.throws(() => templateInput({ ...createDraft(), targetRole: "tech_lead" }), /Department Managers only/);
+  assert.throws(() => templateInput({ ...createDraft(), departmentIds: [ids.type, ids.type] }), /unique references/);
+});
+
+test("legacy and unchanged targeting are omitted from metadata edits", () => {
+  const legacy = original();
+  const patch = templatePatch({ ...templateDraft(legacy), name: "Renamed" }, legacy);
+  for (const field of ["reviewType", "targetRole", "departmentIds"]) assert.equal(field in patch, false);
+  const configured = { ...legacy, reviewType: "probation", targetRole: "department_manager", departmentIds: [ids.type] };
+  const changed = templatePatch({ ...templateDraft(configured), reviewType: "internship", departmentIds: [] }, configured);
+  assert.equal(changed.reviewType, "internship");
+  assert.deepEqual(plain(changed.departmentIds), []);
+  assert.equal("targetRole" in changed, false);
+});
+
 test("new template defaults match draft comments and evidence policies", () => {
   const draft = templateDraft();
   assert.equal(draft.status, "draft");
@@ -187,8 +208,11 @@ test("missing sessions block reads and writes before contacting the backend", as
   await assert.rejects(client.createTemplateSnapshot("id"), /session has expired/);
 });
 
+const reviewForm = module("../components/performance-framework/review-form-preview.tsx", {
+  react: React, "react/jsx-runtime": jsx,
+});
 const { TemplatePreviewContent } = module("../components/performance-framework/template-preview.tsx", {
-  react: React, "react/jsx-runtime": jsx, "@/hooks/use-organization-resource": {}, "@/lib/api": {}, "@/services/review-template.service": {}, "@/components/organization/ui": {},
+  react: React, "react/jsx-runtime": jsx, "./review-form-preview": reviewForm, "@/hooks/use-organization-resource": {}, "@/lib/api": {}, "@/services/review-template.service": {}, "@/components/organization/ui": {},
 });
 
 test("renders pinned preview labels and missing criteria without silently dropping them", () => {
@@ -201,12 +225,57 @@ test("renders pinned preview labels and missing criteria without silently droppi
   assert.match(html, /Criterion missing/);
 });
 
-test("preview exposes required comments and effective evidence without collecting answers", () => {
+test("preview renders fillable required comments questions and evidence without submission", () => {
   const section = { ...original().sections[0], commentsRequired: true, evidenceRequired: true, competencies: [], kpis: [] };
   const preview = { name: "Review", description: "", frameworkName: "Framework", frameworkVersion: 1, usesFrozenFramework: false, employmentTypeIds: [], effectiveEmploymentTypeIds: [], ratingScale: null, validation: { ready: true, message: null }, criteriaWeights: [], sections: [section] };
   const html = renderToStaticMarkup(React.createElement(TemplatePreviewContent, { preview }));
   assert.match(html, /Evidence required/);
   assert.match(html, /Comments field/);
   assert.match(html, /Answer required/);
-  assert.doesNotMatch(html, /<input|<textarea|type="file"/);
+  assert.match(html, /<textarea[^>]*required/);
+  assert.match(html, /type="file"[^>]*required/);
+  assert.match(html, /Check preview form/);
+  assert.match(html, /Selected files are not uploaded/);
+  assert.doesNotMatch(html, /Submit Review/);
+});
+
+test("preview shows HR review targeting and legacy configuration stays unconfigured", () => {
+  const preview = {
+    name: "HR review", description: "", frameworkName: "Framework", frameworkVersion: 1,
+    usesFrozenFramework: false, employmentTypeIds: [], effectiveEmploymentTypeIds: [],
+    ratingScale: null, validation: { ready: false, message: null }, criteriaWeights: [], sections: [],
+    reviewType: "internship", targetRole: "department_manager", departmentIds: [ids.type],
+  };
+  const html = renderToStaticMarkup(React.createElement(TemplatePreviewContent, { preview }));
+  assert.match(html, /internship/);
+  assert.match(html, /Department Manager/);
+  assert.match(html, new RegExp(ids.type));
+  const legacy = renderToStaticMarkup(React.createElement(TemplatePreviewContent, {
+    preview: { ...preview, reviewType: null, targetRole: null, departmentIds: [] },
+  }));
+  assert.match(legacy, /Not configured/);
+  assert.match(legacy, /No department restriction/);
+});
+
+test("review form uses configured scale labels and separates competency categories from KPI results", () => {
+  const section = {
+    ...original().sections[0],
+    competencies: [
+      { _id: ids.competency, name: "Debugging", category: "technical", description: "Find defects", weight: 30 },
+      { _id: "1".repeat(24), name: "Teamwork", category: "behavioral", description: "Work together", weight: 20 },
+    ],
+    kpis: [{ _id: "2".repeat(24), name: "Delivery", description: "Meet the target", targetValue: 90, measurementUnit: "percentage", weight: 50 }],
+  };
+  const html = renderToStaticMarkup(React.createElement(reviewForm.default, {
+    sections: [section],
+    scale: { min: 1, max: 3, levels: [{ value: 1, label: "Needs support" }, { value: 2, label: "Meets expectations" }, { value: 3, label: "Exceeds expectations" }] },
+  }));
+  assert.match(html, /Technical competencies/);
+  assert.match(html, /Behavioural competencies/);
+  assert.match(html, /Actual result \(percentage\)/);
+  assert.match(html, /Target: 90 percentage/);
+  assert.match(html, /Exceeds expectations/);
+  assert.equal((html.match(/type="radio"/g) ?? []).length, 9);
+  assert.match(html, /type="number"[^>]*required/);
+  assert.match(html, /Preview answers are temporary/);
 });

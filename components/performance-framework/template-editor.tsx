@@ -8,14 +8,14 @@ import { getApiErrorMessage } from "@/lib/api";
 import { templateDraft, templatePatch, type TemplateDraft } from "@/lib/review-template";
 import { getCriteriaFrameworks } from "@/services/framework-criteria.service";
 import { getFrameworkEmploymentTypes } from "@/services/performance-framework.service";
-import { getReviewTemplate, previewTemplateChanges, saveReviewTemplate } from "@/services/review-template.service";
+import { getReviewTemplate, getTemplateDepartments, previewTemplateChanges, saveReviewTemplate } from "@/services/review-template.service";
 import type { FrameworkEmploymentType, PerformanceFramework } from "@/types/performance-framework";
-import type { ReviewTemplate, TemplatePreview } from "@/types/review-template";
+import type { ReviewTemplate, TemplateDepartment, ReviewType, TemplatePreview } from "@/types/review-template";
 import { buttonClass, Field, inputClass, secondaryClass } from "@/components/organization/ui";
 import TemplateSectionsEditor from "./template-sections-editor";
 import { TemplatePreviewContent } from "./template-preview";
 
-function Editor({ template, frameworks, types, onSaved, onCancel, onReload }: { template?: ReviewTemplate; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[]; onSaved: () => void; onCancel: () => void; onReload: () => void }) {
+function Editor({ template, frameworks, types, departments, onSaved, onCancel, onReload }: { template?: ReviewTemplate; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[]; departments: TemplateDepartment[]; onSaved: () => void; onCancel: () => void; onReload: () => void }) {
   const [draft, setDraft] = useState(() => templateDraft(template));
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -48,6 +48,60 @@ function Editor({ template, frameworks, types, onSaved, onCancel, onReload }: { 
     <section className="rounded-2xl border border-slate-200 bg-white p-6"><fieldset disabled={disabled} className="grid gap-5 sm:grid-cols-2">
       <Field label="Template name *"><input autoFocus maxLength={200} className={inputClass} value={draft.name} onChange={(event) => change({ ...draft, name: event.target.value })} /></Field>
       <Field label="Performance framework *"><select className={inputClass} disabled={draft.status !== "draft"} value={draft.frameworkId} onChange={(event) => change({ ...draft, frameworkId: event.target.value, employmentTypeIds: [], sections: draft.sections.map((section) => ({ ...section, competencyIds: [], kpiIds: [] })) })}><option value="">Choose a framework</option>{frameworks.filter((item) => item.status !== "archived" || item._id === draft.frameworkId).map((item) => <option key={item._id} value={item._id}>{item.name} · {item._id.slice(-6)}</option>)}{draft.frameworkId && !frameworks.some((item) => item._id === draft.frameworkId) && <option value={draft.frameworkId}>{framework?.name || "Previously selected framework"}</option>}</select></Field>
+      <Field label="Review type">
+        <select
+          className={inputClass}
+          value={draft.reviewType ?? ""}
+          onChange={(event) => change({ ...draft, reviewType: event.target.value as ReviewType })}
+        >
+          {!draft.reviewType && <option value="" disabled>Not configured</option>}
+          <option value="annual">Annual</option>
+          <option value="probation">Probation</option>
+          <option value="internship">Internship</option>
+        </select>
+      </Field>
+      <Field label="Target role">
+        <select
+          className={inputClass}
+          value={draft.targetRole ?? ""}
+          onChange={() => change({ ...draft, targetRole: "department_manager" })}
+        >
+          {!draft.targetRole && <option value="" disabled>Not configured</option>}
+          <option value="department_manager">Department Manager</option>
+        </select>
+      </Field>
+      <fieldset className="space-y-3 rounded-xl border border-slate-200 p-4 sm:col-span-2">
+        <legend className="px-2 text-sm font-semibold">Applicable departments</legend>
+        <p className="text-sm text-slate-500">
+          Leave unselected for no department restriction. This does not assign individual managers.
+        </p>
+        {departments.map((department) => (
+          <label key={department._id} className="flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={draft.departmentIds?.includes(department._id) ?? false}
+              onChange={(event) => change({
+                ...draft,
+                departmentIds: event.target.checked
+                  ? [...(draft.departmentIds ?? []), department._id]
+                  : draft.departmentIds?.filter((id) => id !== department._id),
+              })}
+            />
+            {department.name}
+          </label>
+        ))}
+        {(draft.departmentIds ?? []).filter((id) => !departments.some((item) => item._id === id)).map((id) => (
+          <label key={id} className="flex items-center gap-3 text-sm text-amber-700">
+            <input
+              type="checkbox"
+              checked
+              onChange={() => change({ ...draft, departmentIds: draft.departmentIds?.filter((value) => value !== id) })}
+            />
+            Previously selected department ({id.slice(-6)}) ? unavailable for new selections
+          </label>
+        ))}
+        {!departments.length && <p className="text-sm text-slate-500">No active departments available.</p>}
+      </fieldset>
       <div className="sm:col-span-2"><Field label="Description"><textarea rows={3} maxLength={2000} className={inputClass} value={draft.description} onChange={(event) => change({ ...draft, description: event.target.value })} /></Field></div>
       <fieldset className="max-h-56 space-y-3 overflow-y-auto rounded-xl border border-slate-200 p-4"><legend className="px-2 text-sm font-semibold">Employment types</legend>{options.map((item) => <label key={item._id} className="flex items-center gap-3 text-sm"><input type="checkbox" checked={draft.employmentTypeIds.includes(item._id)} onChange={(event) => change({ ...draft, employmentTypeIds: event.target.checked ? [...draft.employmentTypeIds, item._id] : draft.employmentTypeIds.filter((id) => id !== item._id) })} />{item.name}</label>)}{draft.employmentTypeIds.filter((id) => !options.some((item) => item._id === id)).map((id) => <label key={id} className="flex gap-3 text-sm text-amber-700"><input type="checkbox" checked onChange={() => change({ ...draft, employmentTypeIds: draft.employmentTypeIds.filter((value) => value !== id) })} />Previously selected type ({id.slice(-6)}) — unavailable for new selections</label>)}{!options.length && <p className="text-sm text-slate-500">No active employment types available for this framework.</p>}</fieldset>
       <div className="space-y-4 text-sm text-slate-600"><p>Leave types unselected to inherit framework targeting. This does not assign employees to reviews.</p><label className="flex items-center gap-3 font-medium text-slate-700"><input type="checkbox" checked={draft.evidenceRequired} onChange={(event) => change({ ...draft, evidenceRequired: event.target.checked })} />Require evidence in every section</label><p>Evidence rules configure future responses; files are not uploaded here.</p></div>
@@ -63,12 +117,12 @@ function Editor({ template, frameworks, types, onSaved, onCancel, onReload }: { 
 export default function TemplateEditor({ id, onSaved, onCancel }: { id?: string; onSaved: () => void; onCancel: () => void }) {
   const [revision, setRevision] = useState(0);
   const load = useCallback(async (signal: AbortSignal) => {
-    const [template, frameworks, types] = await Promise.all([id ? getReviewTemplate(id, signal) : Promise.resolve(undefined), getCriteriaFrameworks(signal), getFrameworkEmploymentTypes(signal)]);
-    return { template, frameworks, types };
+    const [template, frameworks, types, departments] = await Promise.all([id ? getReviewTemplate(id, signal) : Promise.resolve(undefined), getCriteriaFrameworks(signal), getFrameworkEmploymentTypes(signal), getTemplateDepartments(signal)]);
+    return { template, frameworks, types, departments };
   }, [id]);
   return <EditorLoader key={revision} load={load} onSaved={onSaved} onCancel={onCancel} onReload={() => setRevision((value) => value + 1)} />;
 }
-function EditorLoader({ load, ...actions }: { load: (signal: AbortSignal) => Promise<{ template: ReviewTemplate | undefined; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[] }>; onSaved: () => void; onCancel: () => void; onReload: () => void }) {
+function EditorLoader({ load, ...actions }: { load: (signal: AbortSignal) => Promise<{ template: ReviewTemplate | undefined; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[]; departments: TemplateDepartment[] }>; onSaved: () => void; onCancel: () => void; onReload: () => void }) {
   const resource = useOrganizationResource(load);
   if (resource.loading) return <p role="status" className="p-6 text-sm text-slate-500">Loading template editor...</p>;
   if (resource.error) return <div role="alert" className="rounded-xl bg-red-50 p-5 text-sm text-red-700"><p>{resource.error}</p><div className="mt-3 flex gap-3"><button type="button" className={secondaryClass} onClick={resource.reload}>Try again</button><button type="button" className={secondaryClass} onClick={actions.onCancel}>Back to templates</button></div></div>;

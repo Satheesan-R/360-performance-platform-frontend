@@ -14,7 +14,12 @@ export interface TemplateSection {
   commentsRequired: boolean;
   evidenceRequired: boolean;
 }
+export type ReviewType = "annual" | "probation" | "internship";
+export interface TemplateDepartment { _id: string; name: string; code?: string; status?: string }
 export interface TemplateInput {
+  reviewType?: ReviewType | null;
+  departmentIds?: string[];
+  targetRole?: "department_manager" | null;
   name: string;
   description: string;
   frameworkId: string;
@@ -37,7 +42,8 @@ export interface ReviewTemplate extends TemplateInput {
   frameworkVersion: number | null;
   frameworkSnapshot: TemplateFramework | null;
 }
-export interface TemplateListItem extends Omit<ReviewTemplate, "frameworkId" | "employmentTypeIds" | "frameworkSnapshot"> {
+export interface TemplateListItem extends Omit<ReviewTemplate, "frameworkId" | "employmentTypeIds" | "frameworkSnapshot" | "departmentIds"> {
+  departmentIds?: (string | TemplateDepartment)[];
   frameworkId: { _id: string; name: string; status: FrameworkStatus } | null;
   employmentTypeIds: FrameworkEmploymentType[];
 }
@@ -51,6 +57,9 @@ export interface ResolvedTemplateSection extends TemplateSection {
   kpis: (Kpi | MissingCriterion)[];
 }
 export interface TemplatePreview {
+  reviewType?: ReviewType | null;
+  departmentIds?: string[];
+  targetRole?: "department_manager" | null;
   templateId: string;
   name: string;
   description: string;

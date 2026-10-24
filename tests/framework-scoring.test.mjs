@@ -17,6 +17,31 @@ function module(file, imports = {}) {
 const { scoringDraft, scoringInput, sampleRatings } = module("../lib/framework-scoring.ts");
 const empty = { frameworkId: "id", version: 0, ratingScale: null, categoryWeights: null, reviewerWeights: null, enabledReviewers: [], validation: { ready: false, message: "Not configured" } };
 const plain = (value) => JSON.parse(JSON.stringify(value));
+test("legacy settings initialize team lead to zero without enabling it", () => {
+  const result = scoringDraft(empty);
+  assert.equal(result.reviewers.tech_lead, "0");
+  assert.equal(result.enabledReviewers.includes("tech_lead"), false);
+  assert.equal(scoringInput(draft()).reviewerWeights.tech_lead, 0);
+});
+
+test("team lead weights share the reviewer budget", () => {
+  const values = {
+    ...draft(),
+    enabledReviewers: ["self", "peer", "manager", "tech_lead"],
+    reviewers: { self: "10", peer: "20", manager: "40", tech_lead: "30" },
+  };
+  const result = scoringInput(values);
+  assert.equal(result.reviewerWeights.tech_lead, 30);
+  assert.throws(() => scoringInput({
+    ...values,
+    reviewers: { ...values.reviewers, tech_lead: "20" },
+  }), /Reviewer weights must total/);
+  assert.throws(() => scoringInput({
+    ...values,
+    enabledReviewers: ["self", "peer", "manager"],
+  }), /disabled reviewers need/);
+  assert.equal(Object.values(result.reviewerWeights).reduce((sum, value) => sum + value, 0), 100);
+});
 function draft() {
   return { editScale: true, editCategories: true, editReviewers: true, max: 5, labels: ["One", "Two", "Three", "Four", "Five"], categories: { technical: "60", behavioral: "40" }, reviewers: { self: "20", peer: "20", manager: "60" }, enabledReviewers: ["self", "peer", "manager"] };
 }
