@@ -3,130 +3,18 @@ import { useState } from "react";
 import Link from "next/link";
 import styles from "./landing.module.css";
 const roles = [
-  {
-    label: "For Employees",
-    eyebrow: "Individual Contributors & Staff Engineers",
-    title: "Know exactly where you stand, what matters most, and how to grow.",
-    description:
-      "Make growth a continuous conversation. See your goals, feedback, and development opportunities in one personal workspace.",
-    bullets: [
-      "Track goals and the work that moves them forward.",
-      "Reflect on feedback and build your development plan.",
-      "Prepare for reviews with a clear picture of your progress.",
-    ],
-    person: "Alex Liang",
-    initials: "AL",
-    job: "Staff Platform Engineer",
-    metric: "Competency roadmap: Distributed Systems",
-    status: "Learning in progress",
-    progress: 86,
-    note: "Your next step: review peer feedback and update your quarterly development goals.",
-  },
-  {
-    label: "For Managers & Tech Leads",
-    eyebrow: "Team Leaders & Engineering Managers",
-    title: "Help your people thrive while keeping your team aligned.",
-    description:
-      "Bring team goals and performance conversations into focus. Identify where support is needed and celebrate progress together.",
-    bullets: [
-      "Connect individual objectives to your team’s priorities.",
-      "Bring context into feedback and review conversations.",
-      "Build practical development plans with your team.",
-    ],
-    person: "Jordan Rivera",
-    initials: "JR",
-    job: "Engineering Manager",
-    metric: "Team objective: Platform reliability",
-    status: "On track this quarter",
-    progress: 78,
-    note: "Your next step: discuss goal progress in your upcoming team check-ins.",
-  },
-  {
-    label: "For HR Leaders & Executives",
-    eyebrow: "People Teams & Business Leaders",
-    title: "Bring clarity and consistency to every performance cycle.",
-    description:
-      "Coordinate reviews, understand talent development, and connect your people strategy with organizational priorities.",
-    bullets: [
-      "Manage performance cycles from one shared workspace.",
-      "Support consistent, informed talent conversations.",
-      "Understand progress across teams and departments.",
-    ],
-    person: "Sam Taylor",
-    initials: "ST",
-    job: "People Operations Lead",
-    metric: "Quarterly review cycle",
-    status: "Reviews approaching completion",
-    progress: 94,
-    note: "Your next step: review completion across departments and prepare calibration discussions.",
-  },
+  { label: "Employees", title: "Your personal starting point.", description: "Activate your invited account and sign in to the employee workspace.", bullets: ["Access the employee dashboard with your assigned account.", "Find dedicated routes for goals, reviews, feedback and development."], note: "Assigned goals, review progress, self-reviews, finalized results, permitted review feedback, development plans and disputes are planned; their current screens are placeholders." },
+  { label: "Managers & Tech Leads", title: "A dedicated entry point for team leaders.", description: "Sign in to the workspace associated with your department manager or tech lead role.", bullets: ["Use a dedicated dashboard route for your assigned role.", "Keep manager and tech lead access separate from HR configuration."], note: "Team performance, assigned assessments, ratings, evidence, comments, review completion and promotion discussions are planned, not connected functionality." },
+  { label: "HR Leaders", title: "Help new employees get started.", description: "Use the HR dashboard and employee onboarding flow to manage account invitations.", bullets: ["Create employee profiles and assign supported roles.", "Send an activation email to the new employee's company address.", "View employee records and pending onboarding totals."], note: "The backend supports frameworks, template submission and draft department-manager cycles. Workflow configuration, live review monitoring, performance analytics, promotion eligibility, calibration and disputes are planned." },
+  { label: "System Administrators", title: "Keep template approval accountable.", description: "Use the administrator dashboard and authorized backend configuration capabilities.", bullets: ["Access a dedicated administrator dashboard.", "Approve or reject review templates submitted by HR through the backend.", "Access authorized framework and template configuration endpoints."], note: "Organization configuration is backend supported. Account and permission-management screens are not yet available; unsupported integrations are outside the current scope." },
 ];
 export default function RoleWorkspaces() {
-  const [active, setActive] = useState(0);
+  const [active,setActive] = useState(0);
   const role = roles[active];
-  return (
-    <section id="solutions" className={`${styles.section} ${styles.roles}`}>
-      <div className={styles.container}>
-        <div className={styles.heading}>
-          <span className={styles.eyebrow}>Role-Tailored Architecture</span>
-          <h2>Built for Every Role in the Modern Enterprise</h2>
-          <p>
-            A focused experience for individual contributors, managers, and
-            people leaders. One shared purpose: helping your team grow.
-          </p>
-        </div>
-        <div className={styles.tabs} aria-label="Choose a role">
-          {roles.map((item, index) => (
-            <button
-              type="button"
-              key={item.label}
-              className={`${styles.tab} ${active === index ? styles.activeTab : ""}`}
-              aria-pressed={active === index}
-              aria-controls="role-workspace"
-              onClick={() => setActive(index)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <div
-          id="role-workspace"
-          className={styles.rolePanel}
-          aria-live="polite"
-        >
-          <div className={styles.roleCopy}>
-            <span className={styles.eyebrow}>{role.eyebrow}</span>
-            <h3>{role.title}</h3>
-            <p>{role.description}</p>
-            <ul>
-              {role.bullets.map((bullet) => (
-                <li key={bullet}>{bullet}</li>
-              ))}
-            </ul>
-            <Link href="/login">Open your workspace →</Link>
-          </div>
-          <div className={styles.profile}>
-            <div className={styles.person}>
-              <span className={styles.avatar}>{role.initials}</span>
-              <div>
-                <strong>{role.person}</strong>
-                <small>{role.job} · Example profile</small>
-              </div>
-            </div>
-            <div className={styles.profileDetail}>
-              <strong>{role.metric}</strong>
-              <p>{role.status}</p>
-              <div className={styles.bar}>
-                <span style={{ width: `${role.progress}%` }} />
-              </div>
-            </div>
-            <div className={styles.profileDetail}>
-              <strong>A clearer path forward</strong>
-              <p>{role.note}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+  return <section id="solutions" className={styles.workflowSection}><div className={styles.container}>
+    <div className={styles.heading}><span className={styles.eyebrow}>Role-based workspaces</span><h2>The right performance information for every role.</h2><p>Workspace access follows the role assigned to your account. A role does not grant unrestricted access to confidential employee information.</p></div>
+    <div className={styles.tabs} aria-label="Choose a workspace role">{roles.map((item,index) => <button type="button" key={item.label} className={[styles.tab, active === index ? styles.activeTab : ""].join(" ")} aria-pressed={active === index} aria-controls="role-workspace" onClick={() => setActive(index)}>{item.label}</button>)}</div>
+    <div id="role-workspace" className={styles.rolePanel} aria-live="polite"><div className={styles.roleCopy}><span className={styles.eyebrow}>{role.label}</span><h3>{role.title}</h3><p>{role.description}</p><ul>{role.bullets.map(bullet => <li key={bullet}>{bullet}</li>)}</ul><Link href="/login">Open your workspace →</Link></div><aside className={styles.roleAvailability}><span className={styles.eyebrow}>Current availability</span><h3>Know what to expect.</h3><p>{role.note}</p><p>Contact your HR team if you need access or help with your assigned role.</p></aside></div>
+    <p className={styles.demoNote}>Peer reviewers are intended to participate only in assigned peer reviews, without unrestricted access to employee records. Peer-review execution is planned.</p>
+  </div></section>;
 }
