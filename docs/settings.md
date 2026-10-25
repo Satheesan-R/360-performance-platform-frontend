@@ -1,7 +1,9 @@
-# Settings frontend
+# Business configuration frontend
 
-HR can open `/hr/settings` from the workspace sidebar. Admins can open
-`/admin/settings` from their dashboard. Both routes use the existing role guard.
+HR can open `/hr/configuration` from Workspace Configuration in the sidebar.
+Admins can open `/admin/configuration` from Administration on their dashboard.
+Both routes use the existing role guard. Ordinary personal Settings now lives
+at `/settings`; see `personal-settings.md` for the shared self-service workflow.
 
 The five sections are General, Roles & access, Review policies, Notifications,
 and Performance. Admins can edit display labels for existing roles; HR sees them

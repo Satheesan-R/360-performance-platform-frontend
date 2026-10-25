@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession, getCurrentUser } from "@/lib/auth";
+import { useSettingsOverlay } from "@/components/settings/settings-overlay-provider";
 
 const navigation = [
   { label: "Dashboard", href: "/employee/dashboard", short: "DB" },
@@ -13,11 +14,13 @@ const navigation = [
   { label: "My Reviews", href: "/employee/reviews", short: "RV" },
   { label: "Feedback", href: "/employee/feedback", short: "FB" },
   { label: "Development", href: "/employee/development", short: "DV" },
+  { label: "Settings", href: "/settings", short: "ST" },
 ];
 
 export default function EmployeeShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const openSettings = useSettingsOverlay();
   const [menuOpen, setMenuOpen] = useState(false);
   const user = getCurrentUser();
 
@@ -40,6 +43,7 @@ export default function EmployeeShell({ children }: { children: ReactNode }) {
           <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
             {navigation.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              if (item.href === "/settings") return <button key={item.href} type="button" aria-haspopup="dialog" onClick={() => { setMenuOpen(false); openSettings(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-[10px] font-bold">{item.short}</span>{item.label}</button>;
               return (
                 <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}>
                   <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold ${active ? "bg-white/15" : "bg-white/5"}`}>{item.short}</span>

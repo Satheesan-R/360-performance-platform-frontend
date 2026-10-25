@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:settings": "node --test tests/settings-demo.test.mjs",
+    "test:personal-settings": "node --test tests/personal-settings.test.mjs",
     "test:organization": "node --test tests/organization-hierarchy.test.mjs tests/organization-response.test.mjs",
     "test:framework": "node --test tests/performance-framework-service.test.mjs tests/framework-criteria.test.mjs"
   },

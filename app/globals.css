@@ -1,12 +1,13 @@
 @import "tailwindcss" source(none);
+@import "./theme.css";
 
 /* Scan application code only; temporary tools can contain locked files. */
 @source "./";
 @source "../components";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--app-background);
+  --foreground: var(--app-text);
 }
 
 @theme inline {
@@ -14,13 +15,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
