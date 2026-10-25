@@ -1,0 +1,16 @@
+.dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  width: min(1152px, calc(100vw - 32px));
+  max-width: none;
+  height: min(90dvh, 960px);
+  max-height: none;
+  overflow: hidden;
+  border-radius: 24px;
+}
+.dialog::backdrop { background: rgb(2 6 23 / 55%); backdrop-filter: blur(2px); }
+@media (max-width: 640px) {
+  .dialog { width: calc(100vw - 16px); height: calc(100dvh - 16px); border-radius: 16px; }
+}

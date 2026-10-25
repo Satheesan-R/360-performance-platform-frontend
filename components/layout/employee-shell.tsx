@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession, getCurrentUser } from "@/lib/auth";
+import { useSettingsOverlay } from "@/components/settings/settings-overlay-provider";
 
 const navigation = [
   { label: "Dashboard", href: "/employee/dashboard", short: "DB" },
@@ -13,11 +14,13 @@ const navigation = [
   { label: "My Reviews", href: "/employee/reviews", short: "RV" },
   { label: "Feedback", href: "/employee/feedback", short: "FB" },
   { label: "Development", href: "/employee/development", short: "DV" },
+  { label: "Settings", href: "/settings", short: "ST" },
 ];
 
 export default function EmployeeShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const openSettings = useSettingsOverlay();
   const [menuOpen, setMenuOpen] = useState(false);
   const user = getCurrentUser();
 

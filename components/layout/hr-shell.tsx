@@ -7,6 +7,8 @@ import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession, getCurrentUser } from "@/lib/auth";
 import { organizationNavigation } from "@/components/organization/navigation";
 import { frameworkNavigation } from "@/components/performance-framework/navigation";
+import type { SettingsRole } from "@/lib/settings-demo";
+import { useSettingsOverlay } from "@/components/settings/settings-overlay-provider";
 
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", short: "DB" },
@@ -26,11 +28,13 @@ const navigation = [
   },
   { label: "Analytics", href: "/hr/analytics", short: "AN" },
   { label: "Audit", href: "/hr/audit", short: "AU" },
+  { label: "Workspace Configuration", href: "/hr/configuration", short: "CF" },
 ];
 
-export default function HrShell({ children }: { children: ReactNode }) {
+export default function HrShell({ children, role = "hr" }: { children: ReactNode; role?: SettingsRole }) {
   const pathname = usePathname();
   const router = useRouter();
+  const openSettings = useSettingsOverlay();
   const [menuOpen, setMenuOpen] = useState(false);
   const [organizationExpanded, setOrganizationExpanded] = useState<
     boolean | null
@@ -42,6 +46,10 @@ export default function HrShell({ children }: { children: ReactNode }) {
     pathname === "/hr/organization" || pathname.startsWith("/hr/organization/");
   const organizationOpen = organizationExpanded ?? organizationActive;
   const user = getCurrentUser();
+  const workspaceLabel = role === "admin" ? "Admin" : "HR";
+  const workspaceNavigation = role === "admin"
+    ? [{ label: "Dashboard", href: "/admin/dashboard", short: "DB" }, { label: "Administration", href: "/admin/configuration", short: "CF" }]
+    : navigation;
 
   function logout() {
     clearSession();
@@ -49,7 +57,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ProtectedRoute role="hr">
+    <ProtectedRoute role={role}>
       <div className="min-h-screen bg-slate-50 text-slate-900 lg:flex">
         {menuOpen && (
           <button
@@ -66,7 +74,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
           <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
             <div>
               <p className="text-lg font-bold">360 Performance</p>
-              <p className="text-xs text-slate-400">Human Resources</p>
+              <p className="text-xs text-slate-400">{role === "admin" ? "Administration" : "Human Resources"}</p>
             </div>
             <button
               type="button"
@@ -170,8 +178,17 @@ export default function HrShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="border-t border-white/10 p-4">
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => { setMenuOpen(false); openSettings(); }}
+              className="mb-4 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-5 w-5"><path d="m9 3-1 3-3 1-2 5 2 5 3 1 1 3h6l1-3 3-1 2-5-2-5-3-1-1-3Z" /><circle cx="12" cy="12" r="3" /></svg>
+              Settings
+            </button>
             <div className="mb-3 rounded-xl bg-white/5 px-4 py-3">
-              <p className="text-xs text-slate-400">Signed in as HR</p>
+              <p className="text-xs text-slate-400">Signed in as {workspaceLabel}</p>
               <p className="mt-1 truncate text-sm font-medium">{user?.email}</p>
             </div>
             <button

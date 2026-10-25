@@ -6,7 +6,7 @@ import { getCurrentUser, getDashboardPath, getToken } from "@/lib/auth";
 import type { UserRole } from "@/types/auth";
 
 interface ProtectedRouteProps {
-  role: UserRole;
+  role?: UserRole;
   children: ReactNode;
 }
 
@@ -28,13 +28,13 @@ export default function ProtectedRoute({ role, children }: ProtectedRouteProps) 
   );
   const token = isHydrated ? getToken() : null;
   const user = isHydrated ? getCurrentUser() : null;
-  const isAuthorized = Boolean(token && user?.role === role);
+  const isAuthorized = Boolean(token && user && (!role || user.role === role));
 
   useEffect(() => {
     if (!isHydrated) return;
     if (!token || !user) {
       router.replace("/login");
-    } else if (user.role !== role) {
+    } else if (role && user.role !== role) {
       router.replace(getDashboardPath(user.role));
     }
   }, [isHydrated, role, router, token, user]);

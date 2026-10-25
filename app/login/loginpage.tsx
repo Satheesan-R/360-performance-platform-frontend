@@ -33,7 +33,7 @@ export default function LoginPage() {
         password,
       });
       saveSession(result);
-      router.replace(result.redirectTo);
+      router.replace("/dashboard");
     } catch (requestError) {
       setError(getApiErrorMessage(requestError));
     } finally {

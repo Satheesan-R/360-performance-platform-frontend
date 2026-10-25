@@ -1,8 +1,10 @@
 ﻿"use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { clearSession, getCurrentUser } from "@/lib/auth";
 import type { UserRole } from "@/types/auth";
+import { useSettingsOverlay } from "@/components/settings/settings-overlay-provider";
 
 const roleLabels: Record<UserRole, string> = {
   employee: "Employee",
@@ -14,6 +16,7 @@ const roleLabels: Record<UserRole, string> = {
 
 export default function DashboardHome({ role }: { role: UserRole }) {
   const router = useRouter();
+  const openSettings = useSettingsOverlay();
   const user = getCurrentUser();
 
   function logout() {
@@ -29,13 +32,17 @@ export default function DashboardHome({ role }: { role: UserRole }) {
             <p className="text-sm font-semibold text-blue-600">360 Performance</p>
             <h1 className="mt-1 text-2xl font-bold text-slate-900">{roleLabels[role]} Dashboard</h1>
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            Log out
-          </button>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {role === "admin" && <Link href="/admin/configuration" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Administration</Link>}
+            <button type="button" aria-haspopup="dialog" onClick={openSettings} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Settings</button>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            >
+              Log out
+            </button>
+          </div>
         </header>
 
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
