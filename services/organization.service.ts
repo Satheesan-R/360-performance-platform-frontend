@@ -1,7 +1,8 @@
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { parseOrganizationResponse } from "@/lib/organization-response";
-import type { HierarchyEmployee, Organization, OrganizationSummary, Permission, StructureInput, StructureKind, StructureRecord } from "@/types/organization";
+import { parseHierarchyEmployees } from "@/lib/organization-hierarchy-response";
+import type { Organization, OrganizationSummary, Permission, StructureInput, StructureKind, StructureRecord } from "@/types/organization";
 
 // Paths are relative to NEXT_PUBLIC_API_URL. Keep backend contract changes here.
 export const organizationEndpoints = {
@@ -13,7 +14,7 @@ export const organizationEndpoints = {
   roles: "/roles",
   permissions: "/permissions",
   hierarchy: "/organization/hierarchy",
-  reportingManager: (id: string) => `/employees/${encodeURIComponent(id)}/reporting-manager`,
+  reportingManager: (id: string) => `/employees/${encodeURIComponent(id)}/manager`,
 };
 
 function config(signal?: AbortSignal) {
@@ -42,8 +43,21 @@ export async function getOrganization(signal?: AbortSignal) {
 }
 
 export async function getOrganizationSummary(signal?: AbortSignal) {
-  const response = await api.get<OrganizationSummary | { data: OrganizationSummary }>(organizationEndpoints.summary, config(signal));
-  return unwrap(response.data);
+  type SummaryBody = OrganizationSummary | { summary: OrganizationSummary };
+  const response = await api.get<SummaryBody | { data: SummaryBody }>(
+    organizationEndpoints.summary,
+    config(signal),
+  );
+  const body = unwrap<SummaryBody>(response.data);
+  const summary = "summary" in body ? body.summary : body;
+
+  for (const key of ["totalEmployees", "departments", "teams"] as const) {
+    if (!Number.isInteger(summary[key]) || summary[key] < 0) {
+      throw new Error("The organization summary is missing valid database counts.");
+    }
+  }
+
+  return summary;
 }
 
 export async function updateOrganization(values: Omit<Organization, "_id">) {
@@ -57,17 +71,25 @@ export async function getStructure(kind: StructureKind, signal?: AbortSignal) {
 
 export async function saveStructure(kind: StructureKind, values: StructureInput, id?: string) {
   const path = organizationEndpoints[kind];
-  if (id) await api.patch(`${path}/${encodeURIComponent(id)}`, values, config());
-  else await api.post(path, values, config());
+  const { departmentHeadId, ...departmentValues } = values;
+  const payload = kind === "departments"
+    ? {
+        ...departmentValues,
+        ...(departmentHeadId === undefined ? {} : { headEmployeeId: departmentHeadId }),
+      }
+    : values;
+
+  if (id) await api.patch(`${path}/${encodeURIComponent(id)}`, payload, config());
+  else await api.post(path, payload, config());
 }
 
 export async function getHierarchy(signal?: AbortSignal) {
   const response = await api.get(organizationEndpoints.hierarchy, config(signal));
-  return list<HierarchyEmployee>(response.data, "employees");
+  return parseHierarchyEmployees(list<unknown>(response.data, "employees"));
 }
 
-export async function updateReportingManager(id: string, reportingManagerId: string | null) {
-  await api.patch(organizationEndpoints.reportingManager(id), { reportingManagerId }, config());
+export async function updateReportingManager(id: string, managerId: string | null) {
+  await api.patch(organizationEndpoints.reportingManager(id), { managerId }, config());
 }
 
 export async function getPermissions(signal?: AbortSignal) {

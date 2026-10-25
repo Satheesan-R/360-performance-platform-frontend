@@ -9,8 +9,10 @@ export interface CreateEmployeeRequest {
   personalEmail?: string;
   phone?: string;
   department?: string;
+  departmentId?: string;
   designation?: string;
   reportingManager?: string;
+  managerId?: string;
   officeLocation?: string;
   companyEmail: string;
   employmentType?: EmploymentType;
@@ -18,8 +20,15 @@ export interface CreateEmployeeRequest {
   role?: UserRole;
 }
 
+export interface ActivationEmailDelivery {
+  status: "accepted" | "failed";
+  recipient: string;
+  message?: string;
+}
+
 export interface CreateEmployeeResponse {
   message: string;
+  emailDelivery?: ActivationEmailDelivery;
   employee: {
     _id: string;
     employeeNumber: string;
@@ -31,4 +40,9 @@ export interface CreateEmployeeResponse {
   activationUrl?: string;
 }
 
-export type Employee = CreateEmployeeResponse["employee"] & Partial<CreateEmployeeRequest>;
+export type Employee = CreateEmployeeResponse["employee"] &
+  Omit<Partial<CreateEmployeeRequest>, "departmentId"> & {
+    departmentId?: string | { _id: string; name: string } | null;
+    jobTitle?: string;
+    user?: { role: UserRole; status: string } | null;
+  };

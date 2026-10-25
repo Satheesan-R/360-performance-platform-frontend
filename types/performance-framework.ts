@@ -1,4 +1,5 @@
 import type { Competency, Kpi } from "./framework-criteria";
+import type { RatingScale } from "./framework-scoring";
 
 export type FrameworkStatus = "draft" | "active" | "archived";
 
@@ -22,7 +23,7 @@ export interface PerformanceFramework {
   kpis: Kpi[];
   totalWeight: number;
   weightsValid: boolean;
-  ratingScale: { name: string } | null;
+  ratingScale: RatingScale | null;
 }
 
 export interface FrameworkInput {
@@ -35,7 +36,12 @@ export interface FrameworkInput {
 
 export interface FrameworkList {
   frameworks: PerformanceFramework[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface FrameworkSummary {
