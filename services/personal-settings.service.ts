@@ -25,7 +25,8 @@ export async function updateSelfProfile(values: { phone?: string; address?: stri
 export async function changeSelfPassword(currentPassword: string, newPassword: string, expectedId: string) {
   const { config } = sameAccount(expectedId);
   // Passwords are request-local only. Never persist, cache, dispatch or log them.
-  await api.patch("/settings/password", { currentPassword, newPassword }, config);
+  const { data } = await api.patch<{ requiresLogin: boolean; notification?: { status: "accepted" | "failed" | "unavailable" } }>("/settings/password", { currentPassword, newPassword }, config);
+  return data;
 }
 export type PreferenceSource = "server" | "browser";
 export async function getSelfPreferences(signal?: AbortSignal): Promise<{ preferences: PersonalPreferences; source: PreferenceSource; notice: string }> {

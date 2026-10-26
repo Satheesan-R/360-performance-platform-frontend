@@ -229,3 +229,13 @@ test("profile service sends allowlisted account details, submits real correction
   await assert.rejects(client.saveProfileDetails(base, "self-id"), /account changed/);
   assert.equal(requests.length, 2);
 });
+
+test("password changes preserve successful revocation results even when security email fails", async () => {
+  for (const status of ["accepted", "failed", "unavailable"]) {
+    const { client, storage } = setup({ patch: async () => ({ data: { success: true, requiresLogin: true, notification: { status } } }) });
+    const result = await client.changeSelfPassword("OldPassword1", "NewPassword2", "self-id");
+    assert.equal(result.requiresLogin, true);
+    assert.equal(result.notification.status, status);
+    assert.equal(storage.size, 0);
+  }
+});
