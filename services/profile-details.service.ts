@@ -14,6 +14,7 @@ export async function saveProfileDetails(details: ProfileDetails, expectedId: st
   const { data } = await api.patch<{ profile: SelfProfile }>("/settings/profile", { details: cleanProfileDetails(details) }, config);
   session(expectedId);
   if (data.profile?.id !== expectedId || !data.profile.details || Object.keys(validateProfileDetails(data.profile.details)).length) throw new Error("Could not verify the saved profile. Reload Settings.");
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("performance-profile-updated", { detail: { id: expectedId } }));
   return data.profile;
 }
 export async function getProfileCorrections(expectedId: string, review = false, signal?: AbortSignal) {

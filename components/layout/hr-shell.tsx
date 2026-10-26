@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import HeaderProfileLink from "./header-profile-link";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession, getCurrentUser } from "@/lib/auth";
 import { organizationNavigation } from "@/components/organization/navigation";
 import { frameworkNavigation } from "@/components/performance-framework/navigation";
 import type { SettingsRole } from "@/lib/settings-demo";
-import { useSettingsOverlay } from "@/components/settings/settings-overlay-provider";
 
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", short: "DB" },
@@ -26,7 +26,6 @@ const navigation = [
 export default function HrShell({ children, role = "hr" }: { children: ReactNode; role?: SettingsRole }) {
   const pathname = usePathname();
   const router = useRouter();
-  const openSettings = useSettingsOverlay();
   const [menuOpen, setMenuOpen] = useState(false);
   const [organizationExpanded, setOrganizationExpanded] = useState<boolean | null>(null);
   const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(null);
@@ -125,15 +124,14 @@ export default function HrShell({ children, role = "hr" }: { children: ReactNode
           </nav>
 
           <div className="border-t border-white/10 p-4">
-            <button
-              type="button"
-              aria-haspopup="dialog"
-              onClick={() => { setMenuOpen(false); openSettings(); }}
+            <Link
+              href="/settings"
+              onClick={() => setMenuOpen(false)}
               className="mb-4 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-5 w-5"><path d="m9 3-1 3-3 1-2 5 2 5 3 1 1 3h6l1-3 3-1 2-5-2-5-3-1-1-3Z" /><circle cx="12" cy="12" r="3" /></svg>
               Settings
-            </button>
+            </Link>
             <div className="mb-3 rounded-xl bg-white/5 px-4 py-3">
               <p className="text-xs text-slate-400">Signed in as {workspaceLabel}</p>
               <p className="mt-1 truncate text-sm font-medium">{user?.email}</p>
@@ -155,7 +153,7 @@ export default function HrShell({ children, role = "hr" }: { children: ReactNode
                 <p className="text-sm text-slate-500">{role === "admin" ? "Manage your organization settings" : "Manage people and performance"}</p>
               </div>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">{role === "admin" ? "AD" : "HR"}</div>
+            <HeaderProfileLink fallback={role === "admin" ? "AD" : "HR"} />
           </header>
 
           <div className="p-5 sm:p-8">{children}</div>
