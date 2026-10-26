@@ -1,8 +1,8 @@
 # Personal Settings
 
-Workspace Settings buttons open a shared modal above the current page and main sidebar, keeping the URL, page state and scroll position. The modal uses a native dialog for keyboard focus containment and inert background content, locks background scrolling, and supports Close, Escape and backdrop dismissal. Unsaved edits require confirmation before closing; dismissal is blocked while a save or password change is in progress. Closing restores the saved appearance and returns focus to the launcher (or the mobile menu button).
+Workspace Settings links open the dedicated `/settings` page. The page includes a Back to workspace link and warns before following links or reloading with unsaved edits. The root layout no longer mounts the settings popup provider.
 
-The canonical personal page `/settings` remains available for bookmarks and legacy redirects for every authenticated account.
+The canonical personal page `/settings` is available through workspace navigation, bookmarks and legacy redirects for every authenticated account.
 It has the same eight sections and component tree for Admin, HR, Manager,
 Team Lead and Employee. Peer is currently a review assignment, not a backend
 authentication role; peer reviewers use the same page through their normal
@@ -53,8 +53,8 @@ remain only in component/request memory, clear on success or leaving the section
 and never enter preference storage, events or local storage. Managed identities
 with no local password capability are directed to their organization/IT process;
 no alternate local-password creation path is provided. Existing activation/login
-flows remain separate. Production-wide rate limiting/session invalidation policy
-remains an authentication-service concern, not a new browser mechanism.
+flows remain separate. Password changes now revoke all login tokens through a database-backed session
+version check in authentication middleware.
 
 ## Personal behavior
 
@@ -146,3 +146,13 @@ server persistence before a background service could consume them.
 Appearance uses System, Light and Dark preview cards, the shared 360 Corporate theme, and Blue, Teal or Violet accents. Background and foreground swatches reflect the active mode and contrast setting; arbitrary color entry is intentionally unavailable. Advanced controls set the application base font size (14–18 px), reduced motion (System/On/Off), and higher contrast. Code editor controls are omitted because this platform has no code editor.
 
 These options live in `User.preferences.appearance`, validated by the existing authenticated self-service preference endpoint. Older records and browser previews receive defaults without a migration. Changes preview globally; Cancel or leaving Settings restores the saved appearance. Save uses the existing server/browser source and reports which one was updated. System mode and motion follow OS preference changes. The backend must be restarted with the updated schema and validator before new options can be saved.
+
+
+## Password security
+
+Password fields have independent visibility controls, live requirements, and a local zxcvbn strength estimate. Existing server policy remains 8 characters minimum and 72 UTF-8 bytes maximum. Strength is guidance, not an additional hidden acceptance rule. Successful password changes end all sessions, clear this browser sign-in, and return to Login with a result notice. Security emails are independent of optional notification preferences; SMTP acceptance is not inbox delivery. Mail failure does not undo a password change. Login activity, individual device controls, and MFA are not implemented in this phase.
+
+
+## Account Support
+
+Get Account Support now opens a real backend workflow in Account: New request, My requests, scoped Support queue, and admin-only Support access. Tickets and replies persist in MongoDB. No browser-only or mock ticket fallback is used. The backend API, RBAC, limits, SMTP behavior and manual test steps are documented in the backend `docs/account-support.md`.
