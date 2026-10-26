@@ -98,6 +98,8 @@ export function parsePreferences(value: unknown, role: UserRole): PersonalPrefer
 export interface SelfProfile {
   id: string; email: string; role: UserRole; status?: string;
   details?: ProfileDetails;
+  createdAt?: string | null;
+  organization?: { name?: string } | null;
   lastLoginAt?: string | null; passwordChangedAt?: string | null;
   capabilities?: { editableProfileFields: string[]; extendedProfile?: boolean; corrections?: boolean; correctionReview?: boolean; passwordChange: boolean; authMethod: "password" | "managed" | "sso"; mfa: boolean; sessions: boolean };
   employee: { _id: string; employeeNumber: string; firstName: string; lastName: string; workEmail: string; phone?: string; address?: string; jobTitle?: string; department?: string; team?: string; reportingManager?: string } | null;
