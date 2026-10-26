@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { clearSession, getDashboardPath } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
-import { landingPages, roleNames, validatePreferences, type SelfProfile } from "@/lib/personal-settings";
+import { landingPages, validatePreferences, type SelfProfile } from "@/lib/personal-settings";
 import { getSelfProfile } from "@/services/personal-settings.service";
 import { usePersonalPreferences } from "./personal-preferences-provider";
+import PersonalAccount from "./personal-account";
 import PersonalSecurity from "./personal-security";
 import PersonalAppearance from "./personal-appearance";
 import PersonalNotifications from "./personal-notifications";
@@ -24,15 +25,15 @@ const sections = [
 type Section = typeof sections[number]["id"];
 const primaryClass = "inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-40";
 
-interface PersonalSettingsProps { onClose?: () => void; registerCloseHandler?: (handler: (() => void) | null) => void }
+interface PersonalSettingsProps { initialSection?: Section; onClose?: () => void; registerCloseHandler?: (handler: (() => void) | null) => void }
 export default function PersonalSettings(props: PersonalSettingsProps) {
   const context = usePersonalPreferences();
   if (!context.user || context.loading) return <div className={`flex items-center justify-center bg-slate-50 ${props.onClose ? "h-full" : "min-h-screen"}`}><p role="status" className="text-sm text-slate-500">Loading personal settings…</p>{props.onClose && <button type="button" aria-label="Close settings" className="absolute right-4 top-4 rounded-lg p-2 text-slate-600" onClick={props.onClose}>×</button>}</div>;
-  return <PersonalSettingsContent key={`${context.user.role}:${context.user.id}`} {...props} />;
+  return <PersonalSettingsContent key={`${context.user.role}:${context.user.id}:${props.initialSection ?? "general"}`} {...props} />;
 }
-function PersonalSettingsContent({ onClose, registerCloseHandler }: PersonalSettingsProps) {
+function PersonalSettingsContent({ onClose, registerCloseHandler, initialSection = "general" }: PersonalSettingsProps) {
   const context = usePersonalPreferences(); const user = context.user!; const router = useRouter();
-  const [section, setSection] = useState<Section>("general");
+  const [section, setSection] = useState<Section>(initialSection);
   const [draft, setDraft] = useState(context.preferences);
   const [profile, setProfile] = useState<SelfProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true); const [profileError, setProfileError] = useState(""); const [profileReload, setProfileReload] = useState(0);
@@ -41,7 +42,6 @@ function PersonalSettingsContent({ onClose, registerCloseHandler }: PersonalSett
   const [saving, setSaving] = useState<"preferences" | "profile" | null>(null);
   const setProfileBusy = useCallback((busy: boolean) => setSaving((current) => busy ? "profile" : current === "profile" ? null : current), []);
   const [passwordDirty, setPasswordDirty] = useState(false); const [passwordBusy, setPasswordBusy] = useState(false);
-  const [help, setHelp] = useState(false);
   const dirtyPreferences = JSON.stringify(draft) !== JSON.stringify(context.preferences);
   const hasUnsaved = dirtyPreferences || dirtyProfile || passwordDirty;
   const previewTheme = context.previewTheme;
@@ -97,7 +97,7 @@ function PersonalSettingsContent({ onClose, registerCloseHandler }: PersonalSett
   const fullName = employee ? [employee.firstName, employee.lastName].filter(Boolean).join(" ") : user.email;
   const initials = employee ? `${employee.firstName?.[0] ?? ""}${employee.lastName?.[0] ?? ""}`.toUpperCase() : user.email.slice(0, 2).toUpperCase();
   const timezones = [...new Set([draft.timezone, "UTC", ...(typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : ["Asia/Colombo", "Europe/London", "America/New_York"])])];
-  const showProfileState = ["profile", "security", "account", "privacy", "devices"].includes(section);
+  const showProfileState = ["profile", "security", "privacy", "devices"].includes(section);
   const preferenceSection = ["general", "appearance", "notifications"].includes(section);
   const resetPreferences = () => { setDraft(context.preferences); previewTheme(null); previewAppearance(null); setErrors({}); setError(""); setMessage("Unsaved preferences discarded."); };
 
@@ -120,7 +120,7 @@ function PersonalSettingsContent({ onClose, registerCloseHandler }: PersonalSett
             {profile && <div hidden={section !== "profile"}><PersonalProfile profile={profile} timezone={context.preferences.timezone} onDirty={setDirtyProfile} onBusy={setProfileBusy} onSaved={setProfile} /></div>}
             {section === "profile" && (profileLoading ? <p role="status" className="text-sm text-slate-500">Loading your profile…</p> : !profile && <p className="text-sm text-slate-500">Your employee profile is unavailable.</p>)}
             {section === "security" && <PersonalSecurity profile={profile} loading={profileLoading} onDirty={setPasswordDirty} onBusy={setPasswordBusy} />}
-            {section === "account" && <div className="space-y-6"><div><h3 className="text-sm font-semibold text-slate-800">Account information</h3><dl className="mt-4 space-y-3 text-sm"><div><dt className="text-slate-500">Account ID</dt><dd className="mt-1 break-all font-medium text-slate-800">{user.id}</dd></div><div><dt className="text-slate-500">Role</dt><dd className="mt-1 font-medium text-slate-800">{roleNames[profile?.role ?? user.role]}</dd></div><div><dt className="text-slate-500">Status</dt><dd className="mt-1 font-medium capitalize text-slate-800">{profileLoading ? "Loading…" : profile?.status || "Unavailable"}</dd></div></dl></div><div className="border-t border-slate-200 pt-5"><h3 className="text-sm font-semibold text-slate-800">Account assistance</h3><p className="mt-2 text-sm leading-6 text-slate-500">Contact HR or IT through your organization’s usual support channel. Role assignments and account deactivation are managed by authorized staff.</p><button type="button" className={`${secondaryClass} mt-4`} aria-expanded={help} onClick={() => setHelp(!help)}>Get account support</button>{help && <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600"><p>When requesting support, include your account ID and describe the problem. Never send your password or sign-in token.</p><p className="mt-2 break-all">Account ID: {user.id}</p><p className="mt-2">This page does not send a support request. Use your established HR or IT channel.</p></div>}</div></div>}
+            {section === "account" && <PersonalAccount key={profile?.id ?? "unavailable"} profile={profile} loading={profileLoading} error={profileError} timezone={context.preferences.timezone} onRetry={() => { setProfileLoading(true); setProfileError(""); setProfileReload(value => value + 1); }} onSecurity={() => navigate("security")} />}
             {section === "privacy" && <div className="space-y-6"><div><h3 className="text-sm font-semibold text-slate-800">Access to your information</h3><p className="mt-3 text-sm leading-6 text-slate-500">This page reads only your linked employee profile. Employment changes remain in authorized HR workflows. Access to employees and performance records is controlled by each module’s backend role and scope checks; personal preferences grant no additional access.</p><p className="mt-3 text-xs leading-5 text-slate-500">Peer reviewers use their normal sign-in account. A peer-review assignment does not create a separate system role or access to confidential audit records.</p></div><div className="border-t border-slate-200 pt-5"><h3 className="text-sm font-semibold text-slate-800">Recent account activity</h3>{profileLoading ? <p role="status" className="mt-3 text-sm text-slate-500">Loading your security activity…</p> : profile?.lastLoginAt || profile?.passwordChangedAt ? <ul className="mt-3 space-y-3">{[{ date: profile.lastLoginAt, label: "Last successful sign-in" }, { date: profile.passwordChangedAt, label: "Last password change" }].filter(({ date }) => date).map(({ date, label }) => <li key={label} className="rounded-xl border border-slate-200 p-4"><p className="text-sm font-semibold text-slate-800">{label}</p><p className="mt-1 text-xs text-slate-500">{new Date(date!).toLocaleString("en", { timeZone: context.preferences.timezone })} · {context.preferences.timezone}</p></li>)}</ul> : <p role="status" className="mt-3 text-sm leading-6 text-slate-500">No personal security activity is available from the server.</p>}<p className="mt-4 text-xs leading-5 text-slate-500">Only your available personal security timestamps are shown. Organization audit records and other employees’ activity are not fetched.</p></div></div>}
             {section === "devices" && <div className="space-y-5"><h3 className="text-sm font-semibold text-slate-800">Signed-in devices</h3><div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-4"><div className="flex items-center gap-3"><Icon name="devices" /><div><p className="text-sm font-semibold text-slate-800">This browser</p><p className="mt-1 text-xs text-slate-500">Your current local sign-in</p></div></div><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Current device</span></div><p className="text-sm leading-6 text-slate-500">The current backend does not provide a session inventory or remote-session revocation. No example device is presented as a real active session.</p><div className="flex flex-wrap gap-3"><button type="button" disabled className={secondaryClass}>Sign out of other sessions</button><button type="button" className={secondaryClass} onClick={() => { if (hasUnsaved && !window.confirm("Sign out and discard unsaved changes?")) return; clearSession(); router.replace("/login"); }}>Sign out of this browser</button></div><p className="text-xs leading-5 text-slate-500">Signing out clears this browser’s sign-in. It does not revoke tokens on other devices.</p></div>}
           </div>
