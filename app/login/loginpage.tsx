@@ -1,13 +1,17 @@
 ﻿"use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { getApiErrorMessage } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
 
-export default function LoginPage() {
+const subscribeToNotice = () => () => {};
+
+export default function LoginPage({ securityNotice = "" }: { securityNotice?: string }) {
   const router = useRouter();
+  const storedNotice = useSyncExternalStore(subscribeToNotice, () => { try { return sessionStorage.getItem("performance_password_change_notice"); } catch { return null; } }, () => null);
+  const notice = securityNotice || (storedNotice === "changed" ? "Your password has been changed. All devices were signed out. Sign in with your new password. A security alert was accepted by the email server." : storedNotice === "changed-email-unavailable" ? "Your password has been changed. All devices were signed out. Sign in with your new password. The security email could not be confirmed; contact HR or IT if needed." : "");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,6 +33,7 @@ export default function LoginPage() {
         email: email.trim().toLowerCase(),
         password,
       });
+      try { sessionStorage.removeItem("performance_password_change_notice"); } catch { /* Sign-in can still continue. */ }
       saveSession(result);
       router.replace("/dashboard");
     } catch (requestError) {
@@ -68,6 +73,7 @@ export default function LoginPage() {
             Use your company email and password to continue.
           </p>
 
+          {notice && <p role="status" className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">{notice}</p>}
           <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
             <div>
               <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
