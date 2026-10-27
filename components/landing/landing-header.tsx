@@ -25,7 +25,7 @@ export default function LandingHeader() {
       }
     }}>
       <nav className={[styles.container, styles.nav, styles.scopeNav].join(" ")} aria-label="Main navigation">
-        <Link href="/" className={[styles.brand, styles.brandWithMark].join(" ")} aria-label="CorpDev 360 home"><Image src="/images/corpdev360-mark.png" alt="" width={36} height={36} className={styles.brandMark} /><span className={styles.brandWordmark}>CorpDev <span>360</span></span></Link>
+        <Link href="/" className={[styles.brand, styles.brandWithMark].join(" ")} aria-label="CorpDev 360 home"><Image src="/images/corpdev360-mark.png" alt="" width={36} height={36} className={styles.brandMark} /><span className={styles.brandWordmark}>Perform <span>360</span></span></Link>
         <button ref={toggle} type="button" className={styles.menuToggle} aria-expanded={open} aria-controls="landing-navigation" onClick={() => setOpen(!open)}>
           {open ? "Close" : "Menu"}<span aria-hidden="true">{open ? " ×" : " ☰"}</span>
         </button>
