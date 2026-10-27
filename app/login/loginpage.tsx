@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -44,9 +44,9 @@ export default function LoginPage() {
   return (
     <main className={styles.page}>
       <section className={styles.brandPanel} aria-labelledby="brand-heading">
-        <Link href="/" className={styles.brand} aria-label="CorpDev 360 home">
+        <Link href="/" className={styles.brand} aria-label="Performance 360 home">
           <Image src="/images/corpdev360-mark.png" alt="" width={48} height={48} className={styles.loginBrandMark} />
-          <span><strong>CorpDev <b>360°</b></strong><small>Performance &amp; Talent Governance</small></span>
+          <span><strong>Perform <b>360°</b></strong><small>Performance &amp; Talent Governance</small></span>
         </Link>
         <div className={styles.brandStory}>
           <span className={styles.edition}><i aria-hidden="true" />GROW TOGETHER · CORPDEV 360</span>
@@ -62,7 +62,11 @@ export default function LoginPage() {
       </section>
 
       <section className={styles.formPanel} aria-labelledby="login-heading">
-        <div className={styles.topBar}><Link href="/" className={styles.back}><span aria-hidden="true">←</span> Back to website</Link><span className={styles.accessBadge}><span aria-hidden="true">◇</span> ROLE-BASED ACCESS</span></div>
+        <div className={styles.topBar}>
+          <Link href="/" className={styles.back}>
+          <span aria-hidden="true">←</span> Back to website
+          </Link>
+        </div>
         <div className={styles.formContent}>
           <p className={styles.mobileBrand}><Image src="/images/corpdev360-mark.png" alt="" width={28} height={28} className={styles.mobileBrandMark} />CorpDev <span>360°</span></p>
           <h2 id="login-heading">Sign in to your account</h2>
