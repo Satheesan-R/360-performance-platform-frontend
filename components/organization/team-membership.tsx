@@ -18,7 +18,7 @@ function CandidateRows({ departmentId, teamId, filters, disabled, selected, onSe
   return <>
     <ResourceState loading={resource.loading} error={resource.error} retry={resource.reload} />
     {!resource.loading && !resource.error && resource.data && <>
-      <fieldset disabled={disabled} className="max-h-80 space-y-2 overflow-y-auto">
+      <fieldset disabled={disabled} className="space-y-2">
         <legend className="sr-only">Choose an employee from this department</legend>
         {resource.data.employees.map((employee) => <label key={employee._id} className="flex items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm">
           <input type="radio" name="team-candidate" className="mt-1" checked={selected === employee._id} disabled={referenceId(employee.teamId) === teamId} onChange={() => onSelect(employee)} />

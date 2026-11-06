@@ -37,7 +37,7 @@ export default function EmployeeShell({ children }: { children: ReactNode }) {
             <button type="button" className="text-2xl text-slate-400 lg:hidden" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
           </div>
 
-          <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
+          <nav className="flex-1 space-y-1 overflow-hidden px-4 py-6">
             {navigation.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
               return (

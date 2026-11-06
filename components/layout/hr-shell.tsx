@@ -58,7 +58,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
             </button>
           </div>
 
-          <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
+          <nav className="flex-1 space-y-1 overflow-hidden px-4 py-6">
             {navigation.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
               if (item.href === "/hr/organization" || item.href === "/hr/performance-framework") {
