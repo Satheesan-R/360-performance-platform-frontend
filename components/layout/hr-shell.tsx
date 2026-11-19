@@ -18,6 +18,7 @@ const navigation = [
     short: "PF",
   },
   { label: "Review Cycles", href: "/hr/review-cycles", short: "RC" },
+  { label: "Goals & OKRs", href: "/hr/goals", short: "GO" },
   { label: "Normalisation", href: "/hr/normalisation", short: "NM" },
   {
     label: "Promotion & Development",
