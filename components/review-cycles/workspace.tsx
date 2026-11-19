@@ -6,13 +6,14 @@ import { getToken } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { getEmployees } from "@/services/employee.service";
 import { getActiveDepartments, type DepartmentOption } from "@/services/department.service";
-import { getReviewTemplates } from "@/services/review-template.service";
+import ReviewerAssignments from "./reviewer-assignments";
+import { getReviewTemplate, getReviewTemplates } from "@/services/review-template.service";
 import { getReviewCycle, getReviewCycles, saveReviewCycle } from "@/services/review-cycle.service";
-import type { CycleInput, CycleList, ReviewCycle } from "@/types/review-cycle";
+import type { CycleInput, CycleList, ReviewCycle, ReviewerRole } from "@/types/review-cycle";
 import type { TemplateListItem } from "@/types/review-template";
 import type { Employee } from "@/types/employee";
 
-const empty = (): CycleInput => ({ name: "", templateId: "", departmentIds: [], employeeIds: [], startDate: "", endDate: "" });
+const empty = (): CycleInput => ({ name: "", templateId: "", departmentIds: [], employeeIds: [], startDate: "", endDate: "", reviewerAssignments: [] });
 const field = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2";
 const button = "rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-50";
 const departmentId = (e: Employee) => typeof e.departmentId === "string" ? e.departmentId : e.departmentId?._id;
@@ -24,6 +25,9 @@ export default function ReviewCycles() {
   const [templates, setTemplates] = useState<TemplateListItem[]>([]);
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [reviewerTemplate, setReviewerTemplate] = useState<{ id: string; roles: ReviewerRole[] } | null>(null);
+  const [roleError, setRoleError] = useState("");
+  const [roleRetry, setRoleRetry] = useState(0);
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -71,7 +75,7 @@ export default function ReviewCycles() {
         const [ts, ds, es] = await Promise.all([templatePromise, getActiveDepartments(token, controller.signal), getEmployees(token, controller.signal)]);
         if (!controller.signal.aborted) {
           setTemplates(ts); setDepartments(ds);
-          setEmployees(es.filter(e => e.user?.role === "department_manager" && e.user.status === "active"));
+          setEmployees(es);
           setReady(true);
         }
       } catch (e) { if (!controller.signal.aborted) setError(getApiErrorMessage(e)); }
@@ -80,12 +84,23 @@ export default function ReviewCycles() {
     return () => controller.abort();
   }, [refresh]);
 
+  useEffect(() => {
+    if (!values.templateId || !editing) return;
+    const controller = new AbortController();
+    const id = values.templateId;
+    setReviewerTemplate(null); setRoleError("");
+    getReviewTemplate(id, controller.signal).then(data => {
+      if (!controller.signal.aborted) setReviewerTemplate({ id, roles: data.frameworkSnapshot?.enabledReviewers ?? [] });
+    }).catch(error => { if (!controller.signal.aborted) setRoleError(getApiErrorMessage(error)); });
+    return () => controller.abort();
+  }, [values.templateId, editing, refresh, roleRetry]);
+
   async function open(id: string) {
     setBusy(true); setError(""); setMessage("");
     try {
       const data = await getReviewCycle(id);
       setCycle(data);
-      setValues({ name: data.name, templateId: data.templateId, departmentIds: data.departmentIds, employeeIds: data.employeeIds, startDate: data.startDate, endDate: data.endDate });
+      setValues({ name: data.name, templateId: data.templateId, departmentIds: data.departmentIds, employeeIds: data.employeeIds, startDate: data.startDate, endDate: data.endDate, reviewerAssignments: data.reviewerAssignments ?? [] });
       setConflict(false); setEditing(true);
     } catch (e) { setError(getApiErrorMessage(e)); }
     finally { setBusy(false); }
@@ -94,10 +109,14 @@ export default function ReviewCycles() {
   const template = templates.find(t => t._id === values.templateId);
   const allowedDepartments = (template?.departmentIds ?? []).map(value => typeof value === "string" ? value : (value as { _id: string })._id);
   const effectiveDepartments = values.departmentIds.length ? values.departmentIds : allowedDepartments;
-  const candidates = employees.filter(e => (!effectiveDepartments.length || effectiveDepartments.includes(departmentId(e) ?? "")) && `${e.firstName} ${e.lastName} ${e.workEmail}`.toLowerCase().includes(search.toLowerCase()));
+  const candidates = employees.filter(e => e.user?.role === "department_manager" && e.user.status === "active" && (!effectiveDepartments.length || effectiveDepartments.includes(departmentId(e) ?? "")) && `${e.firstName} ${e.lastName} ${e.workEmail}`.toLowerCase().includes(search.toLowerCase()));
   const readOnly = !!cycle && cycle.status !== "draft";
   function toggle(key: "departmentIds" | "employeeIds", id: string) {
-    setValues(v => ({ ...v, [key]: v[key].includes(id) ? v[key].filter(x => x !== id) : [...v[key], id] }));
+    setValues(v => ({ ...v, [key]: v[key].includes(id) ? v[key].filter(x => x !== id) : [...v[key], id],
+      reviewerAssignments: key === "employeeIds" && v.employeeIds.includes(id)
+        ? (v.reviewerAssignments ?? []).filter(assignment => assignment.employeeId !== id)
+        : v.reviewerAssignments,
+    }));
   }
 
   async function submit(event: React.FormEvent) {
@@ -108,7 +127,7 @@ export default function ReviewCycles() {
     setBusy(true);
     try {
       const saved = await saveReviewCycle({ ...values, name: values.name.trim() }, cycle);
-      setCycle(saved); setValues({ ...values, departmentIds: saved.departmentIds });
+      setCycle(saved); setValues({ ...values, departmentIds: saved.departmentIds, reviewerAssignments: saved.reviewerAssignments ?? [] });
       setMessage("Draft saved. Reviews have not started."); setRefresh(x => x + 1);
     } catch (e) {
       setError(getApiErrorMessage(e));
@@ -129,7 +148,7 @@ export default function ReviewCycles() {
       {conflict && <p role="alert">The draft or template has changed. Reload before saving again. Reload discards your changes.</p>}
       <fieldset disabled={busy || conflict || readOnly || !ready} className="space-y-5 disabled:opacity-60">
         <label className="block">Cycle name<input required maxLength={200} className={field} value={values.name} onChange={e => setValues({ ...values, name: e.target.value })} /></label>
-        <label className="block">Approved template<select required className={field} value={values.templateId} onChange={e => setValues({ ...values, templateId: e.target.value, departmentIds: [], employeeIds: [] })}>
+        <label className="block">Approved template<select required className={field} value={values.templateId} onChange={e => setValues({ ...values, templateId: e.target.value, departmentIds: [], employeeIds: [], reviewerAssignments: [] })}>
           <option value="">Select a template</option>
           {!template && values.templateId && <option value={values.templateId}>Previously selected template (unavailable)</option>}
           {templates.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
@@ -140,11 +159,16 @@ export default function ReviewCycles() {
           <div className="mt-2 max-h-48 overflow-y-auto">{departments.filter(d => !allowedDepartments.length || allowedDepartments.includes(d._id)).map(d => <label key={d._id} className="block py-1"><input type="checkbox" checked={values.departmentIds.includes(d._id)} onChange={() => toggle("departmentIds", d._id)} /> {d.name}</label>)}</div>
           {values.departmentIds.filter(id => !departments.some(d => d._id === id) || (allowedDepartments.length > 0 && !allowedDepartments.includes(id))).map(id => <label className="block" key={id}><input type="checkbox" checked onChange={() => toggle("departmentIds", id)} /> Unavailable department ({id}) - remove to update</label>)}
         </fieldset>
-        <fieldset><legend className="font-semibold">Participants ({values.employeeIds.length}/500)</legend><p className="text-sm text-slate-500">Active department managers only. The server also checks employment types and job titles.</p>
+        <fieldset><legend className="font-semibold">Participants ({values.employeeIds.length}/500)</legend><p className="text-sm text-slate-500">Active department managers only. The server also checks employment types and job titles. Removing a participant removes their assignments; changing the template clears all assignments.</p>
           <input aria-label="Search managers" placeholder="Search managers" className={`${field} my-2`} value={search} onChange={e => setSearch(e.target.value)} />
           <div className="max-h-64 overflow-y-auto">{candidates.map(e => <label key={e._id} className="block py-2"><input type="checkbox" checked={values.employeeIds.includes(e._id)} onChange={() => toggle("employeeIds", e._id)} /> {e.firstName} {e.lastName} <span className="text-sm text-slate-500">{e.workEmail}</span></label>)}{!candidates.length && <p>No matching active department managers.</p>}</div>
           {values.employeeIds.filter(id => !candidates.some(e => e._id === id)).map(id => <label className="block py-1" key={id}><input type="checkbox" checked onChange={() => toggle("employeeIds", id)} /> Selected manager outside this view: {employees.find(e => e._id === id)?.workEmail ?? id}</label>)}
         </fieldset>
+        <ReviewerAssignments key={values.templateId} participantIds={values.employeeIds} employees={employees}
+          roles={reviewerTemplate?.id === values.templateId ? reviewerTemplate.roles : []}
+          loading={!!values.templateId && reviewerTemplate?.id !== values.templateId && !roleError}
+          error={roleError} onRetry={() => setRoleRetry(value => value + 1)}
+          assignments={values.reviewerAssignments ?? []} onChange={reviewerAssignments => setValues(value => ({ ...value, reviewerAssignments }))} />
         <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white disabled:opacity-50" disabled={!template}>{busy ? "Saving..." : "Save draft"}</button>
       </fieldset>
       <div className="flex flex-wrap gap-3">{cycle && <button type="button" className={button} disabled={busy} onClick={() => { void open(cycle._id); setRefresh(x => x + 1); }}>Reload saved draft (discard changes)</button>}
