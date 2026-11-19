@@ -1,16 +1,11 @@
 .heroSplit {
   padding: 88px 0 72px;
   background:
-    radial-gradient(circle, #2457df12 1px, transparent 1px) 0 0 / 22px 22px,
-    radial-gradient(ellipse at 78% 60%, #dceaff 0, transparent 58%),
-    linear-gradient(135deg, #ffffff 0%, #f1f6ff 55%, #eaf3ff 100%);
+    linear-gradient(90deg, #ffffff 0%, #ffffff 35%, #ffffffdc 58%, #ffffff2e 100%),
+    url("/images/landing-team.webp") center right / cover no-repeat;
   color: #0f1b3d;
 }
 .heroGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 56px;
   max-width: 1180px;
   margin: 0 auto;
   padding: 0 24px;
@@ -79,45 +74,18 @@
 .heroSecondary:hover {
   background: #f1f7f6;
 }
-.heroVisual {
-  position: relative;
-  min-width: 0;
-  padding: 12px;
-  border-radius: 24px;
-  background: #ffffffb3;
-  border: 1px solid #d7e5ff;
-  box-shadow: 0 24px 56px -20px #2457df45, 0 0 32px #a9caff55;
-}
-.heroPhoto {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  border-radius: 16px;
-}
-.heroImage {
-  object-fit: cover;
-  object-position: center;
-}
 @media (max-width: 800px) {
   .heroSplit {
     padding: 56px 0;
+    background:
+      linear-gradient(90deg, #ffffff 0%, #ffffffeb 42%, #ffffffa8 100%),
+      url("/images/landing-team.webp") center / cover no-repeat;
   }
   .heroGrid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 36px;
+    padding-inline: 24px;
   }
   .heroCopy {
     max-width: 620px;
-  }
-  .heroCopy h1 {
-    font-size: clamp(38px, 7vw, 56px);
-  }
-  .heroVisual {
-    width: 100%;
-    max-width: 620px;
-  }
-  .heroPhoto {
-    aspect-ratio: 5 / 4;
   }
 }
 @media (max-width: 480px) {
@@ -138,14 +106,6 @@
   .heroActions {
     align-items: stretch;
     flex-direction: column;
-  }
-  .heroVisual {
-    padding: 8px;
-    border-radius: 20px;
-  }
-  .heroPhoto {
-    aspect-ratio: 1;
-    border-radius: 14px;
   }
 }
 .landing {

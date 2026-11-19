@@ -1,4 +1,4 @@
-﻿import type { UserRole } from "./auth";
+import type { UserRole } from "./auth";
 
 export type EmploymentType = "full-time" | "probation" | "intern";
 
@@ -41,8 +41,9 @@ export interface CreateEmployeeResponse {
 }
 
 export type Employee = CreateEmployeeResponse["employee"] &
-  Omit<Partial<CreateEmployeeRequest>, "departmentId"> & {
+  Omit<Partial<CreateEmployeeRequest>, "departmentId" | "managerId"> & {
     departmentId?: string | { _id: string; name: string } | null;
+    managerId?: string | { _id: string; firstName?: string; lastName?: string } | null;
     jobTitle?: string;
     user?: { role: UserRole; status: string } | null;
   };
