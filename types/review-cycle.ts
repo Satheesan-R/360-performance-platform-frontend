@@ -1,4 +1,11 @@
+export type ReviewerRole = "self" | "peer" | "tech_lead" | "manager";
+export interface ReviewerAssignment {
+  employeeId: string;
+  reviewerEmployeeId: string;
+  role: ReviewerRole;
+}
 export interface CycleInput {
+  reviewerAssignments?: ReviewerAssignment[];
   name: string;
   templateId: string;
   departmentIds: string[];
