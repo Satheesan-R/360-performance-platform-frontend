@@ -6,3 +6,8 @@ export function keyResultProgress(result: KeyResult): number {
   if (!distance || !Number.isFinite(distance) || !Number.isFinite(result.current)) return 0;
   return Math.round(Math.min(100, Math.max(0, ((result.current - result.baseline) / distance) * 100)));
 }
+
+export function objectiveProgress(objective: Objective): number {
+  if (!objective.keyResults.length) return 0;
+  return Math.round(objective.keyResults.reduce((total, result) => total + keyResultProgress(result), 0) / objective.keyResults.length);
+}
