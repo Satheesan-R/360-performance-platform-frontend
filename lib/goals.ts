@@ -30,3 +30,15 @@ export function validateObjective(objective: Objective): string | null {
 function validDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 }
+
+export function isObjective(value: unknown): value is Objective {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Objective;
+  return typeof item.id === "string" && typeof item.title === "string" && typeof item.description === "string"
+    && typeof item.owner === "string" && typeof item.startDate === "string" && typeof item.endDate === "string"
+    && typeof item.updatedAt === "string" && ["organization", "team", "individual"].includes(item.scope)
+    && ["draft", "active", "completed", "archived"].includes(item.status) && Array.isArray(item.keyResults)
+    && item.keyResults.every(result => result && typeof result.id === "string" && typeof result.title === "string"
+      && typeof result.unit === "string" && [result.baseline, result.target, result.current].every(value => typeof value === "number" && Number.isFinite(value)))
+    && validateObjective(item) === null;
+}
