@@ -52,6 +52,22 @@ export default function ObjectiveEditor({ initial, onSave, onCancel }: {
           <Field label="Status"><select className={input} value={value.status} onChange={event => setValue({ ...value, status: event.target.value as GoalStatus })}><option value="draft">Draft</option><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></Field>
         </div>
         <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600"><strong className="text-slate-800">Review-cycle alignment</strong><p className="mt-1">Use dates that match your intended review period. Linking to a review cycle will be available after cycle integration.</p></div>
+        <div>
+          <h3 className="text-lg font-semibold">Key results</h3>
+          <p className="mt-1 text-sm text-slate-500">Use increasing or decreasing targets. Objective progress is the equal-weight average of its key results.</p>
+          <div className="mt-4 space-y-4">
+            {value.keyResults.map((result, index) => <fieldset key={result.id} className="rounded-xl border border-slate-200 p-4 sm:p-5">
+              <legend className="px-2 text-sm font-semibold text-slate-700">Key result {index + 1}</legend>
+              <Field label="Measurable outcome"><input required maxLength={200} className={input} value={result.title} placeholder="Increase customer satisfaction score" onChange={event => updateResult(result.id, { title: event.target.value })} /></Field>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Field label="Unit"><input required maxLength={40} className={input} value={result.unit} placeholder="%, hours, customers" onChange={event => updateResult(result.id, { unit: event.target.value })} /></Field>
+                {([['baseline', 'Baseline'], ['target', 'Target'], ['current', 'Current value']] as const).map(([key, label]) => <Field key={key} label={label}><input required type="number" step="any" className={input} value={Number.isFinite(result[key]) ? result[key] : ""} onChange={event => updateResult(result.id, { [key]: event.target.valueAsNumber })} /></Field>)}
+              </div>
+              <button type="button" disabled={value.keyResults.length === 1} className="mt-4 text-sm font-semibold text-red-700 disabled:cursor-not-allowed disabled:text-slate-400" onClick={() => setValue({ ...value, keyResults: value.keyResults.filter(item => item.id !== result.id) })}>Remove key result {index + 1}</button>
+            </fieldset>)}
+          </div>
+          <button type="button" className="mt-4 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50" onClick={() => setValue({ ...value, keyResults: [...value.keyResults, newResult()] })}>Add key result</button>
+        </div>
         {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-5">
           <button type="submit" className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Save browser draft</button>
