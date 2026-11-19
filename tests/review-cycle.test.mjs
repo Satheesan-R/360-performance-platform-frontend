@@ -38,3 +38,49 @@ test("missing session blocks cycle requests", async () => {
   const client = service({ get: () => assert.fail("must not request") }, null);
   await assert.rejects(client.getReviewCycle("cycle"), /session has expired/);
 });
+
+
+test("assignments are sent in full on create, edit and clear", async () => {
+  const assignments = [{ employeeId: "participant", reviewerEmployeeId: "participant", role: "self" }];
+  const requests = [];
+  const capture = async (path, body) => { requests.push(body); return { data: { cycle: { ...body, _id: "saved", __v: 3 } } }; };
+  const client = service({ post: capture, patch: capture });
+  await client.saveReviewCycle({ name: "Annual", reviewerAssignments: assignments });
+  await client.saveReviewCycle({ name: "Annual", reviewerAssignments: assignments }, { _id: "saved", __v: 2 });
+  await client.saveReviewCycle({ name: "Annual", reviewerAssignments: [] }, { _id: "saved", __v: 3 });
+  assert.equal(requests[0].reviewerAssignments, assignments);
+  assert.equal(requests[1].reviewerAssignments, assignments);
+  assert.equal(requests[1].version, 2);
+  assert.equal(requests[2].reviewerAssignments.length, 0);
+  assert.equal(requests[2].version, 3);
+});
+
+const helperContext = { exports: {} };
+vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL("../lib/reviewer-assignments.ts", import.meta.url), "utf8"), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS },
+}).outputText, helperContext);
+const { eligibleReviewers, assignmentConflict } = helperContext.exports;
+
+test("reviewer options follow enabled role eligibility without limiting reviewers to participants", () => {
+  const employee = (_id, role, status = "active") => ({ _id, user: { role, status } });
+  const participant = { ...employee("person", "department_manager"), managerId: { _id: "manager" } };
+  const employees = [participant, employee("peer", "department_manager"), employee("lead", "tech_lead"), employee("manager", "admin"), employee("disabled", "department_manager", "disabled")];
+  const ids = role => Array.from(eligibleReviewers(participant, role, employees), employee => employee._id);
+  assert.deepEqual(ids("self"), ["person"]);
+  assert.deepEqual(ids("peer"), ["peer"]);
+  assert.deepEqual(ids("tech_lead"), ["lead"]);
+  assert.deepEqual(ids("manager"), ["manager"]);
+  assert.equal(eligibleReviewers(undefined, "self", employees).length, 0);
+  assert.equal(eligibleReviewers({ ...participant, managerId: null }, "manager", employees).length, 0);
+  assert.equal(eligibleReviewers({ ...participant, managerId: "manager" }, "manager", employees)[0]._id, "manager");
+});
+
+test("duplicate reviewers and single-role slots are blocked while distinct peers are allowed", () => {
+  const peer = { employeeId: "person", reviewerEmployeeId: "peer", role: "peer" };
+  assert.equal(assignmentConflict([peer], peer), true);
+  assert.equal(assignmentConflict([peer], { ...peer, role: "manager" }), true);
+  assert.equal(assignmentConflict([peer], { ...peer, reviewerEmployeeId: "another" }), false);
+  const manager = { ...peer, role: "manager" };
+  assert.equal(assignmentConflict([manager], { ...manager, reviewerEmployeeId: "another" }), true);
+  assert.equal(assignmentConflict([peer], { ...peer, employeeId: "other" }), false);
+});
