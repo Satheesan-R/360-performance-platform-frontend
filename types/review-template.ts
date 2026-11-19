@@ -36,6 +36,7 @@ export interface TemplateInput {
   status: FrameworkStatus;
 }
 export interface TemplateFramework {
+  enabledReviewers?: import("./review-cycle").ReviewerRole[];
   name: string;
   status?: FrameworkStatus;
   competencies: Competency[];
