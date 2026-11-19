@@ -94,3 +94,16 @@ export async function getTemplateSnapshot(
   );
   return response.data.snapshot;
 }
+
+export async function getTemplateDepartments(signal?: AbortSignal) {
+  const departments: import("@/types/review-template").TemplateDepartment[] = [];
+  let page = 1;
+  let totalPages = 1;
+  do {
+    const response = await api.get<{ departments: import("@/types/review-template").TemplateDepartment[]; pagination: { totalPages: number } }>("/departments", { ...config(signal), params: { status: "active", page, limit: 100 } });
+    departments.push(...response.data.departments);
+    totalPages = response.data.pagination.totalPages;
+    page++;
+  } while (page <= totalPages);
+  return departments;
+}
