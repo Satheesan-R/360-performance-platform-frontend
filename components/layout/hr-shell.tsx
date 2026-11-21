@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
-import { clearSession, getCurrentUser } from "@/lib/auth";
+import { clearSession } from "@/lib/auth";
+import HrProfileMenu from "./hr-profile-menu";
 import { frameworkNavigation } from "@/components/performance-framework/navigation";
 
 const navigation = [
@@ -43,7 +44,6 @@ export default function HrShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [organizationExpanded, setOrganizationExpanded] = useState<boolean | null>(null);
   const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(
     null,
   );
@@ -90,12 +90,8 @@ export default function HrShell({ children }: { children: ReactNode }) {
             {navigation.map((item) => {
               const active =
                 pathname === item.href || pathname.startsWith(item.href + "/");
-              if (item.href === "/hr/organization" || item.href === "/hr/performance-framework") {
-                const isOrganization = item.href === "/hr/organization";
-                const open = (isOrganization ? organizationExpanded : frameworkExpanded) ?? active;
-                const setExpanded = isOrganization ? setOrganizationExpanded : setFrameworkExpanded;
-                const submenu = isOrganization ? organizationNavigation : frameworkNavigation;
-                const submenuId = isOrganization ? "organization-submenu" : "framework-submenu";
+              if (item.href === "/hr/performance-framework") {
+                const open = frameworkExpanded ?? active;
                 return (
                   <div key={item.href}>
                     <button
@@ -118,11 +114,11 @@ export default function HrShell({ children }: { children: ReactNode }) {
                       </span>
                     </button>
                     <div
-                      id={submenuId}
+                      id="framework-submenu"
                       hidden={!open}
                       className="ml-7 mt-2 space-y-1 border-l border-slate-200 pl-3"
                     >
-                      {submenu.map((child) => (
+                      {frameworkNavigation.map((child) => (
                         <Link
                           key={child.href}
                           href={child.href}
@@ -130,7 +126,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
                           aria-current={
                             pathname === child.href ? "page" : undefined
                           }
-                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href || (child.href !== "/hr/organization" && pathname.startsWith(child.href + "/")) ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
+                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href || (child.href !== "/hr/performance-framework" && pathname.startsWith(child.href + "/")) ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
                         >
                           {child.label}
                         </Link>
@@ -145,7 +141,6 @@ export default function HrShell({ children }: { children: ReactNode }) {
                   href={item.href}
                   onClick={() => {
                     setMenuOpen(false);
-                    setOrganizationExpanded(null);
                     setFrameworkExpanded(null);
                   }}
                   aria-current={pathname === item.href ? "page" : undefined}
