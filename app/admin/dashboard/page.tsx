@@ -1,6 +1,5 @@
-﻿import ProtectedRoute from "@/components/auth/protected-route";
-import DashboardHome from "@/components/dashboard/dashboard-home";
+import AdminOverview from "@/components/dashboard/admin-overview";
 
 export default function AdminDashboardPage() {
-  return <ProtectedRoute role="admin"><DashboardHome role="admin" /></ProtectedRoute>;
+  return <AdminOverview />;
 }

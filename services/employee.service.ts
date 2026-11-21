@@ -9,6 +9,14 @@ export async function getEmployees(token: string, signal?: AbortSignal) {
   return Array.isArray(response.data) ? response.data : response.data.employees;
 }
 
+export async function getEmployee(id: string, token: string, signal?: AbortSignal) {
+  const response = await api.get<{ employee: Employee }>(`/employees/${encodeURIComponent(id)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  });
+  return response.data.employee;
+}
+
 export async function createEmployee(data: CreateEmployeeRequest, token: string) {
   const response = await api.post<CreateEmployeeResponse>("/employees", data, {
     headers: { Authorization: `Bearer ${token}` },

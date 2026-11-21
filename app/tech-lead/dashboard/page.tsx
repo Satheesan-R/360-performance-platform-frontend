@@ -1,6 +1,5 @@
-﻿import ProtectedRoute from "@/components/auth/protected-route";
-import DashboardHome from "@/components/dashboard/dashboard-home";
+import LeadershipDashboard from "@/components/dashboard/leadership-dashboard";
 
-export default function TechLeadDashboardPage() {
-  return <ProtectedRoute role="tech_lead"><DashboardHome role="tech_lead" /></ProtectedRoute>;
+export default function DashboardPage() {
+  return <LeadershipDashboard role="tech_lead" />;
 }
