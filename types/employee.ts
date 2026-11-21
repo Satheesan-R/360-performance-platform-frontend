@@ -16,6 +16,7 @@ export interface CreateEmployeeRequest {
   officeLocation?: string;
   companyEmail: string;
   employmentTypeId?: string;
+  employmentType?: EmploymentType;
   contractStartDate?: string;
   role?: UserRole;
 }

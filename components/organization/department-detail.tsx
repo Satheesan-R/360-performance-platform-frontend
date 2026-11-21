@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
-import { personLabel } from "@/lib/organization-views";
-import { getDepartment } from "@/services/organization-views.service";
+import { directoryName, personLabel } from "@/lib/organization-views";
+import { getDepartment, getDepartmentMembers } from "@/services/organization-views.service";
 import { PageHeading, ResourceState, secondaryClass, Status } from "./ui";
 import EmployeeDirectory from "./employee-directory";
 import StructureDirectory, {
@@ -13,7 +13,77 @@ import StructureDirectory, {
 import StructureEditor from "./structure-editor";
 import DepartmentTree from "./department-tree";
 import EmployeeDepartment from "./employee-department";
-import type { DirectoryPerson } from "@/types/organization-views";
+import type { DepartmentRecord, DirectoryPerson } from "@/types/organization-views";
+
+function DepartmentOverview({ department }: { department: DepartmentRecord }) {
+  const load = useCallback(
+    (signal: AbortSignal) => getDepartmentMembers(department._id, signal),
+    [department._id],
+  );
+  const members = useOrganizationResource(load);
+  const data = members.data;
+
+  return (
+    <div className="space-y-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-slate-900">Department overview</h2>
+          <Status value={department.status} />
+        </div>
+        <dl className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div>
+            <dt className="text-sm text-slate-500">Department head</dt>
+            <dd className="mt-1 text-sm font-semibold text-slate-900">{personLabel(department.headEmployeeId)}</dd>
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500">Description</dt>
+            <dd className="mt-1 whitespace-pre-wrap text-sm text-slate-900">{department.description || "No description"}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <ResourceState loading={members.loading} error={members.error} retry={members.reload} />
+      {!members.loading && !members.error && data && (
+        <>
+          <dl aria-label="Department statistics" className="grid gap-4 sm:grid-cols-2">
+            {[
+              { label: "Total teams", count: data.teams.length },
+              { label: "Total employees", count: data.employees.length },
+            ].map(({ label, count }) => (
+              <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <dt className="text-sm font-semibold text-slate-600">{label}</dt>
+                <dd className="mt-2 text-3xl font-bold tabular-nums text-blue-700">{count.toLocaleString()}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="grid items-start gap-5 lg:grid-cols-2">
+            <section aria-labelledby="department-teams" className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <h2 id="department-teams" className="border-b border-slate-200 bg-slate-50 px-5 py-4 font-bold text-slate-900">Teams</h2>
+              {data.teams.length ? (
+                <ul className="divide-y divide-slate-100">
+                  {data.teams.map((team) => <li key={team._id} className="px-5 py-3 text-sm font-semibold text-slate-900">{team.name}</li>)}
+                </ul>
+              ) : <p className="p-5 text-sm text-slate-600">No teams in this department.</p>}
+            </section>
+            <section aria-labelledby="department-employees" className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <h2 id="department-employees" className="border-b border-slate-200 bg-slate-50 px-5 py-4 font-bold text-slate-900">Employees</h2>
+              {data.employees.length ? (
+                <ul className="divide-y divide-slate-100">
+                  {data.employees.map((employee) => (
+                    <li key={employee._id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
+                      <Link href={`/hr/onboarding/${encodeURIComponent(employee._id)}`} className="font-semibold text-blue-700 hover:underline">{directoryName(employee)}</Link>
+                      <span className="text-slate-600">{employee.employeeNumber || "Employee number unavailable"}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="p-5 text-sm text-slate-600">No employees in this department.</p>}
+            </section>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function DepartmentDetail({ id }: { id: string }) {
   const load = useCallback(

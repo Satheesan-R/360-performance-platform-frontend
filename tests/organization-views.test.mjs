@@ -6,6 +6,7 @@ import ts from "typescript";
 import * as React from "react";
 import * as jsx from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
+import { isAxiosError } from "axios";
 
 function module(file, imports = {}) {
   const source = fs.readFileSync(new URL(file, import.meta.url), "utf8");
@@ -31,7 +32,7 @@ test("department heads require department_manager and team leads require tech_le
 });
 const plain = (value) => JSON.parse(JSON.stringify(value));
 function service(api, token = "test-token") {
-  return module("../services/organization-views.service.ts", { "@/lib/api": { __esModule: true, default: api }, "@/lib/auth": { getToken: () => token } });
+  return module("../services/organization-views.service.ts", { axios: { isAxiosError }, "@/lib/api": { __esModule: true, default: api }, "@/lib/auth": { getToken: () => token } });
 }
 
 test("handles raw and populated relationship references without displaying object strings", () => {
@@ -70,6 +71,33 @@ test("department summary stays independent of table filters", async () => {
   assert.equal(await client.getDepartmentSummary(), summary);
 });
 
+test("missing department summary uses authenticated totals from both department statuses", async () => {
+  const signal = new AbortController().signal;
+  const statuses = [];
+  const client = service({ get: async (path, config) => {
+    assert.equal(config.signal, signal);
+    assert.equal(config.headers.Authorization, "Bearer test-token");
+    if (path === "/departments/summary") {
+      throw { isAxiosError: true, response: { status: 404 } };
+    }
+    assert.equal(path, "/departments");
+    assert.equal(config.params.limit, 1);
+    statuses.push(config.params.status);
+    return { data: { departments: [], pagination: { total: config.params.status === "active" ? 3 : 2 } } };
+  } });
+  assert.deepEqual(plain(await client.getDepartmentSummary(signal)), { total: 5, active: 3, inactive: 2 });
+  assert.deepEqual(statuses, ["active", "inactive"]);
+});
+
+test("department summary propagates authorization errors without a fallback", async () => {
+  const forbidden = { isAxiosError: true, response: { status: 403 } };
+  const client = service({ get: async (path) => {
+    assert.equal(path, "/departments/summary");
+    throw forbidden;
+  } });
+  await assert.rejects(client.getDepartmentSummary(), (error) => error === forbidden);
+});
+
 test("detail endpoints unwrap canonical populated department and team objects", async () => {
   const department = { headEmployeeId: { _id: "head" }, teamCount: 2 };
   const team = { departmentId: { _id: "department", name: "Engineering", status: "active" }, teamLeadEmployeeId: { _id: "lead" }, employeeCount: 3 };
@@ -80,6 +108,24 @@ test("detail endpoints unwrap canonical populated department and team objects", 
   } });
   assert.equal(await client.getDepartment("dept/id"), department);
   assert.equal(await client.getTeam("team/id"), team);
+});
+
+test("department overview works when the backend only exposes list endpoints", async () => {
+  const department = { _id: "eng", name: "Engineering" };
+  const teams = [{ _id: "web", name: "Web" }];
+  const employees = [{ _id: "one", departmentId: "eng" }, { _id: "two", departmentId: { _id: "eng" } }];
+  const client = service({ get: async (path, config) => {
+    if (path === "/departments/eng" || path === "/departments/eng/hierarchy") {
+      throw { isAxiosError: true, response: { status: 404 } };
+    }
+    if (path === "/departments") return { data: { departments: [department], pagination: { totalPages: 1 } } };
+    if (path === "/employees") return { data: { employees: [...employees, { _id: "other", departmentId: "sales" }] } };
+    assert.equal(path, "/teams");
+    assert.equal(config.params.departmentId, "eng");
+    return { data: { teams, pagination: { totalPages: 1 } } };
+  } });
+  assert.deepEqual(plain(await client.getDepartment("eng")), department);
+  assert.deepEqual(plain(await client.getDepartmentMembers("eng")), { teams, employees });
 });
 
 test("team lists scope to the chosen department or the global teams endpoint", async () => {

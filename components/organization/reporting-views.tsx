@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { visibleHierarchyRows } from "@/lib/organization-hierarchy";
 import type { HierarchyEmployee } from "@/types/organization";
 import { secondaryClass } from "./ui";
-import { viewCellClass, viewHeadClass, viewTableClass } from "./view-controls";
+import { ActionIcon, viewActionClass, viewCellClass, viewHeadClass, viewTableClass } from "./view-controls";
 
 type ReportingRows = ReturnType<typeof visibleHierarchyRows>;
 const indentation = ["sm:ml-0", "sm:ml-6", "sm:ml-12", "sm:ml-18", "sm:ml-24"];

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import {
@@ -20,7 +21,13 @@ import {
   ResourceState,
 } from "./ui";
 
-export default function OrganizationOverview() {
+const summaryCards = [
+  { label: "Total employees", key: "totalEmployees", icon: "♙" },
+  { label: "Departments", key: "departments", icon: "▥", href: "/hr/organization/departments", linkLabel: "View departments" },
+  { label: "Teams", key: "teams", icon: "▱", href: "/hr/organization/teams", linkLabel: "View teams" },
+] as const;
+
+export default function OrganizationOverview({ showStructureLinks = false }: { showStructureLinks?: boolean }) {
   const details = useOrganizationResource(getOrganization);
   const summary = useOrganizationResource(getOrganizationSummary);
   const [draft, setDraft] = useState<Organization | null>(null);

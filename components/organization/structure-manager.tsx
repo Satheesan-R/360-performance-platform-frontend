@@ -98,6 +98,25 @@ export default function StructureManager({ kind }: { kind: StructureKind }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [viewing, setViewing] = useState<StructureRecord | null>(null);
+  const [deactivating, setDeactivating] = useState<StructureRecord | null>(null);
+
+  async function confirmDeactivation() {
+    if (!deactivating || saving) return;
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      await deactivateEmploymentType(deactivating._id);
+      setDeactivating(null);
+      setSuccess("Employment type deactivated.");
+      await resource.reload();
+    } catch (error) {
+      setError(getApiErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  }
   function edit(record?: StructureRecord) {
     setEditingId(record?._id);
     setDraft(

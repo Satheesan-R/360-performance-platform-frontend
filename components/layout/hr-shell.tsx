@@ -1,13 +1,11 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
-import { clearSession } from "@/lib/auth";
-import HrProfileMenu from "./hr-profile-menu";
-import { organizationNavigation } from "@/components/organization/navigation";
+import { clearSession, getCurrentUser } from "@/lib/auth";
 import { frameworkNavigation } from "@/components/performance-framework/navigation";
 
 const navigation = [
@@ -103,9 +101,9 @@ export default function HrShell({ children }: { children: ReactNode }) {
                     <button
                       type="button"
                       aria-expanded={open}
-                      aria-controls={submenuId}
+                      aria-controls="framework-submenu"
                       onClick={() => {
-                        setExpanded(!open);
+                        setFrameworkExpanded(!open);
                         if (!open && !active) router.push(item.href);
                       }}
                       className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition ${active ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}

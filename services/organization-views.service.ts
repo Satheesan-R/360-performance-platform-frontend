@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import type {
@@ -112,6 +113,10 @@ export async function saveOrganizationStructure(
 ) {
   if (idValue) await api.patch(`/${kind}/${id(idValue)}`, values, config());
   else await api.post(`/${kind}`, values, config());
+}
+
+export async function deactivateTeam(idValue: string) {
+  await api.patch(`/teams/${id(idValue)}`, { status: "inactive" }, config());
 }
 export async function deactivateDepartment(idValue: string) {
   await api.delete(`/departments/${id(idValue)}`, config());
