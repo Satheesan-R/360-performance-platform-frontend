@@ -90,10 +90,4 @@ export const viewHeadClass =
   "whitespace-nowrap px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500";
 export const viewCellClass = "px-5 py-4 text-slate-600";
 export const viewActionClass =
-  "inline-grid size-9 shrink-0 place-items-center rounded-lg border border-slate-200 bg-white text-blue-700 hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600 disabled:opacity-40";
-
-const actionIcons = { view: "👁︎", edit: "✎", delete: "🗑︎" };
-
-export function ActionIcon({ action }: { action: keyof typeof actionIcons }) {
-  return <span aria-hidden="true" className="text-lg leading-none">{actionIcons[action]}</span>;
-}
+  "rounded-lg px-2 py-2 font-semibold text-blue-700 hover:bg-blue-50 focus-visible:ring-4 focus-visible:ring-blue-500/20 disabled:opacity-40";

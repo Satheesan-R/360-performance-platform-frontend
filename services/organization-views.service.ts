@@ -46,40 +46,20 @@ export async function getDepartments(
   ).data;
 }
 export async function getDepartment(idValue: string, signal?: AbortSignal) {
-  try {
-    const { data } = await api.get<{ department: DepartmentRecord }>(
+  return (
+    await api.get<{ department: DepartmentRecord }>(
       `/departments/${id(idValue)}`,
       config(signal),
-    );
-    return data.department;
-  } catch (error) {
-    if (!isAxiosError(error) || error.response?.status !== 404) throw error;
-    const records = await getDepartmentOptions(signal);
-    const department = records.find((record) => record._id === idValue);
-    if (!department) throw error;
-    return department;
-  }
+    )
+  ).data.department;
 }
-export async function getDepartmentSummary(signal?: AbortSignal): Promise<DepartmentSummary> {
-  try {
-    const { data } = await api.get<{ summary: DepartmentSummary }>(
+export async function getDepartmentSummary(signal?: AbortSignal) {
+  return (
+    await api.get<{ summary: DepartmentSummary }>(
       "/departments/summary",
       config(signal),
-    );
-    return data.summary;
-  } catch (error) {
-    if (!isAxiosError(error) || error.response?.status !== 404) throw error;
-  }
-
-  const [active, inactive] = await Promise.all([
-    getDepartments({ status: "active", limit: 1 }, signal),
-    getDepartments({ status: "inactive", limit: 1 }, signal),
-  ]);
-  return {
-    total: active.pagination.total + inactive.pagination.total,
-    active: active.pagination.total,
-    inactive: inactive.pagination.total,
-  };
+    )
+  ).data.summary;
 }
 export async function getTeams(
   filters: ViewFilters,
@@ -125,45 +105,6 @@ export async function getDepartmentTree(idValue: string, signal?: AbortSignal) {
       config(signal),
     )
   ).data;
-}
-
-export async function getDepartmentMembers(idValue: string, signal?: AbortSignal) {
-  try {
-    const tree = await getDepartmentTree(idValue, signal);
-    return {
-      teams: tree.teams,
-      employees: [...tree.teams.flatMap((team) => team.employees), ...tree.unassignedEmployees],
-    };
-  } catch (error) {
-    if (!isAxiosError(error) || error.response?.status !== 404) throw error;
-  }
-
-  const [teams, employees] = await Promise.all([
-    getTeamsForDepartment(idValue, signal),
-    getEmployeeOptions(signal),
-  ]);
-  return {
-    teams,
-    employees: employees.filter(({ departmentId }) =>
-      (typeof departmentId === "string" ? departmentId : departmentId?._id) === idValue,
-    ),
-  };
-}
-
-async function getTeamsForDepartment(departmentId: string, signal?: AbortSignal) {
-  const teams: TeamRecord[] = [];
-  let page = 1;
-  let totalPages = 1;
-  do {
-    const { data } = await api.get<TeamList>("/teams", {
-      ...config(signal),
-      params: { departmentId, page, limit: 100 },
-    });
-    teams.push(...data.teams);
-    totalPages = data.pagination.totalPages;
-    page += 1;
-  } while (page <= totalPages);
-  return teams;
 }
 export async function saveOrganizationStructure(
   kind: "departments" | "teams",

@@ -2,15 +2,26 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { getApiErrorMessage } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import { getActiveDepartments, type DepartmentOption } from "@/services/department.service";
+import { emailPattern, validateBirthDate, validatePhone } from "@/lib/onboarding-validation";
 import { createEmployee, getEmployees } from "@/services/employee.service";
 import type {
   ActivationEmailDelivery,
   CreateEmployeeRequest,
   Employee,
 } from "@/types/employee";
+import type { UserRole } from "@/types/auth";
+
+const roleLabels: Record<UserRole, string> = {
+  employee: "Employee",
+  tech_lead: "Tech Lead",
+  department_manager: "Department Manager",
+  hr: "HR",
+  admin: "Admin",
+};
 
 const inputClass =
   "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -46,6 +57,10 @@ export default function EmployeeOnboardingPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+  const [departmentError, setDepartmentError] = useState("");
+  const [departmentsLoading, setDepartmentsLoading] = useState(true);
+  const [lookupRequest, setLookupRequest] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -57,7 +72,9 @@ export default function EmployeeOnboardingPage() {
       );
 
     request
-      .then(setEmployees)
+      .then((records) => {
+        if (!controller.signal.aborted) setEmployees(records);
+      })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
           setListError(getApiErrorMessage(error));
@@ -69,8 +86,31 @@ export default function EmployeeOnboardingPage() {
         }
       });
 
+    const departmentRequest = token
+      ? getActiveDepartments(token, controller.signal)
+      : Promise.reject(new Error("Your session has expired. Please log in again."));
+
+    departmentRequest
+      .then((records) => {
+        if (!controller.signal.aborted) setDepartments(records);
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) setDepartmentError(getApiErrorMessage(error));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDepartmentsLoading(false);
+      });
+
     return () => controller.abort();
-  }, []);
+  }, [lookupRequest]);
+
+  function retryLookups() {
+    setLoading(true);
+    setDepartmentsLoading(true);
+    setListError("");
+    setDepartmentError("");
+    setLookupRequest((value) => value + 1);
+  }
 
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -82,12 +122,25 @@ export default function EmployeeOnboardingPage() {
     register,
     handleSubmit,
     reset,
+    control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateEmployeeRequest>({
     defaultValues: {
       role: "employee",
       employmentType: "full-time",
     },
+  });
+
+  const selectedDepartmentId = useWatch({ control, name: "departmentId" });
+  const reportingManagers = employees.filter((employee) => {
+    const departmentId = typeof employee.departmentId === "object"
+      ? employee.departmentId?._id
+      : employee.departmentId;
+
+    return Boolean(selectedDepartmentId)
+      && employee.user?.role === "department_manager"
+      && departmentId === selectedDepartmentId;
   });
 
   async function onSubmit(values: CreateEmployeeRequest) {
@@ -103,11 +156,16 @@ export default function EmployeeOnboardingPage() {
     }
 
     try {
-      const result = await createEmployee(values, token);
+      const payload = { ...values };
+      if (!payload.departmentId) delete payload.departmentId;
+      if (!payload.managerId) delete payload.managerId;
+      const result = await createEmployee(payload, token);
       setSuccessMessage(result.message);
       setEmailDelivery(result.emailDelivery ?? null);
       setActivationUrl(result.activationUrl ?? "");
-      setEmployees((current) => [{ ...values, ...result.employee }, ...current]);
+      setLoading(true);
+      setListError("");
+      setLookupRequest((value) => value + 1);
       setShowForm(false);
       reset({
         role: "employee",
@@ -282,6 +340,7 @@ export default function EmployeeOnboardingPage() {
                       "Email",
                       "Department",
                       "Designation",
+                      "User role",
                       "Onboarding status",
                     ].map((label) => (
                       <th
@@ -313,11 +372,22 @@ export default function EmployeeOnboardingPage() {
                       </td>
 
                       <td className="px-6 py-4">
-                        {employee.department || "—"}
+                        {typeof employee.departmentId === "object" && employee.departmentId
+                          ? employee.departmentId.name
+                          : employee.departmentId
+                            ? departments.find((department) => department._id === employee.departmentId)?.name
+                              ?? "Department unavailable"
+                            : "Unassigned"}
                       </td>
 
                       <td className="px-6 py-4">
-                        {employee.designation || "—"}
+                        {employee.jobTitle || employee.designation || "—"}
+                      </td>
+
+                      <td className="whitespace-nowrap px-6 py-4">
+                        {employee.user?.role
+                          ? roleLabels[employee.user.role] ?? "Unavailable"
+                          : "Unavailable"}
                       </td>
 
                       <td className="px-6 py-4">
@@ -348,6 +418,16 @@ export default function EmployeeOnboardingPage() {
           className="mt-8 space-y-6"
           noValidate
         >
+          {(departmentError || listError) && (
+            <button
+              type="button"
+              onClick={retryLookups}
+              className="text-sm font-semibold text-blue-600 underline"
+            >
+              Retry loading departments and managers
+            </button>
+          )}
+
           <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Personal details</h2>
@@ -379,9 +459,9 @@ export default function EmployeeOnboardingPage() {
                 </select>
               </Field>
 
-              <Field label="Date of birth">
+              <Field label="Date of birth" error={errors.dateOfBirth?.message}>
                 <input
-                  {...register("dateOfBirth")}
+                  {...register("dateOfBirth", { validate: validateBirthDate })}
                   type="date"
                   className={inputClass}
                 />
@@ -391,7 +471,7 @@ export default function EmployeeOnboardingPage() {
                 <input
                   {...register("personalEmail", {
                     pattern: {
-                      value: /^\S+@\S+\.\S+$/,
+                      value: emailPattern,
                       message: "Enter a valid email",
                     },
                   })}
@@ -401,9 +481,12 @@ export default function EmployeeOnboardingPage() {
                 />
               </Field>
 
-              <Field label="Phone number">
+              <Field label="Phone number" error={errors.phone?.message}>
                 <input
-                  {...register("phone")}
+                  {...register("phone", {
+                    setValueAs: (value: string) => value.trim(),
+                    validate: validatePhone,
+                  })}
                   type="tel"
                   className={inputClass}
                   placeholder="+94 77 123 4567"
@@ -425,7 +508,7 @@ export default function EmployeeOnboardingPage() {
                   {...register("companyEmail", {
                     required: "Company email is required",
                     pattern: {
-                      value: /^\S+@\S+\.\S+$/,
+                      value: emailPattern,
                       message: "Enter a valid company email",
                     },
                   })}
@@ -448,18 +531,31 @@ export default function EmployeeOnboardingPage() {
                 </select>
               </Field>
 
-              <Field label="Department">
+              <Field label="Department" error={errors.departmentId?.message || departmentError}>
                 <select
-                  {...register("department")}
+                  {...register("departmentId", {
+                    onChange: () => setValue("managerId", "", { shouldValidate: true }),
+                    validate: (value) =>
+                      !value || departments.some((department) => department._id === value) ||
+                      "Select a department from the list",
+                  })}
+                  disabled={departmentsLoading || Boolean(departmentError)}
                   className={inputClass}
-                  defaultValue=""
                 >
-                  <option value="">Select department</option>
-                  <option value="engineering">Engineering</option>
-                  <option value="qa">QA & Testing</option>
-                  <option value="finance">Finance</option>
-                  <option value="hr">Human Resources</option>
-                  <option value="operations">Operations</option>
+                  <option value="">
+                    {departmentsLoading
+                      ? "Loading departments?"
+                      : departmentError
+                        ? "Departments unavailable"
+                        : departments.length
+                          ? "Select department"
+                          : "No active departments available"}
+                  </option>
+                  {departments.map((department) => (
+                    <option key={department._id} value={department._id}>
+                      {department.name}
+                    </option>
+                  ))}
                 </select>
               </Field>
 
@@ -471,12 +567,39 @@ export default function EmployeeOnboardingPage() {
                 />
               </Field>
 
-              <Field label="Reporting manager">
-                <input
-                  {...register("reportingManager")}
+              <Field label="Reporting manager" error={errors.managerId?.message || listError}>
+                <select
+                  {...register("managerId", {
+                    validate: (value) =>
+                      !value || reportingManagers.some((manager) => manager._id === value) ||
+                      "Select a department manager from the selected department",
+                  })}
+                  disabled={!selectedDepartmentId || loading || Boolean(listError)}
                   className={inputClass}
-                  placeholder="Manager name or email"
-                />
+                >
+                  <option value="">
+                    {!selectedDepartmentId
+                      ? "Select a department first"
+                      : loading
+                      ? "Loading department managers?"
+                      : listError
+                        ? "Managers unavailable"
+                        : reportingManagers.length
+                          ? "Select department manager"
+                          : "No department managers in this department"}
+                  </option>
+                  {reportingManagers.map((manager) => (
+                    <option key={manager._id} value={manager._id}>
+                      {[manager.firstName, manager.lastName].filter(Boolean).join(" ")}
+                      {" — "}
+                      {typeof manager.departmentId === "object" && manager.departmentId
+                        ? manager.departmentId.name
+                        : departments.find((department) => department._id === manager.departmentId)?.name
+                          || manager.department
+                          || "No department assigned"}
+                    </option>
+                  ))}
+                </select>
               </Field>
 
               <Field label="Office location">

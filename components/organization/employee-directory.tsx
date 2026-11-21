@@ -13,7 +13,6 @@ import { getDirectory } from "@/services/organization-views.service";
 import type { DirectoryPerson } from "@/types/organization-views";
 import { ResourceState } from "./ui";
 import {
-  ActionIcon,
   ViewFilters,
   ViewPagination,
   viewActionClass,
@@ -77,7 +76,7 @@ function EmployeeRows({
                       "Manager",
                       "Account",
                       "Onboarding",
-                      "Actions",
+                      ...(onRemove || onMove ? ["Actions"] : []),
                     ].map((heading) => (
                       <th
                         key={heading}
@@ -135,23 +134,30 @@ function EmployeeRows({
                       <td className={`${viewCellClass} capitalize`}>
                         {employee.onboardingStatus || "—"}
                       </td>
-                      <td className={viewCellClass}>
-                        <div className="flex items-center gap-1.5">
-                          <Link className={viewActionClass} href={`/hr/onboarding/${encodeURIComponent(employee._id)}`} title="View employee" aria-label={`View ${directoryName(employee)}`}>
-                            <ActionIcon action="view" />
-                          </Link>
-                          {onMove && (
-                            <button type="button" className={viewActionClass} disabled={disabled} title="Change department" aria-label={`Change department for ${directoryName(employee)}`} onClick={() => onMove(employee)}>
-                              <ActionIcon action="edit" />
-                            </button>
-                          )}
-                          {onRemove && (
-                            <button type="button" className={`${viewActionClass} text-red-700 hover:bg-red-50`} disabled={disabled} title="Remove from team" aria-label={`Remove ${directoryName(employee)} from team`} onClick={() => onRemove(employee)}>
-                              <ActionIcon action="delete" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                      {onRemove && (
+                        <td className={viewCellClass}>
+                          <button
+                            type="button"
+                            className={`${viewActionClass} whitespace-nowrap text-red-700`}
+                            disabled={disabled}
+                            onClick={() => onRemove(employee)}
+                          >
+                            Remove from team
+                          </button>
+                        </td>
+                      )}
+                      {onMove && (
+                        <td className={viewCellClass}>
+                          <button
+                            type="button"
+                            className={`${viewActionClass} whitespace-nowrap`}
+                            disabled={disabled}
+                            onClick={() => onMove(employee)}
+                          >
+                            Change department
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -17,6 +17,7 @@ import {
   inputClass,
   Field,
   Status,
+  PageHeading,
   ResourceState,
 } from "./ui";
 
@@ -54,42 +55,30 @@ export default function OrganizationOverview({ showStructureLinks = false }: { s
   }
   const organization = details.data;
   const organizationName = organization?.name?.trim() || "Organization";
-  const counts = summary.data;
   return (
     <>
-      <header className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6">
-        <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-          {organization?.logoUrl ? (
-            <Image unoptimized src={organization.logoUrl} alt="" width={72} height={72} className="size-16 shrink-0 rounded-xl object-contain sm:size-18" />
-          ) : (
-            <span aria-hidden="true" className="grid size-16 shrink-0 place-items-center rounded-xl bg-blue-100 text-2xl font-bold text-blue-700 sm:size-18">
-              {organizationName.slice(0, 2).toUpperCase()}
-            </span>
-          )}
-          <div className="min-w-0">
-            <h1 className="wrap-break-word text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{organizationName}</h1>
-            {organization && (
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm font-medium text-slate-600">
-                <span>{organization.code}</span>
-                <span aria-hidden="true" className="h-4 w-px bg-slate-300" />
-                <Status value={organization.status} />
-              </div>
-            )}
-          </div>
-        </div>
+      <PageHeading
+        title="Organization Overview"
+        description="Company details and your current organization structure."
+      >
         <button
           type="button"
-          className={`${buttonClass} mt-4 shrink-0 sm:mt-0`}
-          disabled={!organization || details.loading || Boolean(details.error) || Boolean(draft)}
+          className={buttonClass}
+          disabled={
+            !organization ||
+            details.loading ||
+            Boolean(details.error) ||
+            Boolean(draft)
+          }
           onClick={() => {
             setDraft(organization);
             setError("");
             setSuccess("");
           }}
         >
-          Edit organization
+          Edit Organization
         </button>
-      </header>
+      </PageHeading>
       <section
         aria-label="Organization summary"
         className="mb-7"
@@ -100,29 +89,28 @@ export default function OrganizationOverview({ showStructureLinks = false }: { s
           retry={summary.reload}
         />
 
-        {!summary.loading && !summary.error && counts && (
-          <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
-            {summaryCards.map((card) => (
+        {!summary.loading && !summary.error && summary.data && (
+          <dl className="grid gap-4 sm:grid-cols-3 sm:gap-5">
+            {(
+              [
+                ["Total employees", summary.data.totalEmployees],
+                ["Departments", summary.data.departments],
+                ["Teams", summary.data.teams],
+              ] as const
+            ).map(([label, value]) => (
               <div
-                key={card.key}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+                key={label}
+                className="flex min-h-36 flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
               >
-                <span aria-hidden="true" className="block text-2xl leading-none text-blue-800">{card.icon}</span>
-                <dl className="mt-4 flex flex-col">
-                  <dt className="order-2 mt-1 text-sm font-medium text-slate-600">{card.label}</dt>
-                  <dd className="text-3xl font-bold leading-none tracking-tight tabular-nums text-slate-950">{counts[card.key].toLocaleString()}</dd>
-                </dl>
-                {showStructureLinks && "href" in card && (
-                  <Link href={card.href} className="mt-2 inline-block text-sm font-semibold text-blue-700 hover:underline">{card.linkLabel}</Link>
-                )}
+                <dt className="text-sm font-semibold text-slate-500">
+                  {label}
+                </dt>
+                <dd className="mt-5 text-4xl font-bold leading-none tracking-tight text-slate-950 tabular-nums">
+                  {value.toLocaleString()}
+                </dd>
               </div>
             ))}
-          </div>
-        )}
-        {showStructureLinks && (
-          <Link href="/hr/organization/hierarchy" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:underline">
-            View reporting hierarchy <span aria-hidden="true">→</span>
-          </Link>
+          </dl>
         )}
       </section>
 
@@ -247,21 +235,52 @@ export default function OrganizationOverview({ showStructureLinks = false }: { s
             </div>
           </form>
         ) : (
-          <section aria-labelledby="company-details" className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <h2 id="company-details" className="border-b border-slate-200 px-5 py-4 text-lg font-bold text-slate-950 sm:px-6">
-              Company details
-            </h2>
-            <dl className="grid gap-px bg-slate-200 sm:grid-cols-2">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-6 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 border-b border-slate-100 pb-6 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+              {organization.logoUrl ? (
+                <Image
+                  unoptimized
+                  src={organization.logoUrl}
+                  alt={`${organizationName} logo`}
+                  width={64}
+                  height={64}
+                  className="h-16 w-16 rounded-xl object-contain"
+                />
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-2xl font-bold text-blue-700 ring-1 ring-blue-100">
+                  {organizationName.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <h2 className="break-words text-xl font-bold tracking-tight text-slate-950">
+                  {organizationName}
+                </h2>
+                <p className="mt-1 text-sm font-medium text-slate-500">
+                  {organization.code}
+                </p>
+              </div>
+              <div className="col-span-2 sm:col-span-1 sm:justify-self-end">
+                <Status value={organization.status} />
+              </div>
+            </div>
+            <dl className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
               {[
                 ["Industry", organization.industry],
                 ["Contact email", organization.contactEmail],
                 ["Country", organization.country],
-                ["Time zone", organization.timezone],
+                ["Timezone", organization.timezone],
                 ["Description", organization.description],
               ].map(([label, value]) => (
-                <div key={label} className={`min-w-0 bg-white px-5 py-3 sm:px-6 ${label === "Description" ? "sm:col-span-2" : ""}`}>
-                  <dt className="text-sm font-semibold text-slate-600">{label}</dt>
-                  <dd className="mt-1 whitespace-pre-wrap wrap-break-word text-sm text-slate-900">
+                <div
+                  key={label}
+                  className={
+                    label === "Description" ? "sm:col-span-2" : "min-w-0"
+                  }
+                >
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    {label}
+                  </dt>
+                  <dd className="mt-2 whitespace-pre-wrap break-words text-sm font-medium leading-6 text-slate-800">
                     {value || "—"}
                   </dd>
                 </div>

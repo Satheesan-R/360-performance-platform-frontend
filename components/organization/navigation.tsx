@@ -16,7 +16,7 @@ export default function OrganizationNavigation() {
   return (
     <nav
       aria-label="Organization pages"
-      className="mb-5 flex gap-1 overflow-x-auto border-b border-slate-300 sm:gap-3"
+      className="mb-8 flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm"
     >
       {organizationNavigation.map((item) => {
         const active =
@@ -28,9 +28,9 @@ export default function OrganizationNavigation() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`shrink-0 whitespace-nowrap border-b-2 px-3 py-3.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-600 sm:px-4 ${active ? "border-blue-600 text-blue-700" : "border-transparent text-slate-800 hover:border-blue-200 hover:text-blue-700"}`}
+            className={`whitespace-nowrap rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 ${active ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}
           >
-            {item.href === "/hr/organization" ? "Overview" : item.label}
+            {item.label}
           </Link>
         );
       })}

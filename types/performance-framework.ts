@@ -36,7 +36,12 @@ export interface FrameworkInput {
 
 export interface FrameworkList {
   frameworks: PerformanceFramework[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface FrameworkSummary {

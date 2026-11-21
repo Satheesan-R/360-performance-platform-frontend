@@ -1,8 +1,15 @@
 import type { Competency, Kpi } from "./framework-criteria";
 import type { RatingScale, ScoringPreview } from "./framework-scoring";
-import type { FrameworkEmploymentType, FrameworkStatus } from "./performance-framework";
+import type {
+  FrameworkEmploymentType,
+  FrameworkStatus,
+} from "./performance-framework";
 
-export interface TemplateQuestion { _id?: string; prompt: string; required: boolean }
+export interface TemplateQuestion {
+  _id?: string;
+  prompt: string;
+  required: boolean;
+}
 export interface TemplateSection {
   _id?: string;
   title: string;
@@ -14,7 +21,12 @@ export interface TemplateSection {
   commentsRequired: boolean;
   evidenceRequired: boolean;
 }
+export type ReviewType = "annual" | "probation" | "internship";
+export interface TemplateDepartment { _id: string; name: string; code?: string; status?: string }
 export interface TemplateInput {
+  reviewType?: ReviewType | null;
+  departmentIds?: string[];
+  targetRole?: "department_manager" | null;
   name: string;
   description: string;
   frameworkId: string;
@@ -24,6 +36,7 @@ export interface TemplateInput {
   status: FrameworkStatus;
 }
 export interface TemplateFramework {
+  enabledReviewers?: import("./review-cycle").ReviewerRole[];
   name: string;
   status?: FrameworkStatus;
   competencies: Competency[];
@@ -32,18 +45,27 @@ export interface TemplateFramework {
   ratingScale: RatingScale | null;
 }
 export interface ReviewTemplate extends TemplateInput {
+  approvalStatus?: "not_submitted" | "pending" | "approved" | "rejected";
   _id: string;
   __v?: number;
   frameworkVersion: number | null;
   frameworkSnapshot: TemplateFramework | null;
 }
-export interface TemplateListItem extends Omit<ReviewTemplate, "frameworkId" | "employmentTypeIds" | "frameworkSnapshot"> {
+export interface TemplateListItem extends Omit<
+  ReviewTemplate,
+  "frameworkId" | "employmentTypeIds" | "frameworkSnapshot"
+> {
   frameworkId: { _id: string; name: string; status: FrameworkStatus } | null;
   employmentTypeIds: FrameworkEmploymentType[];
 }
 export interface TemplateList {
   templates: TemplateListItem[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 export type MissingCriterion = { _id: string; missing: true };
 export interface ResolvedTemplateSection extends TemplateSection {
@@ -51,6 +73,9 @@ export interface ResolvedTemplateSection extends TemplateSection {
   kpis: (Kpi | MissingCriterion)[];
 }
 export interface TemplatePreview {
+  reviewType?: ReviewType | null;
+  departmentIds?: string[];
+  targetRole?: "department_manager" | null;
   templateId: string;
   name: string;
   description: string;
@@ -71,5 +96,9 @@ export interface TemplateSnapshot {
   templateId: string;
   sourceVersion: number;
   createdAt: string;
-  configuration: Omit<TemplateInput, "status"> & { frameworkVersion: number; framework: TemplateFramework };
+  configuration: Omit<TemplateInput, "status"> & {
+    frameworkVersion: number;
+    framework: TemplateFramework;
+  };
 }
+

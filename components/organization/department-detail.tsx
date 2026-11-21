@@ -136,7 +136,7 @@ export default function DepartmentDetail({ id }: { id: string }) {
         <>
           <PageHeading
             title={department.name}
-            description={department.code}
+            description={`${department.code} · ${personLabel(department.headEmployeeId)}`}
           >
             <div className="flex flex-wrap gap-2">
               <button
@@ -204,7 +204,34 @@ export default function DepartmentDetail({ id }: { id: string }) {
               </button>
             ))}
           </div>
-          {tab === "overview" && <DepartmentOverview department={department} />}
+          {tab === "overview" && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center justify-between gap-3">
+                <h2 className="text-lg font-bold">Department overview</h2>
+                <Status value={department.status} />
+              </div>
+              <dl className="grid gap-6 sm:grid-cols-2">
+                {[
+                  ["Department head", personLabel(department.headEmployeeId)],
+                  ["Teams", department.teamCount],
+                  ["Employees", department.employeeCount],
+                  ["Description", department.description || "No description"],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-sm text-slate-500">{label}</dt>
+                    <dd className="mt-2 whitespace-pre-wrap text-sm font-semibold">
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-6 text-xs text-slate-500">
+                Heads, team leads, and reporting managers are separate
+                relationships. Counts include pending onboarding and disabled
+                accounts.
+              </p>
+            </section>
+          )}
           {tab === "teams" && (
             <StructureDirectory
               kind="teams"
