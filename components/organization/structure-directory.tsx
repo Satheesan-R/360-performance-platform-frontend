@@ -11,6 +11,7 @@ import {
 } from "@/lib/organization-views";
 import {
   deactivateDepartment,
+  deactivateTeam,
   getDepartments,
   getDepartmentSummary,
   getTeamSummary,
@@ -25,6 +26,7 @@ import {
   Status,
 } from "./ui";
 import {
+  ActionIcon,
   ViewFilters,
   ViewPagination,
   viewActionClass,
@@ -34,12 +36,22 @@ import {
 } from "./view-controls";
 import StructureEditor from "./structure-editor";
 
-export function DeactivateDepartment({
-  department,
+export function DeactivateDepartment({ department, onDone, onCancel }: {
+  department: DepartmentRecord;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  return <DeactivateStructure kind="departments" record={department} onDone={onDone} onCancel={onCancel} />;
+}
+
+function DeactivateStructure({
+  kind,
+  record,
   onDone,
   onCancel,
 }: {
-  department: DepartmentRecord;
+  kind: "departments" | "teams";
+  record: DepartmentRecord | TeamRecord;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -50,7 +62,7 @@ export function DeactivateDepartment({
     setBusy(true);
     setError("");
     try {
-      await deactivateDepartment(department._id);
+      await (kind === "departments" ? deactivateDepartment : deactivateTeam)(record._id);
       onDone();
     } catch (error) {
       setError(getApiErrorMessage(error));
@@ -61,14 +73,14 @@ export function DeactivateDepartment({
   return (
     <section
       role="region"
-      aria-label="Confirm department deactivation"
+      aria-label="Confirm deactivation"
       className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5"
     >
-      <h2 className="font-bold">Deactivate {department.name}?</h2>
+      <h2 className="font-bold">Deactivate {record.name}?</h2>
       <p className="mt-2 text-sm leading-6 text-slate-700">
-        The department, head, teams, and employee assignments will be retained.
-        New team memberships will be blocked until the department is active
-        again.
+        {kind === "departments"
+          ? "The department, head, teams, and employee assignments will be retained. New team memberships will be blocked until the department is active again."
+          : "The team and its existing assignments will be retained."}
       </p>
       {error && (
         <p
@@ -110,6 +122,7 @@ function StructureSummaryCards({ kind, departmentId }: {
       : getTeamSummary(departmentId, signal)
   ), [kind, departmentId]);
   const resource = useOrganizationResource(load);
+  const counts = resource.data;
   return (
     <section
       aria-label={kind === "departments" ? "Department summary" : "Team summary"}
@@ -120,7 +133,7 @@ function StructureSummaryCards({ kind, departmentId }: {
         error={resource.error}
         retry={resource.reload}
       />
-      {!resource.loading && !resource.error && resource.data && (
+      {!resource.loading && !resource.error && counts && (
         <div className="grid gap-4 sm:grid-cols-3">
           {(["total", "active", "inactive"] as const).map((key) => (
             <div
@@ -130,7 +143,7 @@ function StructureSummaryCards({ kind, departmentId }: {
               <p className="text-sm capitalize text-slate-500">
                 {key} {kind}
               </p>
-              <p className="mt-2 text-3xl font-bold">{resource.data![key]}</p>
+              <p className="mt-2 text-3xl font-bold tabular-nums">{counts[key].toLocaleString()}</p>
             </div>
           ))}
         </div>
@@ -153,7 +166,7 @@ function StructureRows({
   filters: { search: string; status: string; page: number };
   disabled: boolean;
   onEdit: (record: DepartmentRecord | TeamRecord) => void;
-  onDeactivate: (department: DepartmentRecord) => void;
+  onDeactivate: (record: DepartmentRecord | TeamRecord) => void;
   onPage: (page: number) => void;
 }) {
   const load = useCallback(
@@ -195,9 +208,8 @@ function StructureRows({
                     {[
                       kind === "departments" ? "Department" : "Team",
                       ...(kind === "departments"
-                        ? ["Head", "Teams"]
-                        : ["Department", "Team lead"]),
-                      "Employees",
+                        ? ["Head"]
+                        : ["Department", "Team lead", "Employees"]),
                       "Status",
                       "Actions",
                     ].map((heading) => (
@@ -234,12 +246,9 @@ function StructureRows({
                         )}
                       </td>
                       {"headEmployeeId" in record ? (
-                        <>
-                          <td className={viewCellClass}>
-                            {personLabel(record.headEmployeeId)}
-                          </td>
-                          <td className={viewCellClass}>{record.teamCount}</td>
-                        </>
+                        <td className={viewCellClass}>
+                          {personLabel(record.headEmployeeId)}
+                        </td>
                       ) : (
                         <>
                           <td className={viewCellClass}>
@@ -257,9 +266,9 @@ function StructureRows({
                           <td className={viewCellClass}>
                             {personLabel(record.teamLeadEmployeeId)}
                           </td>
+                          <td className={viewCellClass}>{record.employeeCount}</td>
                         </>
                       )}
-                      <td className={viewCellClass}>{record.employeeCount}</td>
                       <td className={viewCellClass}>
                         <Status value={record.status} />
                       </td>
@@ -268,26 +277,31 @@ function StructureRows({
                           <Link
                             className={viewActionClass}
                             href={`/hr/organization/${kind}/${record._id}`}
+                            title="View"
+                            aria-label={`View ${record.name}`}
                           >
-                            View
+                            <ActionIcon action="view" />
                           </Link>
                           <button
                             type="button"
                             className={viewActionClass}
+                            title="Edit"
+                            aria-label={`Edit ${record.name}`}
                             disabled={disabled}
                             onClick={() => onEdit(record)}
                           >
-                            Edit
+                            <ActionIcon action="edit" />
                           </button>
-                          {"headEmployeeId" in record &&
-                            record.status === "active" && (
+                          {record.status === "active" && (
                               <button
                                 type="button"
-                                className={`${viewActionClass} text-red-700`}
+                                className={`${viewActionClass} text-red-700 hover:bg-red-50`}
+                                title="Deactivate"
+                                aria-label={`Deactivate ${record.name}`}
                                 disabled={disabled}
                                 onClick={() => onDeactivate(record)}
                               >
-                                Deactivate
+                                <ActionIcon action="delete" />
                               </button>
                             )}
                         </div>
@@ -323,7 +337,7 @@ export default function StructureDirectory({
   const [editor, setEditor] = useState<{
     record?: DepartmentRecord | TeamRecord;
   } | null>(null);
-  const [deactivating, setDeactivating] = useState<DepartmentRecord | null>(
+  const [deactivating, setDeactivating] = useState<DepartmentRecord | TeamRecord | null>(
     null,
   );
   const [message, setMessage] = useState("");
@@ -391,11 +405,12 @@ export default function StructureDirectory({
         />
       )}
       {deactivating && (
-        <DeactivateDepartment
-          department={deactivating}
+        <DeactivateStructure
+          kind={kind}
+          record={deactivating}
           onDone={() =>
             changed(
-              "Department deactivated. Existing relationships are preserved.",
+              `${noun} deactivated. Existing relationships are preserved.`,
             )
           }
           onCancel={() => setDeactivating(null)}

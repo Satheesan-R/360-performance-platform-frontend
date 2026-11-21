@@ -29,7 +29,7 @@ export default function ReportingHierarchy() {
     department: "",
     team: "",
   });
-  const [mode, setMode] = useState<"hierarchy" | "table">("hierarchy");
+  const [mode, setMode] = useState<"hierarchy" | "table">("table");
   const [success, setSuccess] = useState("");
   const employees = resource.data ?? [];
   const graph = hierarchyRows(employees);
