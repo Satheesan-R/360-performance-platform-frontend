@@ -46,5 +46,7 @@ export type Employee = CreateEmployeeResponse["employee"] &
     departmentId?: string | { _id: string; name: string } | null;
     managerId?: string | { _id: string; firstName?: string; lastName?: string } | null;
     jobTitle?: string;
+    previousJobTitle?: string;
+    previousCompany?: string;
     user?: { role: UserRole; status: string } | null;
   };
