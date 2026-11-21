@@ -6,7 +6,7 @@
   description: string;
 }) {
   return (
-    <main className="mx-auto max-w-7xl">
+    <main>
       <p className="text-sm font-semibold text-blue-600">HR WORKSPACE</p>
       <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
         {title}
