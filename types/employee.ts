@@ -1,4 +1,4 @@
-﻿import type { UserRole } from "./auth";
+import type { UserRole } from "./auth";
 
 export type EmploymentType = "full-time" | "probation" | "intern";
 
@@ -9,10 +9,13 @@ export interface CreateEmployeeRequest {
   personalEmail?: string;
   phone?: string;
   department?: string;
+  departmentId?: string;
   designation?: string;
   reportingManager?: string;
+  managerId?: string;
   officeLocation?: string;
   companyEmail: string;
+  employmentTypeId?: string;
   employmentType?: EmploymentType;
   contractStartDate?: string;
   role?: UserRole;
@@ -38,4 +41,16 @@ export interface CreateEmployeeResponse {
   activationUrl?: string;
 }
 
-export type Employee = CreateEmployeeResponse["employee"] & Partial<CreateEmployeeRequest>;
+export type Employee = CreateEmployeeResponse["employee"] &
+  Omit<Partial<CreateEmployeeRequest>, "departmentId" | "managerId" | "employmentTypeId"> & {
+    departmentId?: string | { _id: string; name: string } | null;
+    managerId?: string | { _id: string; firstName?: string; lastName?: string; jobTitle?: string } | null;
+    teamId?: string | { _id: string; name: string } | null;
+    employmentTypeId?: string | { _id: string; name: string } | null;
+    employmentType?: EmploymentType;
+    JoiningDate?: string | null;
+    jobTitle?: string;
+    previousJobTitle?: string;
+    previousCompany?: string;
+    user?: { role: UserRole; status: string } | null;
+  };

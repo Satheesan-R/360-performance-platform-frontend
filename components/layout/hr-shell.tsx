@@ -1,11 +1,10 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession, getCurrentUser } from "@/lib/auth";
-import { organizationNavigation } from "@/components/organization/navigation";
 import { frameworkNavigation } from "@/components/performance-framework/navigation";
 
 const navigation = [
@@ -24,10 +23,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [organizationExpanded, setOrganizationExpanded] = useState<boolean | null>(null);
   const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(null);
-  const organizationActive = pathname === "/hr/organization" || pathname.startsWith("/hr/organization/");
-  const organizationOpen = organizationExpanded ?? organizationActive;
   const user = getCurrentUser();
 
   function logout() {
@@ -61,20 +57,16 @@ export default function HrShell({ children }: { children: ReactNode }) {
           <nav className="flex-1 space-y-1 overflow-hidden px-4 py-6">
             {navigation.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
-              if (item.href === "/hr/organization" || item.href === "/hr/performance-framework") {
-                const isOrganization = item.href === "/hr/organization";
-                const open = isOrganization ? organizationOpen : frameworkExpanded ?? active;
-                const setExpanded = isOrganization ? setOrganizationExpanded : setFrameworkExpanded;
-                const children = isOrganization ? organizationNavigation : frameworkNavigation;
-                const submenuId = isOrganization ? "organization-submenu" : "framework-submenu";
+              if (item.href === "/hr/performance-framework") {
+                const open = frameworkExpanded ?? active;
                 return (
                   <div key={item.href}>
                     <button
                       type="button"
                       aria-expanded={open}
-                      aria-controls={submenuId}
+                      aria-controls="framework-submenu"
                       onClick={() => {
-                        setExpanded(!open);
+                        setFrameworkExpanded(!open);
                         if (!open && !active) router.push(item.href);
                       }}
                       className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
@@ -83,14 +75,14 @@ export default function HrShell({ children }: { children: ReactNode }) {
                       <span className="flex-1">{item.label}</span>
                       <span aria-hidden="true" className={`transition-transform ${open ? "rotate-180" : ""}`}>⌄</span>
                     </button>
-                    <div id={submenuId} hidden={!open} className="ml-7 mt-2 space-y-1 border-l border-white/15 pl-3">
-                      {children.map((child) => (
+                    <div id="framework-submenu" hidden={!open} className="ml-7 mt-2 space-y-1 border-l border-white/15 pl-3">
+                      {frameworkNavigation.map((child) => (
                         <Link
                           key={child.href}
                           href={child.href}
                           onClick={() => setMenuOpen(false)}
                           aria-current={pathname === child.href ? "page" : undefined}
-                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href || (child.href !== "/hr/organization" && pathname.startsWith(child.href + "/")) ? "bg-blue-500/20 text-blue-200" : "text-slate-400 hover:bg-white/10 hover:text-white"}`}
+                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href || (child.href !== "/hr/performance-framework" && pathname.startsWith(child.href + "/")) ? "bg-blue-500/20 text-blue-200" : "text-slate-400 hover:bg-white/10 hover:text-white"}`}
                         >
                           {child.label}
                         </Link>
@@ -103,7 +95,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => { setMenuOpen(false); setOrganizationExpanded(null); setFrameworkExpanded(null); }}
+                  onClick={() => { setMenuOpen(false); setFrameworkExpanded(null); }}
                   aria-current={pathname === item.href ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                 >
