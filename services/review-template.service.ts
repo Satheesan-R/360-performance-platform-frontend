@@ -3,6 +3,7 @@ import { getToken } from "@/lib/auth";
 import { getActiveDepartments } from "@/services/department.service";
 import type {
   ReviewTemplate,
+  TemplateApprovalStatus,
   TemplateInput,
   TemplateList,
   TemplatePreview,
@@ -31,6 +32,7 @@ export async function getReviewTemplates(
     status: string;
     frameworkId: string;
     page: number;
+    approvalStatus?: TemplateApprovalStatus;
   },
   signal?: AbortSignal,
 ) {
@@ -50,6 +52,19 @@ export async function getReviewTemplate(id: string, signal?: AbortSignal) {
     path(id),
     config(signal),
   );
+  return response.data.template;
+}
+export function getPendingTemplateApprovals(page: number, signal?: AbortSignal) {
+  return getReviewTemplates({ search: "", frameworkId: "", status: "active", approvalStatus: "pending", page }, signal);
+}
+
+export async function submitTemplateApproval(id: string) {
+  const response = await api.post<{ template: ReviewTemplate }>(`${path(id)}/submit-approval`, {}, config());
+  return response.data.template;
+}
+
+export async function decideTemplateApproval(id: string, decision: "approve" | "reject", comment: string) {
+  const response = await api.post<{ template: ReviewTemplate }>(`${path(id)}/${decision}`, { comment }, config());
   return response.data.template;
 }
 export async function saveReviewTemplate(
@@ -101,17 +116,4 @@ export async function getTemplateSnapshot(
     config(signal),
   );
   return response.data.snapshot;
-}
-
-export async function getTemplateDepartments(signal?: AbortSignal) {
-  const departments: import("@/types/review-template").TemplateDepartment[] = [];
-  let page = 1;
-  let totalPages = 1;
-  do {
-    const response = await api.get<{ departments: import("@/types/review-template").TemplateDepartment[]; pagination: { totalPages: number } }>("/departments", { ...config(signal), params: { status: "active", page, limit: 100 } });
-    departments.push(...response.data.departments);
-    totalPages = response.data.pagination.totalPages;
-    page++;
-  } while (page <= totalPages);
-  return departments;
 }
