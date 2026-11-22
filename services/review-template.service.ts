@@ -1,5 +1,6 @@
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import { getActiveDepartments } from "@/services/department.service";
 import type {
   ReviewTemplate,
   TemplateInput,
@@ -8,13 +9,20 @@ import type {
   TemplateSnapshot,
 } from "@/types/review-template";
 
-function config(signal?: AbortSignal) {
+function requireToken() {
   const token = getToken();
   if (!token) throw new Error("Your session has expired. Please log in again.");
-  return { headers: { Authorization: `Bearer ${token}` }, signal };
+  return token;
+}
+function config(signal?: AbortSignal) {
+  return { headers: { Authorization: `Bearer ${requireToken()}` }, signal };
 }
 function path(id: string) {
   return `/review-templates/${encodeURIComponent(id)}`;
+}
+
+export async function getTemplateDepartments(signal?: AbortSignal) {
+  return getActiveDepartments(requireToken(), signal);
 }
 
 export async function getReviewTemplates(
