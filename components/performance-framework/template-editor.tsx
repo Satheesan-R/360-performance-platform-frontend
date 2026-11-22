@@ -103,7 +103,7 @@ function Editor({ template, frameworks, types, departments, onSaved, onCancel, o
               checked
               onChange={() => change({ ...draft, departmentIds: draft.departmentIds?.filter((value) => value !== id) })}
             />
-            Previously selected department ({id.slice(-6)}) ? unavailable for new selections
+            Previously selected department ({id.slice(-6)}) is unavailable. Uncheck it to remove it.
           </label>
         ))}
         {!departments.length && <p className="text-sm text-slate-500">No active departments available.</p>}
