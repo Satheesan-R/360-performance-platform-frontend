@@ -66,7 +66,12 @@ export async function updateOrganization(values: Omit<Organization, "_id">) {
 
 export async function getStructure(kind: StructureKind, signal?: AbortSignal) {
   const response = await api.get(organizationEndpoints[kind], config(signal));
-  return list<StructureRecord>(response.data, kind === "employment-types" ? "employmentTypes" : kind);
+  if (kind !== "employment-types") return list<StructureRecord>(response.data, kind);
+
+  return list<StructureRecord & { isActive?: boolean }>(response.data, "employmentTypes").map((record): StructureRecord => ({
+    ...record,
+    status: typeof record.isActive === "boolean" ? (record.isActive ? "active" : "inactive") : record.status,
+  }));
 }
 
 export async function saveStructure(kind: StructureKind, values: StructureInput, id?: string) {
@@ -86,6 +91,10 @@ export async function saveStructure(kind: StructureKind, values: StructureInput,
 export async function getHierarchy(signal?: AbortSignal) {
   const response = await api.get(organizationEndpoints.hierarchy, config(signal));
   return parseHierarchyEmployees(list<unknown>(response.data, "employees"));
+}
+
+export async function deactivateEmploymentType(id: string) {
+  await api.patch(`${organizationEndpoints["employment-types"]}/${encodeURIComponent(id)}`, { status: "inactive" }, config());
 }
 
 export async function updateReportingManager(id: string, managerId: string | null) {

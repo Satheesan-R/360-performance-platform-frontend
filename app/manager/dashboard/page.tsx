@@ -1,10 +1,5 @@
-﻿import ProtectedRoute from "@/components/auth/protected-route";
-import DashboardHome from "@/components/dashboard/dashboard-home";
+import LeadershipDashboard from "@/components/dashboard/leadership-dashboard";
 
-export default function ManagerDashboardPage() {
-  return (
-    <ProtectedRoute role="department_manager">
-      <DashboardHome role="department_manager" />
-    </ProtectedRoute>
-  );
+export default function DashboardPage() {
+  return <LeadershipDashboard role="department_manager" />;
 }

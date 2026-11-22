@@ -1,115 +1,17 @@
 import styles from "./landing.module.css";
 
 const goals = [
-  ["Cross-Microservices Latency Reduction", 85, "Owner: Infrastructure Guild"],
-  [
-    "Self-Service Multi-Tenant Provisioning Workflow",
-    72,
-    "Owner: Platform Engineering",
-  ],
-  [
-    "SOC 2 Type II Automated Compliance Checks",
-    100,
-    "Owner: Security & Compliance",
-  ],
-] as const;
-const cells = [
-  ["Future Star", 18],
-  ["Top Talent", 34],
-  ["Key Leader", 22],
-  ["Core Growth", 56],
-  ["High Impact", 41],
-  ["Specialist", 19],
-  ["Developing", 9],
-  ["Action Plan", 4],
-  ["Onboarding", 12],
-] as const;
+  ["Organization Goals", "Improve customer support reliability.", "Sample objective"],
+  ["Team Goals", "Reduce first-response time from 8 hours to 4 hours.", "Sample key result"],
+  ["Individual Goals", "Maintain the triage checklist and review progress weekly.", "Sample contribution"],
+];
 
 export default function PerformancePreview() {
   return (
-    <section
-      id="performance"
-      className={styles.preview}
-      aria-label="Illustrative performance dashboard"
-    >
-      <div className={styles.container}>
-        <div className={styles.window}>
-          <div className={styles.windowBar}>
-            <span className={styles.dot} />
-            <span className={styles.dot} />
-            <span className={styles.dot} />
-            <span className={styles.address}>
-              ◈ corpdev360 / performance workspace
-            </span>
-            <span className={styles.live}>◉ Connected team insights</span>
-          </div>
-          <div className={styles.metrics}>
-            {[
-              ["Review Completion", "98.4%", "A clear view of every review"],
-              [
-                "Strategic OKRs Aligned",
-                "142",
-                "94 Jira sprints actively linked",
-              ],
-              [
-                "Talent Calibration Index",
-                "4.35 / 5",
-                "High-density talent cohort",
-              ],
-              ["Team Feedback", "Live Sync", "Feedback that moves you forward"],
-            ].map(([label, value, note]) => (
-              <div className={styles.metric} key={label}>
-                <small>{label}</small>
-                <strong
-                  className={
-                    label === "Team Feedback" ? styles.blue : undefined
-                  }
-                >
-                  {value}
-                </strong>
-                <span>{note}</span>
-              </div>
-            ))}
-          </div>
-          <div className={styles.panels}>
-            <div className={styles.panel}>
-              <h3>Active Enterprise OKR Alignment</h3>
-              <p>Connect daily execution to your team&apos;s bigger goals.</p>
-              {goals.map(([name, progress, owner]) => (
-                <div key={name} className={styles.okr}>
-                  <div className={styles.okrLabel}>
-                    <strong>{name}</strong>
-                    <span className={styles.blue}>{progress}%</span>
-                  </div>
-                  <div className={styles.bar}>
-                    <span style={{ width: `${progress}%` }} />
-                  </div>
-                  <span>{owner}</span>
-                </div>
-              ))}
-            </div>
-            <div className={styles.panel}>
-              <h3>Talent Calibration Matrix</h3>
-              <p>A shared view of performance and growth potential.</p>
-              <div className={styles.matrix}>
-                {cells.map(([label, count], index) => (
-                  <div
-                    key={label}
-                    className={`${styles.cell} ${index === 1 ? styles.selected : ""}`}
-                  >
-                    {label}
-                    <strong>{count}</strong>
-                  </div>
-                ))}
-              </div>
-              <p>Make development conversations more meaningful.</p>
-            </div>
-          </div>
-        </div>
-        <p className={styles.demoNote}>
-          Illustrative product preview · Sample data shown
-        </p>
-      </div>
-    </section>
+    <section id="performance" className={styles.section}><div className={styles.container}>
+      <div className={styles.heading}><span className={styles.eyebrow}>OKRs & goal alignment · planned</span><h2>Connect organizational goals to individual performance.</h2><p>The intended goal module connects organization, team and individual goals, with progress and completion tracking throughout a performance cycle. This module is not implemented yet.</p></div>
+      <div className={styles.goalExample}><div className={styles.exampleHeader}><span className={styles.eyebrow}>Conceptual goal alignment</span><span>Illustrative sample data · not live results</span></div><ol className={styles.goalAlignment}>{goals.map(([title, text, label], index) => <li key={title}><span className={styles.stepNumber}>0{index + 1}</span><h3>{title}</h3><p>{text}</p><small>{label}</small>{index < goals.length - 1 && <span className={styles.goalArrow} aria-hidden="true">→</span>}</li>)}</ol></div>
+      <div className={styles.scopeLegend}><span>Goal cascading · planned</span><span>Progress tracking · planned</span><span>Completion percentages · planned</span><span>Review-cycle alignment · planned</span></div>
+    </div></section>
   );
 }

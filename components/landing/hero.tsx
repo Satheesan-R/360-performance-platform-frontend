@@ -1,4 +1,3 @@
-import Image from "next/image";
 import styles from "./landing.module.css";
 
 export default function Hero() {
@@ -35,18 +34,6 @@ export default function Hero() {
             >
               See how it works <span aria-hidden="true">↗</span>
             </a>
-          </div>
-        </div>
-        <div className={styles.heroVisual}>
-          <div className={styles.heroPhoto}>
-            <Image
-              src="/images/landing-team.webp"
-              alt="Colleagues sharing ideas around a table in a bright, modern office"
-              fill
-              sizes="(max-width: 800px) calc(100vw - 48px), (max-width: 1180px) 44vw, 490px"
-              preload
-              className={styles.heroImage}
-            />
           </div>
         </div>
       </div>
