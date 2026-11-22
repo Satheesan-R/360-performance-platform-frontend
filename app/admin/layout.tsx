@@ -1,6 +1,23 @@
 import type { ReactNode } from "react";
-import AdminShell from "@/components/layout/admin-shell";
+import WorkspaceShell from "@/components/layout/workspace-shell";
+
+const navigation = [
+  { label: "Dashboard", href: "/admin/dashboard", short: "DB" },
+  { label: "Review Templates", href: "/admin/review-templates", short: "RT" },
+  { label: "Organization", href: "/admin/organization", short: "OR" },
+  { label: "Employee Directory", href: "/admin/employees", short: "ED" },
+];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <WorkspaceShell
+      role="admin"
+      title="Admin workspace"
+      description="Platform administration"
+      initials="AD"
+      navigation={navigation}
+    >
+      {children}
+    </WorkspaceShell>
+  );
 }

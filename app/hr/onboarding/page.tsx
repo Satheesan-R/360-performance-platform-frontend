@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { getApiErrorMessage } from "@/lib/api";
@@ -8,11 +7,14 @@ import { getToken } from "@/lib/auth";
 import { getActiveDepartments, type DepartmentOption } from "@/services/department.service";
 import { emailPattern, validateBirthDate, validatePhone } from "@/lib/onboarding-validation";
 import { createEmployee, getEmployees } from "@/services/employee.service";
+import { getFrameworkEmploymentTypes } from "@/services/performance-framework.service";
+import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import type {
   ActivationEmailDelivery,
   CreateEmployeeRequest,
   Employee,
 } from "@/types/employee";
+import OnboardingDirectory from "@/components/onboarding/onboarding-directory";
 
 const inputClass =
   "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -52,6 +54,7 @@ export default function EmployeeOnboardingPage() {
   const [departmentError, setDepartmentError] = useState("");
   const [departmentsLoading, setDepartmentsLoading] = useState(true);
   const [lookupRequest, setLookupRequest] = useState(0);
+  const employmentTypes = useOrganizationResource(getFrameworkEmploymentTypes);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -119,7 +122,7 @@ export default function EmployeeOnboardingPage() {
   } = useForm<CreateEmployeeRequest>({
     defaultValues: {
       role: "employee",
-      employmentType: "full-time",
+      employmentTypeId: "",
     },
   });
 
@@ -150,15 +153,18 @@ export default function EmployeeOnboardingPage() {
       const payload = { ...values };
       if (!payload.departmentId) delete payload.departmentId;
       if (!payload.managerId) delete payload.managerId;
+      if (!payload.employmentTypeId) delete payload.employmentTypeId;
       const result = await createEmployee(payload, token);
       setSuccessMessage(result.message);
       setEmailDelivery(result.emailDelivery ?? null);
       setActivationUrl(result.activationUrl ?? "");
-      setEmployees((current) => [{ ...values, ...result.employee }, ...current]);
+      setLoading(true);
+      setListError("");
+      setLookupRequest((value) => value + 1);
       setShowForm(false);
       reset({
         role: "employee",
-        employmentType: "full-time",
+        employmentTypeId: "",
       });
     } catch (error) {
       setServerError(getApiErrorMessage(error));
@@ -166,25 +172,11 @@ export default function EmployeeOnboardingPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl">
-      <nav className="mb-3 flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/hr/dashboard" className="hover:text-blue-600">
-          Dashboard
-        </Link>
-
-        <span>/</span>
-
-        <span className="font-medium text-blue-600">Employee Onboarding</span>
-      </nav>
-
+    <main>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-semibold text-blue-600">
-            EMPLOYEE MANAGEMENT
-          </p>
-
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
-            Employee Onboarding
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            {showForm ? "Add Employee" : "Employee & Structure Management"}
           </h1>
 
           <p className="mt-2 text-slate-500">
@@ -296,96 +288,15 @@ export default function EmployeeOnboardingPage() {
       )}
 
       {!showForm && (
-        <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 p-6">
-            <h2 className="text-lg font-bold text-slate-900">Employee details</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Employee profiles and account activation status.
-            </p>
-          </div>
-          {loading ? (
-            <p role="status" className="p-8 text-center text-slate-500">
-              Loading employees...
-            </p>
-          ) : listError ? (
-            <p role="alert" className="p-8 text-center text-red-600">
-              {listError}
-            </p>
-          ) : employees.length === 0 ? (
-            <div className="p-12 text-center">
-              <p className="font-semibold text-slate-700">No employees yet</p>
-              <p className="mt-2 text-sm text-slate-500">
-                Click Add Employee to create your first employee profile.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600">
-                  <tr>
-                    {[
-                      "Employee",
-                      "Employee number",
-                      "Email",
-                      "Department",
-                      "Designation",
-                      "Onboarding status",
-                    ].map((label) => (
-                      <th
-                        key={label}
-                        scope="col"
-                        className="whitespace-nowrap px-6 py-4 font-semibold"
-                      >
-                        {label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-slate-100">
-                  {employees.map((employee) => (
-                    <tr key={employee._id} className="text-slate-700">
-                      <td className="whitespace-nowrap px-6 py-4 font-semibold text-slate-900">
-                        {employee.fullName ||
-                          `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() ||
-                          "—"}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {employee.employeeNumber || "—"}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {employee.workEmail || employee.companyEmail || "—"}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {employee.department || "—"}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {employee.jobTitle || employee.designation || "—"}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${employee.onboardingStatus === "completed"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-amber-50 text-amber-700"
-                            }`}
-                        >
-                          {employee.onboardingStatus === "completed"
-                            ? "Completed"
-                            : "Pending"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+        <OnboardingDirectory
+          employees={employees}
+          departments={departments}
+          loading={loading}
+          error={listError}
+          departmentsLoading={departmentsLoading}
+          departmentError={departmentError}
+          onRetry={retryLookups}
+        />
       )}
 
       {showForm && (
@@ -597,15 +508,28 @@ export default function EmployeeOnboardingPage() {
               </p>
             </div>
             <div className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:grid-cols-2">
-              <Field label="Employment type">
+              <Field label="Employment type" error={employmentTypes.error}>
                 <select
-                  {...register("employmentType")}
+                  aria-label="Employment type"
+                  {...register("employmentTypeId")}
                   className={inputClass}
+                  disabled={employmentTypes.loading || Boolean(employmentTypes.error)}
                 >
-                  <option value="full-time">Full-time</option>
-                  <option value="probation">Probation</option>
-                  <option value="intern">Intern</option>
+                  <option value="">
+                    {employmentTypes.loading ? "Loading employment types…" : "Select employment type"}
+                  </option>
+                  {employmentTypes.data?.map((type) => (
+                    <option key={type._id} value={type._id}>{type.name}</option>
+                  ))}
                 </select>
+                {employmentTypes.error && (
+                  <button type="button" onClick={employmentTypes.reload} className="mt-2 text-sm font-semibold text-blue-700 hover:underline">
+                    Retry loading employment types
+                  </button>
+                )}
+                {!employmentTypes.loading && !employmentTypes.error && !employmentTypes.data?.length && (
+                  <p className="mt-2 text-sm text-slate-600">Add active employment types in Organization settings.</p>
+                )}
               </Field>
 
               <Field label="Contract start date">

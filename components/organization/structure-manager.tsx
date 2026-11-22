@@ -6,6 +6,7 @@ import {
   getStructure,
   getPermissions,
   saveStructure,
+  deactivateEmploymentType,
 } from "@/services/organization.service";
 import { getEmployees } from "@/services/employee.service";
 import { getToken } from "@/lib/auth";
@@ -24,6 +25,7 @@ import {
   PageHeading,
   ResourceState,
 } from "./ui";
+import { ActionIcon, viewActionClass } from "./view-controls";
 
 const settings = {
   departments: {
@@ -49,6 +51,48 @@ const settings = {
       "Define access roles and the permissions available to each role.",
   },
 };
+
+const employmentStats = [
+  { code: "INTERN", label: "Interns" },
+  { code: "PERMANENT", label: "Permanent employees" },
+  { code: "PROBATION", label: "Probationary employees" },
+] as const;
+
+async function loadEmploymentStats(signal: AbortSignal) {
+  const token = getToken();
+  if (!token) throw new Error("Your session has expired. Please log in again.");
+  return getEmployees(token, signal);
+}
+
+function EmploymentTypeStats({ types }: { types: StructureRecord[] }) {
+  const employees = useOrganizationResource(loadEmploymentStats);
+  const codesById = new Map(types.map((type) => [type._id, type.code]));
+  const counts = new Map<string, number>();
+
+  for (const employee of employees.data ?? []) {
+    const reference = employee.employmentTypeId;
+    const code = typeof reference === "string"
+      ? codesById.get(reference)
+      : reference && (reference.code || codesById.get(reference._id));
+    if (code) counts.set(code, (counts.get(code) ?? 0) + 1);
+  }
+
+  return (
+    <section aria-label="Employees by employment type" className="mb-6">
+      <ResourceState loading={employees.loading} error={employees.error} retry={employees.reload} />
+      {!employees.loading && !employees.error && employees.data && (
+        <dl className="grid gap-4 sm:grid-cols-3">
+          {employmentStats.map(({ code, label }) => (
+            <div key={code} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <dt className="text-sm font-medium text-slate-600">{label}</dt>
+              <dd className="mt-2 text-3xl font-bold tabular-nums text-slate-950">{(counts.get(code) ?? 0).toLocaleString()}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </section>
+  );
+}
 
 function employeeName(employee: {
   fullName?: string;
@@ -98,6 +142,25 @@ export default function StructureManager({ kind }: { kind: StructureKind }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [viewing, setViewing] = useState<StructureRecord | null>(null);
+  const [deactivating, setDeactivating] = useState<StructureRecord | null>(null);
+
+  async function confirmDeactivation() {
+    if (!deactivating || saving) return;
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      await deactivateEmploymentType(deactivating._id);
+      setDeactivating(null);
+      setSuccess("Employment type deactivated.");
+      await resource.reload();
+    } catch (error) {
+      setError(getApiErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  }
   function edit(record?: StructureRecord) {
     setEditingId(record?._id);
     setDraft(
@@ -180,7 +243,7 @@ export default function StructureManager({ kind }: { kind: StructureKind }) {
         <button
           type="button"
           disabled={
-            Boolean(draft) || resource.loading || Boolean(resource.error)
+            Boolean(draft || viewing || deactivating) || resource.loading || Boolean(resource.error)
           }
           className={buttonClass}
           onClick={() => edit()}
@@ -188,6 +251,29 @@ export default function StructureManager({ kind }: { kind: StructureKind }) {
           + Add {info.singular}
         </button>
       </PageHeading>
+      {kind === "employment-types" && <EmploymentTypeStats types={resource.data ?? []} />}
+      {viewing && (
+        <section aria-label="Employment type details" className="mb-5 rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="font-bold text-slate-900">{viewing.name}</h2>
+            <button type="button" className={secondaryClass} onClick={() => setViewing(null)}>Close</button>
+          </div>
+          <p className="mt-2 text-sm text-slate-600">{viewing.code}</p>
+          <p className="mt-2 text-sm text-slate-600">{viewing.description || "No description provided."}</p>
+          <div className="mt-3"><Status value={viewing.status} /></div>
+        </section>
+      )}
+      {deactivating && (
+        <section aria-label="Confirm employment type deactivation" className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <h2 className="font-bold text-slate-900">Are you sure you want to deactivate {deactivating.name}?</h2>
+          <p className="mt-2 text-sm text-slate-700">Existing employee classifications are preserved. This type will be unavailable for new assignments.</p>
+          {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button type="button" disabled={saving} className={buttonClass} onClick={() => void confirmDeactivation()}>{saving ? "Deactivating..." : "Yes, deactivate"}</button>
+            <button type="button" disabled={saving} className={secondaryClass} onClick={() => { setDeactivating(null); setError(""); }}>Cancel</button>
+          </div>
+        </section>
+      )}
       {success && (
         <p
           role="status"
@@ -196,7 +282,7 @@ export default function StructureManager({ kind }: { kind: StructureKind }) {
           {success}
         </p>
       )}
-      {error && (
+      {error && !deactivating && (
         <p
           role="alert"
           className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
@@ -537,15 +623,21 @@ export default function StructureManager({ kind }: { kind: StructureKind }) {
                     <Status value={record.status} />
                   </td>
                   <td className="px-4 py-4 sm:px-5">
-                    <button
-                      type="button"
-                      disabled={Boolean(draft)}
-                      className="rounded-lg px-3 py-2 font-semibold text-blue-700 transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 disabled:opacity-40"
-                      aria-label={`Edit ${record.name}`}
-                      onClick={() => edit(record)}
-                    >
-                      Edit
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {kind === "employment-types" && (
+                        <button type="button" disabled={Boolean(draft || viewing || deactivating)} className={viewActionClass} title="View" aria-label={`View ${record.name}`} onClick={() => setViewing(record)}>
+                          <ActionIcon action="view" />
+                        </button>
+                      )}
+                      <button type="button" disabled={Boolean(draft || viewing || deactivating)} className={viewActionClass} title="Edit" aria-label={`Edit ${record.name}`} onClick={() => edit(record)}>
+                        <ActionIcon action="edit" />
+                      </button>
+                      {kind === "employment-types" && record.status === "active" && (
+                        <button type="button" disabled={Boolean(draft || viewing || deactivating)} className={`${viewActionClass} text-red-700 hover:bg-red-50`} title="Deactivate" aria-label={`Deactivate ${record.name}`} onClick={() => { setError(""); setSuccess(""); setDeactivating(record); }}>
+                          <ActionIcon action="delete" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
