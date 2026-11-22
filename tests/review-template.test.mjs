@@ -138,8 +138,29 @@ test("checks UTF-8 bytes against the server request size limit", () => {
 });
 
 function service(api, token = "test-token") {
-  return module("../services/review-template.service.ts", { "@/lib/api": { __esModule: true, default: api }, "@/lib/auth": { getToken: () => token } });
+  const apiImport = { __esModule: true, default: api };
+  return module("../services/review-template.service.ts", {
+    "@/lib/api": apiImport,
+    "@/lib/auth": { getToken: () => token },
+    "@/services/department.service": module("../services/department.service.ts", { "@/lib/api": apiImport }),
+  });
 }
+
+test("template departments load all active pages with auth and cancellation", async () => {
+  const signal = new AbortController().signal;
+  const departments = [{ _id: "first", name: "Engineering" }, { _id: "second", name: "Operations" }];
+  const pages = [];
+  const client = service({ get: async (path, config) => {
+    assert.equal(path, "/departments");
+    assert.equal(config.headers.Authorization, "Bearer test-token");
+    assert.equal(config.signal, signal);
+    assert.equal(config.params.status, "active");
+    pages.push(config.params.page);
+    return { data: { departments: [departments[config.params.page - 1]], pagination: { totalPages: 2 } } };
+  } });
+  assert.deepEqual(plain(await client.getTemplateDepartments(signal)), departments);
+  assert.deepEqual(pages, [1, 2]);
+});
 
 test("list sends server pagination search and filters with Bearer auth", async () => {
   const signal = new AbortController().signal;
