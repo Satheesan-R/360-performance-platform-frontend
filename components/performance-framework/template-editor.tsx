@@ -15,7 +15,7 @@ import { buttonClass, Field, inputClass, secondaryClass } from "@/components/org
 import TemplateSectionsEditor from "./template-sections-editor";
 import { TemplatePreviewContent } from "./template-preview";
 
-function Editor({ template, frameworks, types, departments, onSaved, onCancel, onReload }: { template?: ReviewTemplate; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[]; departments: TemplateDepartment[]; onSaved: () => void; onCancel: () => void; onReload: () => void }) {
+function Editor({ template, frameworks, types, departments, onSaved, onCancel, onReload }: { template?: ReviewTemplate; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[]; departments: TemplateDepartment[]; onSaved: () => void; onCancel?: () => void; onReload: () => void }) {
   const [draft, setDraft] = useState(() => templateDraft(template));
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -41,7 +41,13 @@ function Editor({ template, frameworks, types, departments, onSaved, onCancel, o
     finally { setBusy(false); }
   }
   return <>
-    <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">{template ? "Edit review template" : "Create review template"}</h2><p className="mt-1 text-sm text-slate-500">{template ? `${template.status} · Version ${template.__v ?? 0}` : "New templates start as draft"}{dirty ? " · Unsaved changes" : ""}</p></div><button type="button" className={secondaryClass} disabled={busy} onClick={onCancel}>{dirty ? "Discard & back" : "Back to templates"}</button></div>
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 className="text-xl font-semibold">{template ? "Edit review template" : "Create review template"}</h2>
+        <p className="mt-1 text-sm text-slate-500">{template ? `${template.status} · Version ${template.__v ?? 0}` : "New templates start as draft"}{dirty ? " · Unsaved changes" : ""}</p>
+      </div>
+      {onCancel && <button type="button" className={secondaryClass} disabled={busy} onClick={onCancel}>{dirty ? "Discard & back" : "Back to templates"}</button>}
+    </div>
     {frozen && <p className="mb-5 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">Using pinned framework version {template?.frameworkVersion}: {framework?.name}. Move the template to draft from the list before changing its framework or adopting newer criteria.</p>}
     {readOnly && <p className="mb-5 text-sm text-slate-600">Archived templates are read-only here. Move the template to draft from the list to edit its sections.</p>}
     {error && <div role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700"><p>{error}</p>{conflict && <><p className="mt-2">Reload before retrying. Reloading discards unsaved changes.</p><button type="button" className={`${secondaryClass} mt-3`} onClick={onReload}>Reload latest template</button></>}</div>}
@@ -114,7 +120,7 @@ function Editor({ template, frameworks, types, departments, onSaved, onCancel, o
   </>;
 }
 
-export default function TemplateEditor({ id, onSaved, onCancel }: { id?: string; onSaved: () => void; onCancel: () => void }) {
+export default function TemplateEditor({ id, onSaved, onCancel }: { id?: string; onSaved: () => void; onCancel?: () => void }) {
   const [revision, setRevision] = useState(0);
   const load = useCallback(async (signal: AbortSignal) => {
     const [template, frameworks, types, departments] = await Promise.all([id ? getReviewTemplate(id, signal) : Promise.resolve(undefined), getCriteriaFrameworks(signal), getFrameworkEmploymentTypes(signal), getTemplateDepartments(signal)]);
@@ -122,9 +128,9 @@ export default function TemplateEditor({ id, onSaved, onCancel }: { id?: string;
   }, [id]);
   return <EditorLoader key={revision} load={load} onSaved={onSaved} onCancel={onCancel} onReload={() => setRevision((value) => value + 1)} />;
 }
-function EditorLoader({ load, ...actions }: { load: (signal: AbortSignal) => Promise<{ template: ReviewTemplate | undefined; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[]; departments: TemplateDepartment[] }>; onSaved: () => void; onCancel: () => void; onReload: () => void }) {
+function EditorLoader({ load, ...actions }: { load: (signal: AbortSignal) => Promise<{ template: ReviewTemplate | undefined; frameworks: PerformanceFramework[]; types: FrameworkEmploymentType[]; departments: TemplateDepartment[] }>; onSaved: () => void; onCancel?: () => void; onReload: () => void }) {
   const resource = useOrganizationResource(load);
   if (resource.loading) return <p role="status" className="p-6 text-sm text-slate-500">Loading template editor...</p>;
-  if (resource.error) return <div role="alert" className="rounded-xl bg-red-50 p-5 text-sm text-red-700"><p>{resource.error}</p><div className="mt-3 flex gap-3"><button type="button" className={secondaryClass} onClick={resource.reload}>Try again</button><button type="button" className={secondaryClass} onClick={actions.onCancel}>Back to templates</button></div></div>;
+  if (resource.error) return <div role="alert" className="rounded-xl bg-red-50 p-5 text-sm text-red-700"><p>{resource.error}</p><div className="mt-3 flex gap-3"><button type="button" className={secondaryClass} onClick={resource.reload}>Try again</button>{actions.onCancel && <button type="button" className={secondaryClass} onClick={actions.onCancel}>Back to templates</button>}</div></div>;
   return resource.data ? <Editor {...resource.data} {...actions} /> : null;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { isAxiosError } from "axios";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
@@ -28,7 +29,7 @@ type Filters = {
   page: number;
 };
 type View =
-  | { kind: "edit"; id?: string }
+  | { kind: "edit"; id: string }
   | { kind: "preview" | "snapshots"; item: TemplateListItem }
   | null;
 
@@ -285,18 +286,13 @@ export default function ReviewTemplatesPage() {
         title="Review Templates"
         description="Organize framework criteria, questions, comments, and evidence rules for reviews."
       >
-        {!view && (
-          <button
-            type="button"
-            className={buttonClass}
-            disabled={locked}
-            onClick={() => {
-              setView({ kind: "edit" });
-              setMessage("");
-            }}
+        {!view && !locked && (
+          <Link
+            className={`${buttonClass} inline-block`}
+            href="/hr/performance-framework/templates/new"
           >
             + Create Template
-          </button>
+          </Link>
         )}
       </PageHeading>
       {message && (
@@ -309,7 +305,7 @@ export default function ReviewTemplatesPage() {
       )}
       {view?.kind === "edit" ? (
         <TemplateEditor
-          key={view.id ?? "new"}
+          key={view.id}
           id={view.id}
           onCancel={() => back()}
           onSaved={() => back("Review template saved.")}
