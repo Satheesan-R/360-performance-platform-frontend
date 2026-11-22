@@ -9,6 +9,7 @@ import { getCriteriaFrameworks } from "@/services/framework-criteria.service";
 import {
   getReviewTemplates,
   saveReviewTemplate,
+  submitTemplateApproval,
 } from "@/services/review-template.service";
 import type { FrameworkStatus } from "@/types/performance-framework";
 import type { TemplateListItem } from "@/types/review-template";
@@ -38,12 +39,14 @@ function TemplatesTable({
   disabled,
   onView,
   onStatus,
+  onSubmitApproval,
   onPage,
 }: {
   filters: Filters;
   disabled: boolean;
   onView: (view: View) => void;
   onStatus: (item: TemplateListItem, status: FrameworkStatus) => void;
+  onSubmitApproval: (item: TemplateListItem) => void;
   onPage: (page: number) => void;
 }) {
   const load = useCallback(
@@ -149,6 +152,15 @@ function TemplatesTable({
                       >
                         {item.status}
                       </span>
+                      <p className="mt-2 text-xs text-slate-600">
+                        {item.approvalStatus === "pending" ? "Pending admin approval"
+                          : item.approvalStatus === "approved" ? "Admin approved"
+                          : item.approvalStatus === "rejected" ? "Declined by admin"
+                          : "Not submitted"}
+                      </p>
+                      {item.approvalStatus === "rejected" && item.approvalComment && (
+                        <p className="mt-1 max-w-48 break-words text-xs text-slate-600">{item.approvalComment}</p>
+                      )}
                     </td>
                     <td className="min-w-60 px-5 py-4">
                       <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -160,6 +172,17 @@ function TemplatesTable({
                         >
                           Preview
                         </button>
+                        {item.status === "active" &&
+                          item.approvalStatus !== "pending" && item.approvalStatus !== "approved" && (
+                          <button
+                            type="button"
+                            className="font-semibold text-blue-600 disabled:opacity-40"
+                            disabled={disabled}
+                            onClick={() => onSubmitApproval(item)}
+                          >
+                            {item.targetRole ? "Submit for approval" : "Set manager target and submit"}
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="font-semibold text-blue-600 disabled:opacity-40"
@@ -269,12 +292,44 @@ export default function ReviewTemplatesPage() {
     setBusy(true);
     setError("");
     try {
-      await saveReviewTemplate({ status: pending.status }, pending.item._id);
-      back(`Template moved to ${pending.status}.`);
+      const activating = pending.status === "active";
+      const updated = await saveReviewTemplate(
+        activating ? { status: "active", targetRole: "department_manager" } : { status: pending.status },
+        pending.item._id,
+      );
+      if (activating) {
+        try {
+          await submitTemplateApproval(updated._id);
+          back("Template activated and sent to Admin for approval.");
+        } catch (submissionError) {
+          back("Template activated.");
+          setError(`Could not send the approval request. ${getApiErrorMessage(submissionError)} Use Submit for approval to retry.`);
+        }
+      } else {
+        back(`Template moved to ${pending.status}.`);
+      }
     } catch (error) {
       setError(getApiErrorMessage(error));
       if (isAxiosError(error) && error.response?.status === 409)
         setConflict(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function submitApproval(item: Pick<TemplateListItem, "_id" | "targetRole">) {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      if (!item.targetRole) {
+        await saveReviewTemplate({ targetRole: "department_manager" }, item._id);
+      }
+      await submitTemplateApproval(item._id);
+      back("Template sent to Admin for approval.");
+    } catch (submissionError) {
+      setError(getApiErrorMessage(submissionError));
+      setVersion((value) => value + 1);
     } finally {
       setBusy(false);
     }
@@ -295,6 +350,7 @@ export default function ReviewTemplatesPage() {
           </Link>
         )}
       </PageHeading>
+      {error && !pending && <p role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
       {message && (
         <p
           role="status"
@@ -315,6 +371,8 @@ export default function ReviewTemplatesPage() {
           id={view.item._id}
           onBack={() => back()}
           onActivate={() => request(view.item, "active")}
+          onSubmitApproval={(targetRole) => void submitApproval({ _id: view.item._id, targetRole })}
+          submitting={busy}
         />
       ) : view?.kind === "snapshots" ? (
         <TemplateSnapshots
@@ -333,7 +391,7 @@ export default function ReviewTemplatesPage() {
                 {pending.status === "draft"
                   ? "Returning to draft clears the pinned framework. Criteria will use the current live framework; reactivate after reviewing them."
                   : pending.status === "active"
-                    ? "Activation requires an active, scoring-ready framework and a complete criterion selection. The framework version will be pinned."
+                    ? "Activation pins the framework version and sends the template to Admin for approval. The target role is Department Manager."
                     : "The template will remain available for reference. Existing snapshots are preserved."}
               </p>
               {error && (
@@ -463,6 +521,7 @@ export default function ReviewTemplatesPage() {
             disabled={locked}
             onView={setView}
             onStatus={request}
+            onSubmitApproval={(item) => void submitApproval(item)}
             onPage={(page) => setFilters({ ...filters, page })}
           />
         </>
