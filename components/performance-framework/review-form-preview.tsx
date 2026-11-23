@@ -106,9 +106,10 @@ function ReviewSection({ section, index, scale }: {
   );
 }
 
-export default function ReviewFormPreview({ sections, scale }: {
+export default function ReviewFormPreview({ sections, scale, readOnly = false }: {
   sections: ResolvedTemplateSection[];
   scale: RatingScale | null;
+  readOnly?: boolean;
 }) {
   const [message, setMessage] = useState("");
   const [revision, setRevision] = useState(0);
@@ -123,13 +124,16 @@ export default function ReviewFormPreview({ sections, scale }: {
       }}
     >
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-        Try filling out this review form. Preview answers are temporary and are cleared when you leave.
+        {readOnly ? "You can view your assigned form here. Response submission is not available yet." : "Try filling out this review form. Preview answers are temporary and are cleared when you leave."}
       </div>
-      {sections.map((section, index) => (
-        <ReviewSection key={`${revision}:${section._id ?? index}`} section={section} index={index} scale={scale} />
-      ))}
+      <fieldset disabled={readOnly} className="space-y-6">
+        <legend className="sr-only">Review questions and ratings</legend>
+        {sections.map((section, index) => (
+          <ReviewSection key={`${revision}:${section._id ?? index}`} section={section} index={index} scale={scale} />
+        ))}
+      </fieldset>
       {!sections.length && <p className="rounded-xl bg-white p-6 text-sm text-slate-500">No sections configured.</p>}
-      {sections.length > 0 && (
+      {sections.length > 0 && !readOnly && (
         <div className="flex flex-wrap gap-3">
           <button type="submit" className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">Check preview form</button>
           <button type="reset" className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold">Clear preview answers</button>

@@ -20,6 +20,7 @@ const navigation = [
     icon: "▤",
   },
   { label: "Review Cycles", href: "/hr/review-cycles", icon: "⟳" },
+  { label: "My Reviews", href: "/hr/assigned-reviews", icon: "MR" },
   { label: "Normalisation", href: "/hr/normalisation", icon: "⇄" },
   {
     label: "Promotion & Development",
