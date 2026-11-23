@@ -3,7 +3,14 @@ import type {
   TemplateInput,
   TemplateQuestion,
   TemplateSection,
+  TemplateTargetRole,
 } from "@/types/review-template";
+
+export const templateTargetRoleLabels: Record<TemplateTargetRole, string> = {
+  employee: "Employee",
+  tech_lead: "Tech Lead",
+  department_manager: "Department Manager",
+};
 
 export interface QuestionDraft extends TemplateQuestion {
   key: string;
@@ -85,8 +92,8 @@ export function templateInput(
   const targetRole = draft.targetRole ?? (existing ? undefined : "department_manager");
   if (reviewType && !["annual", "probation", "internship"].includes(reviewType))
     throw new Error("Choose annual, probation, or internship.");
-  if (targetRole && targetRole !== "department_manager")
-    throw new Error("This template can target Department Managers only.");
+  if (targetRole && !Object.hasOwn(templateTargetRoleLabels, targetRole))
+    throw new Error("Choose Employee, Tech Lead, or Department Manager.");
   const seen = {
     competencies: new Set<string>(),
     kpis: new Set<string>(),

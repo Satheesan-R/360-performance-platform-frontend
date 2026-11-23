@@ -6,6 +6,7 @@ import { Field, inputClass, ResourceState, buttonClass, secondaryClass } from "@
 import { TemplatePreviewContent } from "@/components/performance-framework/template-preview";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
+import { templateTargetRoleLabels } from "@/lib/review-template";
 import { decideTemplateApproval, getPendingTemplateApprovals, getReviewTemplates, getTemplatePreview } from "@/services/review-template.service";
 import type { TemplateListItem } from "@/types/review-template";
 
@@ -53,7 +54,7 @@ function ApprovalDetails({
       <dl className="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-white p-5 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <div><dt className="font-semibold">Approval status</dt><dd>{status && status !== "not_submitted" ? views[status] : "Not submitted"}</dd></div>
         <div><dt className="font-semibold">Review type</dt><dd className="capitalize">{item.reviewType ?? "Unspecified"}</dd></div>
-        <div><dt className="font-semibold">Target role</dt><dd>Department Manager</dd></div>
+        <div><dt className="font-semibold">Target role</dt><dd>{item.targetRole ? templateTargetRoleLabels[item.targetRole] : "Not configured"}</dd></div>
         <div><dt className="font-semibold">Departments</dt><dd>{item.departmentIds?.map((department) => department.name).join(", ") || "All eligible departments"}</dd></div>
         <div><dt className="font-semibold">Employment types</dt><dd>{item.employmentTypeIds.map((type) => type.name).join(", ") || "Inherited from framework"}</dd></div>
         <div><dt className="font-semibold">Submitted</dt><dd>{item.submittedAt ? new Date(item.submittedAt).toLocaleString() : "—"}</dd></div>

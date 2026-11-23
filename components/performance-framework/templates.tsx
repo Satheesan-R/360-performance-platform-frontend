@@ -294,7 +294,9 @@ export default function ReviewTemplatesPage() {
     try {
       const activating = pending.status === "active";
       const updated = await saveReviewTemplate(
-        activating ? { status: "active", targetRole: "department_manager" } : { status: pending.status },
+        activating && !pending.item.targetRole
+          ? { status: "active", targetRole: "department_manager" }
+          : { status: pending.status },
         pending.item._id,
       );
       if (activating) {
@@ -391,7 +393,7 @@ export default function ReviewTemplatesPage() {
                 {pending.status === "draft"
                   ? "Returning to draft clears the pinned framework. Criteria will use the current live framework; reactivate after reviewing them."
                   : pending.status === "active"
-                    ? "Activation pins the framework version and sends the template to Admin for approval. The target role is Department Manager."
+                    ? "Activation pins the framework version and sends the template to Admin for approval."
                     : "The template will remain available for reference. Existing snapshots are preserved."}
               </p>
               {error && (

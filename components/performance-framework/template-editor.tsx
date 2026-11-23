@@ -5,12 +5,12 @@ import { isAxiosError } from "axios";
 import { useCallback, useState } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
-import { templateDraft, templatePatch, type TemplateDraft } from "@/lib/review-template";
+import { templateDraft, templatePatch, templateTargetRoleLabels, type TemplateDraft } from "@/lib/review-template";
 import { getCriteriaFrameworks } from "@/services/framework-criteria.service";
 import { getFrameworkEmploymentTypes } from "@/services/performance-framework.service";
 import { getReviewTemplate, getTemplateDepartments, previewTemplateChanges, saveReviewTemplate } from "@/services/review-template.service";
 import type { FrameworkEmploymentType, PerformanceFramework } from "@/types/performance-framework";
-import type { ReviewTemplate, TemplateDepartment, ReviewType, TemplatePreview } from "@/types/review-template";
+import type { ReviewTemplate, TemplateDepartment, ReviewType, TemplatePreview, TemplateTargetRole } from "@/types/review-template";
 import { buttonClass, Field, inputClass, secondaryClass } from "@/components/organization/ui";
 import TemplateSectionsEditor from "./template-sections-editor";
 import { TemplatePreviewContent } from "./template-preview";
@@ -69,16 +69,18 @@ function Editor({ template, frameworks, types, departments, onSaved, onCancel, o
         <select
           className={inputClass}
           value={draft.targetRole ?? ""}
-          onChange={() => change({ ...draft, targetRole: "department_manager" })}
+          onChange={(event) => change({ ...draft, targetRole: event.target.value as TemplateTargetRole })}
         >
           {!draft.targetRole && <option value="" disabled>Not configured</option>}
-          <option value="department_manager">Department Manager</option>
+          {Object.entries(templateTargetRoleLabels).map(([role, label]) => (
+            <option key={role} value={role}>{label}</option>
+          ))}
         </select>
       </Field>
       <fieldset className="space-y-3 rounded-xl border border-slate-200 p-4 sm:col-span-2">
         <legend className="px-2 text-sm font-semibold">Applicable departments</legend>
         <p className="text-sm text-slate-500">
-          Leave unselected for no department restriction. This does not assign individual managers.
+          Leave unselected for no department restriction.
         </p>
         {departments.map((department) => (
           <label key={department._id} className="flex items-center gap-3 text-sm">

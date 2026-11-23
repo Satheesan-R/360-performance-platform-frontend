@@ -4,6 +4,7 @@ import ReviewFormPreview from "./review-form-preview";
 import { useCallback, useState } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
+import { templateTargetRoleLabels } from "@/lib/review-template";
 import {
   createTemplateSnapshot,
   getTemplatePreview,
@@ -158,7 +159,7 @@ export function TemplatePreviewContent({
         </div>
         <div>
           <dt className="text-slate-500">Target role</dt>
-          <dd>{preview.targetRole === "department_manager" ? "Department Manager" : "Not configured"}</dd>
+          <dd>{preview.targetRole ? templateTargetRoleLabels[preview.targetRole] : "Not configured"}</dd>
         </div>
         <div>
           <dt className="text-slate-500">Departments</dt>

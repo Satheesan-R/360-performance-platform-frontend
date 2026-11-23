@@ -17,7 +17,8 @@ function module(file, imports = {}) {
   vm.runInNewContext(compiled, context);
   return context.exports;
 }
-const { templateDraft, templateInput, templatePatch, newTemplateSection } = module("../lib/review-template.ts");
+const reviewTemplate = module("../lib/review-template.ts");
+const { templateDraft, templateInput, templatePatch, newTemplateSection } = reviewTemplate;
 const ids = { template: "a".repeat(24), framework: "b".repeat(24), section: "c".repeat(24), question: "d".repeat(24), competency: "e".repeat(24), type: "f".repeat(24) };
 const plain = (value) => JSON.parse(JSON.stringify(value));
 function original() {
@@ -33,7 +34,10 @@ test("HR targeting defaults and write fields follow the template API", () => {
   assert.equal(values.targetRole, "department_manager");
   assert.deepEqual(plain(values.departmentIds), [ids.type]);
   assert.throws(() => templateInput({ ...createDraft(), reviewType: "monthly" }), /Choose annual/);
-  assert.throws(() => templateInput({ ...createDraft(), targetRole: "tech_lead" }), /Department Managers only/);
+  for (const targetRole of ["employee", "tech_lead", "department_manager"]) {
+    assert.equal(templateInput({ ...createDraft(), targetRole }).targetRole, targetRole);
+  }
+  assert.throws(() => templateInput({ ...createDraft(), targetRole: "admin" }), /Choose Employee, Tech Lead, or Department Manager/);
   assert.throws(() => templateInput({ ...createDraft(), departmentIds: [ids.type, ids.type] }), /unique references/);
 });
 
@@ -270,6 +274,7 @@ const reviewForm = module("../components/performance-framework/review-form-previ
   react: React, "react/jsx-runtime": jsx,
 });
 const { TemplatePreviewContent } = module("../components/performance-framework/template-preview.tsx", {
+  "@/lib/review-template": reviewTemplate,
   react: React, "react/jsx-runtime": jsx, "./review-form-preview": reviewForm, "@/hooks/use-organization-resource": {}, "@/lib/api": {}, "@/services/review-template.service": {}, "@/components/organization/ui": {},
 });
 
