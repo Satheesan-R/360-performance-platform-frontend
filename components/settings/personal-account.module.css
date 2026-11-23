@@ -1,0 +1,4 @@
+.tintedCard {
+  background-color: color-mix(in srgb, var(--app-surface, #fff) 82%, #0d9488);
+  border-color: color-mix(in srgb, var(--app-line, #e2e8f0) 65%, #0d9488);
+}
