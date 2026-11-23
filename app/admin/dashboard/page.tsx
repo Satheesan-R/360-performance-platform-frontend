@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useApprovalNotifications } from "@/components/layout/admin-shell";
+import { useApprovalNotifications } from "@/components/layout/template-approval-notifications";
 import { buttonClass } from "@/components/organization/ui";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getPendingTemplateApprovals, getReviewTemplates } from "@/services/review-template.service";

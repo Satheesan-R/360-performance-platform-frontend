@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useApprovalNotifications } from "@/components/layout/admin-shell";
+import { useApprovalNotifications } from "@/components/layout/template-approval-notifications";
 import { Field, inputClass, ResourceState, buttonClass, secondaryClass } from "@/components/organization/ui";
 import { TemplatePreviewContent } from "@/components/performance-framework/template-preview";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
