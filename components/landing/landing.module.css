@@ -1,16 +1,11 @@
 .heroSplit {
   padding: 88px 0 72px;
   background:
-    radial-gradient(circle, #2457df12 1px, transparent 1px) 0 0 / 22px 22px,
-    radial-gradient(ellipse at 78% 60%, #dceaff 0, transparent 58%),
-    linear-gradient(135deg, #ffffff 0%, #f1f6ff 55%, #eaf3ff 100%);
+    linear-gradient(90deg, #ffffff 0%, #ffffff 35%, #ffffffdc 58%, #ffffff2e 100%),
+    url("/images/landing-team.webp") center right / cover no-repeat;
   color: #0f1b3d;
 }
 .heroGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 56px;
   max-width: 1180px;
   margin: 0 auto;
   padding: 0 24px;
@@ -79,45 +74,18 @@
 .heroSecondary:hover {
   background: #f1f7f6;
 }
-.heroVisual {
-  position: relative;
-  min-width: 0;
-  padding: 12px;
-  border-radius: 24px;
-  background: #ffffffb3;
-  border: 1px solid #d7e5ff;
-  box-shadow: 0 24px 56px -20px #2457df45, 0 0 32px #a9caff55;
-}
-.heroPhoto {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  border-radius: 16px;
-}
-.heroImage {
-  object-fit: cover;
-  object-position: center;
-}
 @media (max-width: 800px) {
   .heroSplit {
     padding: 56px 0;
+    background:
+      linear-gradient(90deg, #ffffff 0%, #ffffffeb 42%, #ffffffa8 100%),
+      url("/images/landing-team.webp") center / cover no-repeat;
   }
   .heroGrid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 36px;
+    padding-inline: 24px;
   }
   .heroCopy {
     max-width: 620px;
-  }
-  .heroCopy h1 {
-    font-size: clamp(38px, 7vw, 56px);
-  }
-  .heroVisual {
-    width: 100%;
-    max-width: 620px;
-  }
-  .heroPhoto {
-    aspect-ratio: 5 / 4;
   }
 }
 @media (max-width: 480px) {
@@ -138,14 +106,6 @@
   .heroActions {
     align-items: stretch;
     flex-direction: column;
-  }
-  .heroVisual {
-    padding: 8px;
-    border-radius: 20px;
-  }
-  .heroPhoto {
-    aspect-ratio: 1;
-    border-radius: 14px;
   }
 }
 .landing {
@@ -1758,10 +1718,15 @@
 /* Three header zones: brand, centered section links, account actions. */
 .scopeNav { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 20px; }
 .scopeNav > .brand { justify-self: start; }
-.scopeLinks { justify-content: center; margin: 0; gap: 16px; }
-.headerActions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; justify-self: end; }
-.headerRequest { color: var(--blue); font-size: 12px; font-weight: 600; white-space: nowrap; }
-.headerRequest:hover { color: #173a9f; }
+.scopeLinks { justify-content: center; margin: 0; gap: 6px; }
+.scopeLinks > a { position: relative; padding: 10px 11px; border-radius: 8px; color: #52617a; font-size: 12px; font-weight: 550; letter-spacing: -0.05px; transition: background .15s ease, color .15s ease; }
+.scopeLinks > a::after { position: absolute; right: 11px; bottom: 4px; left: 11px; height: 2px; border-radius: 999px; background: var(--blue); content: ""; opacity: 0; transform: scaleX(.4); transition: opacity .15s ease, transform .15s ease; }
+.scopeLinks > a:hover { background: #f1f5ff; color: #173a9f; }
+.scopeLinks > a:hover::after { opacity: 1; transform: scaleX(1); }
+.headerActions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; justify-self: end; }
+.headerRequest { padding: 10px 12px; border-radius: 8px; color: #3156b8; font-size: 12px; font-weight: 650; white-space: nowrap; transition: background .15s ease, color .15s ease; }
+.headerRequest:hover { background: #f1f5ff; color: #173a9f; }
+.scopeNav .navLogin { min-height: 44px; padding: 10px 17px; border-radius: 9px; font-weight: 650; }
 @media (max-width: 1100px) {
   .scopeNav { grid-template-columns: minmax(0, 1fr) auto auto; gap: 16px; }
   .menuToggle { margin-left: 0; }
@@ -1769,10 +1734,11 @@
   .scopeLinks { grid-column: 1 / -1; grid-row: 2; }
 }
 @media (max-width: 560px) {
-  .scopeNav { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
-  .headerActions { grid-column: 1 / -1; grid-row: 2; gap: 18px; }
-  .scopeLinks { grid-row: 3; }
-  .headerRequest { font-size: 12px; }
+  .scopeNav { grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; }
+  .headerActions { grid-column: 3; grid-row: 1; gap: 8px; }
+  .headerRequest { display: none; }
+  .scopeLinks { grid-column: 1 / -1; grid-row: 2; }
+  .scopeNav .navLogin { min-height: 40px; padding: 8px 13px; }
   .landing section[id], .accessInstructions { scroll-margin-top: 144px; }
 }
 

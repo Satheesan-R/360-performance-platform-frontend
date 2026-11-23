@@ -124,7 +124,7 @@ const ui = {
 const link = { __esModule: true, default: ({ href, children, ...props }) => React.createElement("a", { href, ...props }, children) };
 const { default: ReportingViews } = module("../components/organization/reporting-views.tsx", {
   "react/jsx-runtime": jsx, "next/link": link, "./ui": ui,
-  "./view-controls": { viewCellClass: "cell", viewHeadClass: "head", viewTableClass: "table" },
+  "./view-controls": { ActionIcon: () => null, viewActionClass: "action", viewCellClass: "cell", viewHeadClass: "head", viewTableClass: "table" },
 });
 
 test("reporting table renders real manager department and team relationships", () => {

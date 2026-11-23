@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { visibleHierarchyRows } from "@/lib/organization-hierarchy";
 import type { HierarchyEmployee } from "@/types/organization";
 import { secondaryClass } from "./ui";
-import { viewCellClass, viewHeadClass, viewTableClass } from "./view-controls";
+import { ActionIcon, viewActionClass, viewCellClass, viewHeadClass, viewTableClass } from "./view-controls";
 
 type ReportingRows = ReturnType<typeof visibleHierarchyRows>;
 const indentation = ["sm:ml-0", "sm:ml-6", "sm:ml-12", "sm:ml-18", "sm:ml-24"];
@@ -131,7 +131,16 @@ export default function ReportingViews({
                 <td className={viewCellClass}>
                   {directReports.get(employee._id) ?? 0}
                 </td>
-                <td className={viewCellClass}>{edit(employee)}</td>
+                <td className={viewCellClass}>
+                  <div className="flex items-center gap-1.5">
+                    <Link className={viewActionClass} href={`/hr/onboarding/${encodeURIComponent(employee._id)}`} title="View employee" aria-label={`View ${employee.fullName}`}>
+                      <ActionIcon action="view" />
+                    </Link>
+                    <button type="button" className={viewActionClass} disabled={disabled} title="Change manager" aria-label={`Change manager for ${employee.fullName}`} onClick={() => onEdit(employee)}>
+                      <ActionIcon action="edit" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

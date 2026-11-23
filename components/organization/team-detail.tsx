@@ -46,6 +46,13 @@ export default function TeamDetail({ id }: { id: string }) {
   }
   return (
     <>
+      <Link
+        href="/hr/organization/teams"
+        className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600"
+      >
+        <span aria-hidden="true">←</span>
+        Back to teams
+      </Link>
       <nav
         aria-label="Breadcrumb"
         className="mb-5 flex flex-wrap gap-2 text-sm text-slate-500"

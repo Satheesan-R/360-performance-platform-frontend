@@ -42,7 +42,13 @@ test("legacy and unchanged targeting are omitted from metadata edits", () => {
   const patch = templatePatch({ ...templateDraft(legacy), name: "Renamed" }, legacy);
   for (const field of ["reviewType", "targetRole", "departmentIds"]) assert.equal(field in patch, false);
   const configured = { ...legacy, reviewType: "probation", targetRole: "department_manager", departmentIds: [ids.type] };
-  const changed = templatePatch({ ...templateDraft(configured), reviewType: "internship", departmentIds: [] }, configured);
+  const draft = templateDraft(configured);
+  assert.equal(draft.reviewType, "probation");
+  assert.equal(draft.targetRole, "department_manager");
+  assert.deepEqual(plain(draft.departmentIds), [ids.type]);
+  const unchanged = templatePatch({ ...draft, name: "Renamed" }, configured);
+  for (const field of ["reviewType", "targetRole", "departmentIds"]) assert.equal(field in unchanged, false);
+  const changed = templatePatch({ ...draft, reviewType: "internship", departmentIds: [] }, configured);
   assert.equal(changed.reviewType, "internship");
   assert.deepEqual(plain(changed.departmentIds), []);
   assert.equal("targetRole" in changed, false);
@@ -138,8 +144,29 @@ test("checks UTF-8 bytes against the server request size limit", () => {
 });
 
 function service(api, token = "test-token") {
-  return module("../services/review-template.service.ts", { "@/lib/api": { __esModule: true, default: api }, "@/lib/auth": { getToken: () => token } });
+  const apiImport = { __esModule: true, default: api };
+  return module("../services/review-template.service.ts", {
+    "@/lib/api": apiImport,
+    "@/lib/auth": { getToken: () => token },
+    "@/services/department.service": module("../services/department.service.ts", { "@/lib/api": apiImport }),
+  });
 }
+
+test("template departments load all active pages with auth and cancellation", async () => {
+  const signal = new AbortController().signal;
+  const departments = [{ _id: "first", name: "Engineering" }, { _id: "second", name: "Operations" }];
+  const pages = [];
+  const client = service({ get: async (path, config) => {
+    assert.equal(path, "/departments");
+    assert.equal(config.headers.Authorization, "Bearer test-token");
+    assert.equal(config.signal, signal);
+    assert.equal(config.params.status, "active");
+    pages.push(config.params.page);
+    return { data: { departments: [departments[config.params.page - 1]], pagination: { totalPages: 2 } } };
+  } });
+  assert.deepEqual(plain(await client.getTemplateDepartments(signal)), departments);
+  assert.deepEqual(pages, [1, 2]);
+});
 
 test("list sends server pagination search and filters with Bearer auth", async () => {
   const signal = new AbortController().signal;
@@ -156,6 +183,35 @@ test("list sends server pagination search and filters with Bearer auth", async (
     return { data: body };
   } });
   assert.equal(await client.getReviewTemplates({ search: "Annual", status: "", frameworkId: "", page: 2 }, signal), body);
+});
+
+test("approval queue and decisions use the authenticated template approval API", async () => {
+  const calls = [];
+  const client = service({
+    get: async (path, config) => {
+      assert.equal(config.headers.Authorization, "Bearer test-token");
+      assert.equal(config.params.approvalStatus, "pending");
+      assert.equal(config.params.status, "active");
+      assert.equal(config.params.page, 2);
+      calls.push(path);
+      return { data: { templates: [], pagination: { total: 0 } } };
+    },
+    post: async (path, body, config) => {
+      assert.equal(config.headers.Authorization, "Bearer test-token");
+      calls.push([path, plain(body)]);
+      return { data: { template: original() } };
+    },
+  });
+  await client.getPendingTemplateApprovals(2);
+  await client.submitTemplateApproval("template/id");
+  await client.decideTemplateApproval("template/id", "approve", "");
+  await client.decideTemplateApproval("template/id", "reject", "Update the criteria");
+  assert.deepEqual(calls, [
+    "/review-templates",
+    ["/review-templates/template%2Fid/submit-approval", {}],
+    ["/review-templates/template%2Fid/approve", { comment: "" }],
+    ["/review-templates/template%2Fid/reject", { comment: "Update the criteria" }],
+  ]);
 });
 
 test("detail loads raw references and create/edit forward only the supplied body", async () => {
