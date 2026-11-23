@@ -1,6 +1,7 @@
 "use client";
 
 import { isAxiosError } from "axios";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
@@ -51,7 +52,7 @@ function CriteriaPanel({
     [frameworkId, kind],
   );
   const resource = useOrganizationResource(load);
-  const [editor, setEditor] = useState<{ item: Criterion | null } | null>(null);
+  const [editor, setEditor] = useState<Criterion | null>(null);
   const [pending, setPending] = useState<Criterion | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -87,6 +88,7 @@ function CriteriaPanel({
   }
 
   async function save(values: CompetencyInput | KpiInput) {
+    if (!editor) return;
     setBusy(true);
     onLock(true);
     setError("");
@@ -96,9 +98,9 @@ function CriteriaPanel({
           frameworkId,
           "competencies",
           values,
-          editor?.item?._id,
+          editor._id,
         );
-      else await saveCriterion(frameworkId, "kpis", values, editor?.item?._id);
+      else await saveCriterion(frameworkId, "kpis", values, editor._id);
       onReload();
     } catch (error) {
       failed(error);
@@ -213,20 +215,16 @@ function CriteriaPanel({
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              className={buttonClass}
-              disabled={
-                readonly || locked || conflict || data.items.length >= 100
-              }
-              onClick={() => {
-                setEditor({ item: null });
-                onLock(true);
-                setError("");
-              }}
-            >
-              + Add {noun}
-            </button>
+            {readonly || locked || conflict || data.items.length >= 100 ? (
+              <button type="button" className={buttonClass} disabled>+ Add {noun}</button>
+            ) : (
+              <Link
+                className={buttonClass}
+                href={`/hr/performance-framework/competencies/${encodeURIComponent(frameworkId)}/${kind}/new`}
+              >
+                + Add {noun}
+              </Link>
+            )}
           </div>
           {data.items.length >= 100 && (
             <p className="mb-4 text-sm text-slate-500">
@@ -237,7 +235,7 @@ function CriteriaPanel({
           {editor && (
             <CriterionForm
               kind={kind}
-              item={editor.item}
+              item={editor}
               disabled={conflict || readonly}
               onSave={save}
               onCancel={() => {
@@ -325,7 +323,7 @@ function CriteriaPanel({
             filtered={Boolean(search.trim() || status)}
             disabled={readonly || locked || conflict}
             onEdit={(item) => {
-              setEditor({ item });
+              setEditor(item);
               onLock(true);
               setError("");
             }}
@@ -343,12 +341,14 @@ function CriteriaPanel({
 
 export default function CriteriaWorkspace({
   frameworkId,
+  initialKind,
   onLock,
 }: {
   frameworkId: string;
+  initialKind: CriteriaKind;
   onLock: (locked: boolean) => void;
 }) {
-  const [kind, setKind] = useState<CriteriaKind>("competencies");
+  const [kind, setKind] = useState<CriteriaKind>(initialKind);
   const [version, setVersion] = useState(0);
   return (
     <CriteriaPanel

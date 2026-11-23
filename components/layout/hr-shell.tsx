@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import TemplateApprovalNotificationBell, { TemplateApprovalNotificationsProvider } from "./template-approval-notifications";
 import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession } from "@/lib/auth";
@@ -52,6 +53,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
 
   return (
     <ProtectedRoute role="hr">
+      <TemplateApprovalNotificationsProvider role="hr">
       <div className="min-h-screen bg-slate-50 text-slate-900 lg:flex">
         {menuOpen && (
           <button
@@ -114,23 +116,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
               ☰
             </button>
             <div className="flex min-w-0 items-center gap-2">
-              <button
-                type="button"
-                aria-label="Notifications"
-                popoverTarget="hr-notifications"
-                className="relative grid size-10 shrink-0 place-items-center rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-blue-600"
-              >
-                <span aria-hidden="true" className="relative block h-3.5 w-3 rounded-t-full border-2 border-current before:absolute before:-bottom-0.5 before:-left-1 before:h-0.5 before:w-4 before:rounded-full before:bg-current after:absolute after:-bottom-1.5 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-current" />
-              </button>
-              <div
-                id="hr-notifications"
-                popover="auto"
-                aria-labelledby="hr-notifications-title"
-                className="fixed inset-auto top-16 right-4 m-0 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-lg sm:right-8"
-              >
-                <h2 id="hr-notifications-title" className="text-sm font-bold">Notifications</h2>
-                <p className="mt-2 text-sm text-slate-600">In-app notifications are not available yet.</p>
-              </div>
+              <TemplateApprovalNotificationBell role="hr" />
               <span aria-hidden="true" className="h-6 w-px shrink-0 bg-slate-200" />
               <HrProfileMenu onLogout={logout} />
             </div>
@@ -139,6 +125,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
           <div className="px-4 py-5 sm:px-5 sm:py-8 lg:px-12">{children}</div>
         </div>
       </div>
+      </TemplateApprovalNotificationsProvider>
     </ProtectedRoute>
   );
 }
