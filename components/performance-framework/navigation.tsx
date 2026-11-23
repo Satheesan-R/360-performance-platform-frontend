@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const frameworkNavigation = [
+export const frameworkNavigation = [
   {
     label: "Framework Overview",
     shortLabel: "Overview",

@@ -56,7 +56,6 @@ export function scoringDraft(settings: FrameworkScoring): ScoringDraft {
       manager: settings.reviewerWeights
         ? String(settings.reviewerWeights.manager)
         : "0",
-      tech_lead: String(settings.reviewerWeights?.tech_lead ?? 0),
     },
     enabledReviewers: [...settings.enabledReviewers],
   };
@@ -110,7 +109,6 @@ export function scoringInput(
       self: weight(draft.reviewers.self),
       peer: weight(draft.reviewers.peer),
       manager: weight(draft.reviewers.manager),
-      tech_lead: weight(draft.reviewers.tech_lead ?? "0"),
     };
     total(Object.values(reviewers), "Reviewer weights");
     for (const role of reviewerRoles) {
