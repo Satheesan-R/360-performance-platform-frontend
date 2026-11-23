@@ -102,13 +102,15 @@ export async function getTeam(idValue: string, signal?: AbortSignal) {
   ).data.team;
 }
 
-export async function getTeamSummary(signal?: AbortSignal) {
-  const [active, inactive] = await Promise.all([
-    getTeams({ status: "active", limit: 1 }, undefined, signal),
-    getTeams({ status: "inactive", limit: 1 }, undefined, signal),
+export async function getTeamSummary(departmentId?: string, signal?: AbortSignal) {
+  const [all, active, inactive] = await Promise.all([
+    getTeams({ limit: 1 }, departmentId, signal),
+    getTeams({ status: "active", limit: 1 }, departmentId, signal),
+    getTeams({ status: "inactive", limit: 1 }, departmentId, signal),
   ]);
+
   return {
-    total: active.pagination.total + inactive.pagination.total,
+    total: all.pagination.total,
     active: active.pagination.total,
     inactive: inactive.pagination.total,
   };

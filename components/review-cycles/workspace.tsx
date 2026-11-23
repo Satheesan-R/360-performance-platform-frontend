@@ -175,6 +175,7 @@ export default function ReviewCycles() {
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 className="text-2xl font-bold">Review Cycles</h1><p className="mt-2 text-slate-500">Prepare draft reviews using an admin-approved template.</p></div>
       <button className={button} disabled={busy || editing || Boolean(resultsId) || !ready} onClick={() => { setCycle(undefined); setValues(empty()); setConflict(false); setError(""); setMessage(""); setSearch(""); setEditing(true); }}>Create draft</button>
+      <button className={button} disabled={busy || editing || !ready} onClick={() => { setCycle(undefined); setValues(empty()); setConflict(false); setError(""); setMessage(""); setSearch(""); setEditing(true); }}>Create draft</button>
     </div>
     {error && <div role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">{error} <button className={button} disabled={busy} onClick={() => { setError(""); setRefresh(x => x + 1); }}>Retry loading</button></div>}
     {message && <p role="status" className="rounded-lg bg-green-50 p-4 text-green-800">{message}</p>}

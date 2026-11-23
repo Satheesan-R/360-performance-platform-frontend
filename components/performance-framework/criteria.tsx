@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getCriteriaFrameworks } from "@/services/framework-criteria.service";
+import type { CriteriaKind } from "@/types/framework-criteria";
 import {
   Field,
   inputClass,
@@ -13,11 +14,18 @@ import {
 import CriteriaWorkspace from "./criteria-workspace";
 import CriteriaLoadState from "./criteria-load-state";
 
-export default function FrameworkCriteriaPage() {
+export default function FrameworkCriteriaPage({
+  initialFrameworkId,
+  initialKind,
+}: {
+  initialFrameworkId?: string;
+  initialKind: CriteriaKind;
+}) {
   const frameworks = useOrganizationResource(getCriteriaFrameworks);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(initialFrameworkId ?? "");
   const [locked, setLocked] = useState(false);
-  const id = selectedId || frameworks.data?.[0]?._id || "";
+  const id = frameworks.data?.find((framework) => framework._id === selectedId)?._id
+    ?? frameworks.data?.[0]?._id ?? "";
   return (
     <>
       <PageHeading
@@ -56,6 +64,7 @@ export default function FrameworkCriteriaPage() {
             <CriteriaWorkspace
               key={id}
               frameworkId={id}
+              initialKind={initialKind}
               onLock={setLocked}
             />
           </>

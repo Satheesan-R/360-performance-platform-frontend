@@ -4,6 +4,7 @@ import WorkspaceShell from "@/components/layout/workspace-shell";
 const navigation = [
   { label: "Dashboard", href: "/admin/dashboard", short: "DB" },
   { label: "Review Templates", href: "/admin/review-templates", short: "RT" },
+  { label: "Template Approvals", href: "/admin/template-approvals", short: "TA" },
   { label: "My Reviews", href: "/admin/assigned-reviews", short: "MR" },
   { label: "Organization", href: "/admin/organization", short: "OR" },
   { label: "Employee Directory", href: "/admin/employees", short: "ED" },

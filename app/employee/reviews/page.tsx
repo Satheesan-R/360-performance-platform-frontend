@@ -8,4 +8,6 @@ export default async function Page({
   const { cycleId } = await searchParams;
   const initialCycleId = typeof cycleId === "string" && /^[a-f0-9]{24}$/i.test(cycleId) ? cycleId : "";
   return <AssignedReviews key={initialCycleId} initialCycleId={initialCycleId} />;
+export default function Page() {
+  return <AssignedReviews />;
 }

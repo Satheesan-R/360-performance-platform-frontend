@@ -14,8 +14,8 @@ import {
   deactivateTeam,
   getDepartments,
   getDepartmentSummary,
-  getTeams,
   getTeamSummary,
+  getTeams,
 } from "@/services/organization-views.service";
 import type { DepartmentRecord, TeamRecord } from "@/types/organization-views";
 import {
@@ -112,8 +112,16 @@ function DeactivateStructure({
   );
 }
 
-function StructureSummaryCards({ kind }: { kind: "departments" | "teams" }) {
-  const resource = useOrganizationResource(kind === "departments" ? getDepartmentSummary : getTeamSummary);
+function StructureSummaryCards({ kind, departmentId }: {
+  kind: "departments" | "teams";
+  departmentId?: string;
+}) {
+  const load = useCallback((signal: AbortSignal) => (
+    kind === "departments"
+      ? getDepartmentSummary(signal)
+      : getTeamSummary(departmentId, signal)
+  ), [kind, departmentId]);
+  const resource = useOrganizationResource(load);
   const counts = resource.data;
   return (
     <section
@@ -374,12 +382,11 @@ export default function StructureDirectory({
           {add}
         </PageHeading>
       )}
-      {!departmentId && (
-        <StructureSummaryCards
-          key={revision}
-          kind={kind}
-        />
-      )}
+      <StructureSummaryCards
+        key={`${kind}:${departmentId ?? "all"}:${revision}`}
+        kind={kind}
+        departmentId={departmentId}
+      />
       {message && (
         <p
           role="status"

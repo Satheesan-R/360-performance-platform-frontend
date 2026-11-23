@@ -1,6 +1,7 @@
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import type { AssignedReview, AssignedReviewList, CycleInput, CycleList, ReviewCycle, ReviewCycleResults, ReviewResponse, ReviewSectionResponse } from "@/types/review-cycle";
+import type { AssignedReview, AssignedReviewList, CycleInput, CycleList, ReviewCycle } from "@/types/review-cycle";
 function config(signal?: AbortSignal) {
   const token = getToken();
   if (!token) throw new Error("Your session has expired. Please log in again.");

@@ -46,7 +46,6 @@ export function scoringDraft(settings: FrameworkScoring): ScoringDraft {
         : "",
     },
     reviewers: {
-      tech_lead: String(settings.reviewerWeights?.tech_lead ?? 0),
       self: settings.reviewerWeights
         ? String(settings.reviewerWeights.self)
         : "0",
@@ -105,7 +104,6 @@ export function scoringInput(
     )
       throw new Error("Enable at least one reviewer type.");
     const reviewers = {
-      tech_lead: weight(draft.reviewers.tech_lead ?? "0"),
       self: weight(draft.reviewers.self),
       peer: weight(draft.reviewers.peer),
       manager: weight(draft.reviewers.manager),

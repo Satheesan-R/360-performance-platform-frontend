@@ -70,9 +70,7 @@ export default function CriterionForm({
       onSubmit={submit}
       className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
     >
-      <h3 className="mb-5 text-lg font-bold">
-        {item ? "Edit" : "Add"} {noun}
-      </h3>
+      {item && <h3 className="mb-5 text-lg font-bold">Edit {noun}</h3>}
       {error && (
         <p
           role="alert"

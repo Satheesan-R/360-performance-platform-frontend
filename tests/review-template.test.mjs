@@ -165,11 +165,13 @@ test("template departments load all active pages with auth and cancellation", as
     assert.equal(config.headers.Authorization, "Bearer test-token");
     assert.equal(config.signal, signal);
     assert.equal(config.params.status, "active");
+    assert.equal(config.params.limit, 100);
     pages.push(config.params.page);
     return { data: { departments: [departments[config.params.page - 1]], pagination: { totalPages: 2 } } };
   } });
   assert.deepEqual(plain(await client.getTemplateDepartments(signal)), departments);
   assert.deepEqual(pages, [1, 2]);
+  await assert.rejects(service({}, null).getTemplateDepartments(), /session has expired/);
 });
 
 test("list sends server pagination search and filters with Bearer auth", async () => {

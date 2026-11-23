@@ -2,19 +2,20 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, getDashboardPath, getToken } from "@/lib/auth";
+import { getDashboardPath } from "@/lib/auth";
+import ProtectedRoute from "@/components/auth/protected-route";
+import { usePersonalPreferences } from "@/components/settings/personal-preferences-provider";
+import { landingPages } from "@/lib/personal-settings";
 
-export default function DashboardPage() {
+function DashboardPage() {
   const router = useRouter();
+  const { user, preferences, loading } = usePersonalPreferences();
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!getToken() || !user) {
-      router.replace("/login");
-      return;
-    }
-    router.replace(getDashboardPath(user.role));
-  }, [router]);
+    if (!user || loading) return;
+    const allowed = landingPages[user.role].some(({ href }) => href === preferences.landingPage);
+    router.replace(allowed ? preferences.landingPage : getDashboardPath(user.role));
+  }, [router, user, preferences, loading]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -22,3 +23,4 @@ export default function DashboardPage() {
     </main>
   );
 }
+export default function Page() { return <ProtectedRoute><DashboardPage /></ProtectedRoute>; }
