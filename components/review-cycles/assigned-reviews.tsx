@@ -1,6 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { ResourceState, secondaryClass } from "@/components/organization/ui";
+import { useOrganizationResource } from "@/hooks/use-organization-resource";
+import { reviewerRoleLabels } from "@/lib/reviewer-assignments";
+import { getAssignedReview, getAssignedReviewCycles } from "@/services/review-cycle.service";
+import AssignedReviewForm from "./assigned-review-form";
 import { ResourceState, secondaryClass } from "@/components/organization/ui";
 import ReviewFormPreview from "@/components/performance-framework/review-form-preview";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
@@ -35,6 +41,7 @@ function ReviewDetails({ id, onBack }: { id: string; onBack: () => void }) {
           ) : (
             <p className="mt-4 text-sm font-semibold">{assignment.participantName || "Participant"} · {reviewerRoleLabels[assignment.role]}</p>
           )}
+          <AssignedReviewForm key={assignment.employeeId} cycleId={id} participantId={assignment.employeeId} review={data} />
           <ReviewFormPreview key={assignment.employeeId} sections={data.sections} scale={data.ratingScale} readOnly />
         </>
       )}
@@ -77,6 +84,16 @@ function ReviewList({ page, onPage, onOpen }: { page: number; onPage: (page: num
   );
 }
 
+export default function AssignedReviews({ title = "My Reviews", initialCycleId = "" }: { title?: string; initialCycleId?: string }) {
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState(initialCycleId);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  function back() {
+    setSelected("");
+    if (initialCycleId) router.replace(pathname);
+  }
 export default function AssignedReviews({ title = "My Reviews" }: { title?: string }) {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState("");
@@ -84,6 +101,7 @@ export default function AssignedReviews({ title = "My Reviews" }: { title?: stri
     <div className="mx-auto max-w-5xl">
       <h1 className="mb-6 text-3xl font-bold tracking-tight">{title}</h1>
       {selected
+        ? <ReviewDetails key={selected} id={selected} onBack={back} />
         ? <ReviewDetails key={selected} id={selected} onBack={() => setSelected("")} />
         : <ReviewList key={page} page={page} onPage={setPage} onOpen={setSelected} />}
     </div>

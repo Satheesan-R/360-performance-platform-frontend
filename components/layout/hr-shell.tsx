@@ -90,6 +90,51 @@ export default function HrShell({ children }: { children: ReactNode }) {
             {navigation.map((item) => {
               const active =
                 pathname === item.href || pathname.startsWith(item.href + "/");
+              if (item.href === "/hr/performance-framework") {
+                const open = frameworkExpanded ?? active;
+                return (
+                  <div key={item.href}>
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      aria-controls="framework-submenu"
+                      onClick={() => {
+                        setFrameworkExpanded(!open);
+                        if (!open && !active) router.push(item.href);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition ${active ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
+                    >
+                      <SidebarIcon icon={item.icon} active={active} />
+                      <span className="flex-1">{item.label}</span>
+                      <span
+                        aria-hidden="true"
+                        className={`transition-transform ${open ? "rotate-180" : ""}`}
+                      >
+                        ⌄
+                      </span>
+                    </button>
+                    <div
+                      id="framework-submenu"
+                      hidden={!open}
+                      className="ml-7 mt-2 space-y-1 border-l border-slate-200 pl-3"
+                    >
+                      {frameworkNavigation.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={() => setMenuOpen(false)}
+                          aria-current={
+                            pathname === child.href ? "page" : undefined
+                          }
+                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href || (child.href !== "/hr/performance-framework" && pathname.startsWith(child.href + "/")) ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <Link
                   key={item.href}

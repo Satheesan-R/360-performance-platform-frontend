@@ -8,6 +8,7 @@ import { templateTargetRoleLabels } from "@/lib/review-template";
 import { getEmployees } from "@/services/employee.service";
 import { getActiveDepartments, type DepartmentOption } from "@/services/department.service";
 import ReviewerAssignments from "./reviewer-assignments";
+import CycleResults from "./cycle-results";
 import { getReviewTemplate, getReviewTemplates } from "@/services/review-template.service";
 import { getReviewCycle, getReviewCycles, publishReviewCycle, saveReviewCycle } from "@/services/review-cycle.service";
 import type { CycleInput, CycleList, ReviewCycle } from "@/types/review-cycle";
@@ -31,6 +32,7 @@ export default function ReviewCycles() {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [resultsId, setResultsId] = useState("");
   const [cycle, setCycle] = useState<ReviewCycle>();
   const [values, setValues] = useState<CycleInput>(empty);
   const [busy, setBusy] = useState(false);
@@ -172,11 +174,12 @@ export default function ReviewCycles() {
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 className="text-2xl font-bold">Review Cycles</h1><p className="mt-2 text-slate-500">Prepare draft reviews using an admin-approved template.</p></div>
+      <button className={button} disabled={busy || editing || Boolean(resultsId) || !ready} onClick={() => { setCycle(undefined); setValues(empty()); setConflict(false); setError(""); setMessage(""); setSearch(""); setEditing(true); }}>Create draft</button>
       <button className={button} disabled={busy || editing || !ready} onClick={() => { setCycle(undefined); setValues(empty()); setConflict(false); setError(""); setMessage(""); setSearch(""); setEditing(true); }}>Create draft</button>
     </div>
     {error && <div role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">{error} <button className={button} disabled={busy} onClick={() => { setError(""); setRefresh(x => x + 1); }}>Retry loading</button></div>}
     {message && <p role="status" className="rounded-lg bg-green-50 p-4 text-green-800">{message}</p>}
-    {editing ? <form onSubmit={submit} className="space-y-5 rounded-xl border border-slate-200 bg-white p-6">
+    {resultsId ? <CycleResults key={resultsId} id={resultsId} onBack={() => setResultsId("")} /> : editing ? <form onSubmit={submit} className="space-y-5 rounded-xl border border-slate-200 bg-white p-6">
       <h2 className="text-lg font-bold">{cycle ? "Review cycle details" : "New draft cycle"}</h2>
       {readOnly && <p>This cycle is read-only because it is no longer a draft.</p>}
       {conflict && <p role="alert">The draft or template has changed. Reload before saving again. Reload discards your changes.</p>}
@@ -217,6 +220,7 @@ export default function ReviewCycles() {
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={busy} className={button} onClick={() => void open(c._id)}>Open</button>
               {c.status === "draft" && <button type="button" disabled={busy} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50" onClick={() => void publish(c)}>Publish cycle</button>}
+              {c.status === "published" && <button type="button" disabled={busy} className={button} onClick={() => { setError(""); setMessage(""); setResultsId(c._id); }}>View results</button>}
             </div>
           </td></tr>)}</tbody>
         </table></div>

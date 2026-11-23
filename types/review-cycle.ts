@@ -38,3 +38,24 @@ export interface AssignedReview {
   sections: ResolvedTemplateSection[];
   assignments: { employeeId: string; participantName: string; role: ReviewerRole }[];
 }
+
+export interface ReviewSectionResponse {
+  sectionId: string;
+  ratings: Record<string, number>;
+  kpiResults: Record<string, number>;
+  answers: Record<string, string>;
+  comment: string;
+  evidenceUrl: string;
+}
+
+export interface ReviewResponse {
+  version: number | null;
+  submittedAt: string | null;
+  sections: ReviewSectionResponse[];
+}
+
+export interface ReviewCycleResults {
+  name: string;
+  maxRating: number;
+  participants: { employeeId: string; name: string; submitted: number; assigned: number; score: number | null; normalizedPercent: number | null }[];
+}

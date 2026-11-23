@@ -6,6 +6,7 @@ import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import type { UserRole } from "@/types/auth";
 import { clearSession, getCurrentUser } from "@/lib/auth";
+import EmployeeReviewNotifications from "./employee-review-notifications";
 import TemplateApprovalNotificationBell, { TemplateApprovalNotificationsProvider } from "./template-approval-notifications";
 
 type WorkspaceNavigationItem = { label: string; href: string; short: string };
@@ -123,6 +124,7 @@ export default function WorkspaceShell({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {role === "employee" && <EmployeeReviewNotifications />}
               {role === "admin" && <TemplateApprovalNotificationBell role="admin" />}
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
                 {initials}
