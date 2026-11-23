@@ -35,6 +35,9 @@ export function templateDraft(template?: ReviewTemplate): TemplateDraft {
     description: template?.description ?? "",
     frameworkId: template?.frameworkId ?? "",
     employmentTypeIds: [...(template?.employmentTypeIds ?? [])],
+    reviewType: template ? template.reviewType : "annual",
+    targetRole: template ? template.targetRole : "department_manager",
+    departmentIds: [...(template?.departmentIds ?? [])],
     status: template?.status ?? "draft",
     evidenceRequired: template?.evidenceRequired ?? false,
     sections: (template?.sections ?? []).map((section, index) => ({
@@ -78,6 +81,12 @@ export function templateInput(
     throw new Error("A template can have at most 50 sections.");
   if (!(["draft", "active", "archived"] as string[]).includes(draft.status))
     throw new Error("Choose a valid template status.");
+  const reviewType = draft.reviewType ?? (existing ? undefined : "annual");
+  const targetRole = draft.targetRole ?? (existing ? undefined : "department_manager");
+  if (reviewType && !["annual", "probation", "internship"].includes(reviewType))
+    throw new Error("Choose annual, probation, or internship.");
+  if (targetRole && targetRole !== "department_manager")
+    throw new Error("This template can target Department Managers only.");
   const seen = {
     competencies: new Set<string>(),
     kpis: new Set<string>(),
@@ -144,6 +153,9 @@ export function templateInput(
     description: text(draft.description, "Description", 2000),
     frameworkId: id(draft.frameworkId),
     employmentTypeIds: ids(draft.employmentTypeIds),
+    ...(reviewType ? { reviewType } : {}),
+    ...(targetRole ? { targetRole } : {}),
+    departmentIds: ids(draft.departmentIds ?? []),
     evidenceRequired: draft.evidenceRequired,
     status: draft.status,
     sections,
@@ -160,6 +172,16 @@ export function templatePatch(
   existing?: ReviewTemplate,
 ): Partial<TemplateInput> {
   const values: Partial<TemplateInput> = templateInput(draft, existing);
+  if (existing) {
+    if (values.reviewType === existing.reviewType) delete values.reviewType;
+    if (values.targetRole === existing.targetRole) delete values.targetRole;
+    const departments = existing.departmentIds ?? [];
+    if (
+      values.departmentIds?.length === departments.length &&
+      departments.every((id) => values.departmentIds?.includes(id))
+    )
+      delete values.departmentIds;
+  }
   if (
     existing &&
     existing.frameworkId === draft.frameworkId &&

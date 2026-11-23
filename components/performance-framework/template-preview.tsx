@@ -151,6 +151,20 @@ export function TemplatePreviewContent({
           : "No employment-type restriction configured."}{" "}
         Employee assignment is handled by future review workflows.
       </p>
+      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+        <div>
+          <dt className="text-slate-500">Review type</dt>
+          <dd>{preview.reviewType ?? "Not configured"}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-500">Target role</dt>
+          <dd>{preview.targetRole === "department_manager" ? "Department Manager" : "Not configured"}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-500">Departments</dt>
+          <dd className="break-words">{preview.departmentIds?.join(", ") || "No department restriction"}</dd>
+        </div>
+      </dl>
       {preview.ratingScale && (
         <div className="mt-4 rounded-xl bg-white p-4 text-sm">
           <h3 className="font-semibold">
@@ -164,6 +178,7 @@ export function TemplatePreviewContent({
         </div>
       )}
       <TemplateSectionPreview sections={preview.sections} />
+      <ReviewFormPreview sections={preview.sections} scale={preview.ratingScale} />
       {!!preview.criteriaWeights.length && (
         <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
