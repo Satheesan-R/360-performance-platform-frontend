@@ -1,5 +1,5 @@
-import LeadershipArea from "@/components/dashboard/leadership-area";
+import AssignedReviews from "@/components/review-cycles/assigned-reviews";
 
 export default function Page() {
-  return <LeadershipArea role="tech_lead" slug="assessments" />;
+  return <AssignedReviews title="Assigned Assessments" />;
 }

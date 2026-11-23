@@ -12,7 +12,7 @@ export function eligibleReviewers(participant: Employee | undefined, role: Revie
     if (role === "self") return employee._id === participant._id;
     if (employee._id === participant._id) return false;
     if (role === "manager") return employee._id === managerId;
-    if (role === "peer") return employee.user.role === "department_manager";
+    if (role === "peer") return employee.user.role === participant.user?.role;
     return employee.user.role === "tech_lead";
   });
 }

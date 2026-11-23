@@ -179,6 +179,7 @@ export function TemplatePreviewContent({
         </div>
       )}
       <TemplateSectionPreview sections={preview.sections} />
+      <ReviewFormPreview sections={preview.sections} scale={preview.ratingScale} />
       {!!preview.criteriaWeights.length && (
         <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
