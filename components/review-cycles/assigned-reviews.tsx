@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { ResourceState, secondaryClass } from "@/components/organization/ui";
-import ReviewFormPreview from "@/components/performance-framework/review-form-preview";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { reviewerRoleLabels } from "@/lib/reviewer-assignments";
 import { getAssignedReview, getAssignedReviewCycles } from "@/services/review-cycle.service";
+import AssignedReviewForm from "./assigned-review-form";
 
 function ReviewDetails({ id, onBack }: { id: string; onBack: () => void }) {
   const load = useCallback((signal: AbortSignal) => getAssignedReview(id, signal), [id]);
@@ -35,7 +36,7 @@ function ReviewDetails({ id, onBack }: { id: string; onBack: () => void }) {
           ) : (
             <p className="mt-4 text-sm font-semibold">{assignment.participantName || "Participant"} · {reviewerRoleLabels[assignment.role]}</p>
           )}
-          <ReviewFormPreview key={assignment.employeeId} sections={data.sections} scale={data.ratingScale} readOnly />
+          <AssignedReviewForm key={assignment.employeeId} cycleId={id} participantId={assignment.employeeId} review={data} />
         </>
       )}
     </>
@@ -77,14 +78,21 @@ function ReviewList({ page, onPage, onOpen }: { page: number; onPage: (page: num
   );
 }
 
-export default function AssignedReviews({ title = "My Reviews" }: { title?: string }) {
+export default function AssignedReviews({ title = "My Reviews", initialCycleId = "" }: { title?: string; initialCycleId?: string }) {
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(initialCycleId);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  function back() {
+    setSelected("");
+    if (initialCycleId) router.replace(pathname);
+  }
   return (
     <div className="mx-auto max-w-5xl">
       <h1 className="mb-6 text-3xl font-bold tracking-tight">{title}</h1>
       {selected
-        ? <ReviewDetails key={selected} id={selected} onBack={() => setSelected("")} />
+        ? <ReviewDetails key={selected} id={selected} onBack={back} />
         : <ReviewList key={page} page={page} onPage={setPage} onOpen={setSelected} />}
     </div>
   );

@@ -1,6 +1,6 @@
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import type { AssignedReview, AssignedReviewList, CycleInput, CycleList, ReviewCycle } from "@/types/review-cycle";
+import type { AssignedReview, AssignedReviewList, CycleInput, CycleList, ReviewCycle, ReviewCycleResults, ReviewResponse, ReviewSectionResponse } from "@/types/review-cycle";
 function config(signal?: AbortSignal) {
   const token = getToken();
   if (!token) throw new Error("Your session has expired. Please log in again.");
@@ -29,4 +29,24 @@ export async function getAssignedReviewCycles(page: number, signal?: AbortSignal
 
 export async function getAssignedReview(id: string, signal?: AbortSignal) {
   return (await api.get<{ review: AssignedReview }>(`/review-cycles/assigned/${encodeURIComponent(id)}`, config(signal))).data.review;
+}
+
+function responsePath(cycleId: string, participantId: string) {
+  return `/review-cycles/assigned/${encodeURIComponent(cycleId)}/participants/${encodeURIComponent(participantId)}/response`;
+}
+
+export async function getAssignedReviewResponse(cycleId: string, participantId: string, signal?: AbortSignal) {
+  return (await api.get<{ response: ReviewResponse }>(responsePath(cycleId, participantId), config(signal))).data.response;
+}
+
+export async function saveAssignedReviewResponse(
+  cycleId: string,
+  participantId: string,
+  values: { version: number | null; submit: boolean; sections: ReviewSectionResponse[] },
+) {
+  return (await api.put<{ response: ReviewResponse }>(responsePath(cycleId, participantId), values, config())).data.response;
+}
+
+export async function getReviewCycleResults(id: string, signal?: AbortSignal) {
+  return (await api.get<{ results: ReviewCycleResults }>(`/review-cycles/${encodeURIComponent(id)}/results`, config(signal))).data.results;
 }
