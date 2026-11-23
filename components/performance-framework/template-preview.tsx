@@ -4,6 +4,7 @@ import ReviewFormPreview from "./review-form-preview";
 import { useCallback, useState } from "react";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { getApiErrorMessage } from "@/lib/api";
+import { templateTargetRoleLabels } from "@/lib/review-template";
 import {
   createTemplateSnapshot,
   getTemplatePreview,
@@ -151,6 +152,20 @@ export function TemplatePreviewContent({
           : "No employment-type restriction configured."}{" "}
         Employee assignment is handled by future review workflows.
       </p>
+      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+        <div>
+          <dt className="text-slate-500">Review type</dt>
+          <dd>{preview.reviewType ?? "Not configured"}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-500">Target role</dt>
+          <dd>{preview.targetRole ? templateTargetRoleLabels[preview.targetRole] : "Not configured"}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-500">Departments</dt>
+          <dd className="break-words">{preview.departmentIds?.join(", ") || "No department restriction"}</dd>
+        </div>
+      </dl>
       {preview.ratingScale && (
         <div className="mt-4 rounded-xl bg-white p-4 text-sm">
           <h3 className="font-semibold">

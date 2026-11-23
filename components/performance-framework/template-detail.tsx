@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback } from "react";
 import { ResourceState, secondaryClass } from "@/components/organization/ui";
 import { useOrganizationResource } from "@/hooks/use-organization-resource";
+import { templateTargetRoleLabels } from "@/lib/review-template";
 import { getReviewTemplate, getTemplatePreview } from "@/services/review-template.service";
 import DetailTable from "./detail-table";
 
@@ -33,7 +34,7 @@ export default function TemplateDetail({
             ["Description", item.description || "No description"],
             ["Status", item.status],
             ["Review type", item.reviewType ?? "Not configured"],
-            ["Target role", item.targetRole === "department_manager" ? "Department Manager" : "Not configured"],
+            ["Target role", item.targetRole ? templateTargetRoleLabels[item.targetRole] : "Not configured"],
             ["Departments", item.departmentIds?.join(", ") || "No department restriction"],
             ["Employment types", item.employmentTypeIds.join(", ") || "Inherit from framework"],
             ["Evidence required", item.evidenceRequired ? "Yes" : "No"],
