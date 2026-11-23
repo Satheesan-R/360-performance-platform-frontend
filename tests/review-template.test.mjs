@@ -42,7 +42,13 @@ test("legacy and unchanged targeting are omitted from metadata edits", () => {
   const patch = templatePatch({ ...templateDraft(legacy), name: "Renamed" }, legacy);
   for (const field of ["reviewType", "targetRole", "departmentIds"]) assert.equal(field in patch, false);
   const configured = { ...legacy, reviewType: "probation", targetRole: "department_manager", departmentIds: [ids.type] };
-  const changed = templatePatch({ ...templateDraft(configured), reviewType: "internship", departmentIds: [] }, configured);
+  const draft = templateDraft(configured);
+  assert.equal(draft.reviewType, "probation");
+  assert.equal(draft.targetRole, "department_manager");
+  assert.deepEqual(plain(draft.departmentIds), [ids.type]);
+  const unchanged = templatePatch({ ...draft, name: "Renamed" }, configured);
+  for (const field of ["reviewType", "targetRole", "departmentIds"]) assert.equal(field in unchanged, false);
+  const changed = templatePatch({ ...draft, reviewType: "internship", departmentIds: [] }, configured);
   assert.equal(changed.reviewType, "internship");
   assert.deepEqual(plain(changed.departmentIds), []);
   assert.equal("targetRole" in changed, false);
@@ -177,6 +183,35 @@ test("list sends server pagination search and filters with Bearer auth", async (
     return { data: body };
   } });
   assert.equal(await client.getReviewTemplates({ search: "Annual", status: "", frameworkId: "", page: 2 }, signal), body);
+});
+
+test("approval queue and decisions use the authenticated template approval API", async () => {
+  const calls = [];
+  const client = service({
+    get: async (path, config) => {
+      assert.equal(config.headers.Authorization, "Bearer test-token");
+      assert.equal(config.params.approvalStatus, "pending");
+      assert.equal(config.params.status, "active");
+      assert.equal(config.params.page, 2);
+      calls.push(path);
+      return { data: { templates: [], pagination: { total: 0 } } };
+    },
+    post: async (path, body, config) => {
+      assert.equal(config.headers.Authorization, "Bearer test-token");
+      calls.push([path, plain(body)]);
+      return { data: { template: original() } };
+    },
+  });
+  await client.getPendingTemplateApprovals(2);
+  await client.submitTemplateApproval("template/id");
+  await client.decideTemplateApproval("template/id", "approve", "");
+  await client.decideTemplateApproval("template/id", "reject", "Update the criteria");
+  assert.deepEqual(calls, [
+    "/review-templates",
+    ["/review-templates/template%2Fid/submit-approval", {}],
+    ["/review-templates/template%2Fid/approve", { comment: "" }],
+    ["/review-templates/template%2Fid/reject", { comment: "Update the criteria" }],
+  ]);
 });
 
 test("detail loads raw references and create/edit forward only the supplied body", async () => {

@@ -4,9 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import HeaderProfileLink from "./header-profile-link";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession } from "@/lib/auth";
 import HrProfileMenu from "./hr-profile-menu";
+import { frameworkNavigation } from "@/components/performance-framework/navigation";
+import type { SettingsRole } from "@/lib/settings-demo";
 
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", icon: "▦" },
@@ -50,7 +53,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ProtectedRoute role="hr">
+    <ProtectedRoute role={role}>
       <div className="min-h-screen bg-slate-50 text-slate-900 lg:flex">
         {menuOpen && (
           <button

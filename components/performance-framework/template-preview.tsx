@@ -138,8 +138,8 @@ export function TemplatePreviewContent({
       >
         <p className="font-semibold">
           {preview.validation.ready
-            ? "Ready for activation"
-            : "Not ready for activation"}
+            ? preview.status === "active" ? "Ready for approval" : "Ready for activation"
+            : preview.status === "active" ? "Not ready for approval" : "Not ready for activation"}
         </p>
         {preview.validation.message && (
           <p className="mt-2">{preview.validation.message}</p>
@@ -229,10 +229,14 @@ export function SavedTemplatePreview({
   id,
   onBack,
   onActivate,
+  onSubmitApproval,
+  submitting,
 }: {
   id: string;
   onBack: () => void;
   onActivate: () => void;
+  onSubmitApproval: (targetRole: TemplatePreview["targetRole"]) => void;
+  submitting: boolean;
 }) {
   const load = useCallback(
     (signal: AbortSignal) => getTemplatePreview(id, signal),
@@ -245,6 +249,7 @@ export function SavedTemplatePreview({
         <button
           type="button"
           className={secondaryClass}
+          disabled={submitting}
           onClick={onBack}
         >
           Back to templates
@@ -262,6 +267,22 @@ export function SavedTemplatePreview({
               Activate Template
             </button>
           )}
+        {resource.data?.status === "active" && !resource.loading && !resource.error && (
+          resource.data.approvalStatus === "pending" || resource.data.approvalStatus === "approved" ? (
+            <span className="self-center rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-800">
+              {resource.data.approvalStatus === "pending" ? "Pending admin approval" : "Admin approved"}
+            </span>
+          ) : (
+            <button
+              type="button"
+              className={buttonClass}
+              disabled={submitting || !resource.data.validation.ready}
+              onClick={() => onSubmitApproval(resource.data?.targetRole)}
+            >
+              {submitting ? "Submitting…" : resource.data.targetRole ? "Submit for approval" : "Set manager target and submit"}
+            </button>
+          )
+        )}
       </div>
       {resource.loading && <p role="status">Loading template preview...</p>}
       {resource.error && (
