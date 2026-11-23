@@ -7,6 +7,8 @@ export const secondaryClass = "inline-flex items-center justify-center gap-2 rou
 
 export function Icon({ name, className = "h-5 w-5" }: { name: string; className?: string }) {
   const paths: Record<string, ReactNode> = {
+    copy: <><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4" /></>,
+    support: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /><path d="m5.6 5.6 3.6 3.6m5.6 5.6 3.6 3.6m0-12.8-3.6 3.6m-5.6 5.6-3.6 3.6" /></>,
     appearance: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></>,
     key: <><circle cx="8" cy="15" r="5" /><path d="m12 11 8-8 2 2-3 3-2-2m-2 4-2-2" /></>,
     account: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="9" r="3" /><path d="M6 19a6 6 0 0 1 12 0" /></>,

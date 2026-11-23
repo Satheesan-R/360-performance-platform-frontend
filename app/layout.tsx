@@ -2,7 +2,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import PersonalPreferencesProvider from "@/components/settings/personal-preferences-provider";
-import SettingsOverlayProvider from "@/components/settings/settings-overlay-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col"><PersonalPreferencesProvider><SettingsOverlayProvider>{children}</SettingsOverlayProvider></PersonalPreferencesProvider></body>
+      <body className="min-h-full flex flex-col"><PersonalPreferencesProvider>{children}</PersonalPreferencesProvider></body>
     </html>
   );
 }

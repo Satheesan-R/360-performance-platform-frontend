@@ -4,12 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import HeaderProfileLink from "./header-profile-link";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession } from "@/lib/auth";
 import HrProfileMenu from "./hr-profile-menu";
 import { frameworkNavigation } from "@/components/performance-framework/navigation";
 import type { SettingsRole } from "@/lib/settings-demo";
-import { useSettingsOverlay } from "@/components/settings/settings-overlay-provider";
 
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", icon: "▦" },
@@ -45,7 +45,6 @@ function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
 export default function HrShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const openSettings = useSettingsOverlay();
   const [menuOpen, setMenuOpen] = useState(false);
   const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(
     null,
