@@ -26,7 +26,6 @@ function Editor({ template, frameworks, types, departments, onSaved, onCancel, o
   const framework = frozen ? template!.frameworkSnapshot! : frameworks.find((item) => item._id === draft.frameworkId);
   const readOnly = draft.status === "archived";
   const restrictions = framework?.applicableEmploymentTypeIds.map((item) => typeof item === "string" ? item : item._id) ?? [];
-  const options = types.filter((item) => !restrictions.length || restrictions.includes(item._id));
   const disabled = busy || conflict || readOnly;
   function change(draft: TemplateDraft) { setDraft(draft); setDirty(true); setPreview(null); setError(""); }
   async function submit(previewOnly: boolean) {
@@ -109,7 +108,45 @@ function Editor({ template, frameworks, types, departments, onSaved, onCancel, o
         {!departments.length && <p className="text-sm text-slate-500">No active departments available.</p>}
       </fieldset>
       <div className="sm:col-span-2"><Field label="Description"><textarea rows={3} maxLength={2000} className={inputClass} value={draft.description} onChange={(event) => change({ ...draft, description: event.target.value })} /></Field></div>
-      <fieldset className="max-h-56 space-y-3 overflow-y-auto rounded-xl border border-slate-200 p-4"><legend className="px-2 text-sm font-semibold">Employment types</legend>{options.map((item) => <label key={item._id} className="flex items-center gap-3 text-sm"><input type="checkbox" checked={draft.employmentTypeIds.includes(item._id)} onChange={(event) => change({ ...draft, employmentTypeIds: event.target.checked ? [...draft.employmentTypeIds, item._id] : draft.employmentTypeIds.filter((id) => id !== item._id) })} />{item.name}</label>)}{draft.employmentTypeIds.filter((id) => !options.some((item) => item._id === id)).map((id) => <label key={id} className="flex gap-3 text-sm text-amber-700"><input type="checkbox" checked onChange={() => change({ ...draft, employmentTypeIds: draft.employmentTypeIds.filter((value) => value !== id) })} />Previously selected type ({id.slice(-6)}) — unavailable for new selections</label>)}{!options.length && <p className="text-sm text-slate-500">No active employment types available for this framework.</p>}</fieldset>
+      <fieldset className="max-h-56 space-y-3 overflow-y-auto rounded-xl border border-slate-200 p-4">
+        <legend className="px-2 text-sm font-semibold">Employment types</legend>
+        {types.map((item) => {
+          const selected = draft.employmentTypeIds.includes(item._id);
+          const allowed = !restrictions.length || restrictions.includes(item._id);
+          return (
+            <label key={item._id} className="flex items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={selected}
+                disabled={!allowed && !selected}
+                onChange={(event) => change({
+                  ...draft,
+                  employmentTypeIds: event.target.checked
+                    ? [...draft.employmentTypeIds, item._id]
+                    : draft.employmentTypeIds.filter((id) => id !== item._id),
+                })}
+              />
+              <span>
+                {item.name}
+                {!allowed && <span className="ml-2 text-xs text-slate-600">Outside framework targeting</span>}
+              </span>
+            </label>
+          );
+        })}
+        {draft.employmentTypeIds.filter((id) => !types.some((item) => item._id === id)).map((id) => (
+          <label key={id} className="flex gap-3 text-sm text-amber-700">
+            <input type="checkbox" checked onChange={() => change({ ...draft, employmentTypeIds: draft.employmentTypeIds.filter((value) => value !== id) })} />
+            Previously selected type ({id.slice(-6)}) — unavailable for new selections
+          </label>
+        ))}
+        {!types.length && <p className="text-sm text-slate-500">No active employment types are configured.</p>}
+        {restrictions.length > 0 && (
+          <p className="text-sm text-slate-600">
+            To make another type selectable, update the applicable groups in{" "}
+            <Link href="/hr/performance-framework" className="font-medium text-blue-700 underline">Framework Overview</Link>.
+          </p>
+        )}
+      </fieldset>
       <div className="space-y-4 text-sm text-slate-600"><p>Leave types unselected to inherit framework targeting. This does not assign employees to reviews.</p><label className="flex items-center gap-3 font-medium text-slate-700"><input type="checkbox" checked={draft.evidenceRequired} onChange={(event) => change({ ...draft, evidenceRequired: event.target.checked })} />Require evidence in every section</label><p>Evidence rules configure future responses; files are not uploaded here.</p></div>
     </fieldset><p className="mt-4 text-xs text-slate-500">Changing the framework clears selected criteria and employment types; section titles and questions remain.</p></section>
     {!frameworks.some((item) => item.status !== "archived") && !template && <p className="mt-4 text-sm text-slate-600">Create a draft or active framework in <Link className="text-blue-600 underline" href="/hr/performance-framework">Framework Overview</Link> first.</p>}
