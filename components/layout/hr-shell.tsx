@@ -110,7 +110,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
                       <span className="flex-1">{item.label}</span>
                       <span
                         aria-hidden="true"
-                        className={`transition-transform ${organizationOpen ? "rotate-180" : ""}`}
+                        className={`transition-transform ${open ? "rotate-180" : ""}`}
                       >
                         ⌄
                       </span>
