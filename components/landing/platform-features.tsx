@@ -1,68 +1,26 @@
 import styles from "./landing.module.css";
+
 const features = [
-  [
-    "⚑",
-    "Strategic OKRs & Goal Hierarchy",
-    "Cascade company objectives into individual goals. Connect work across teams, track progress, and keep everyone moving in the same direction.",
-    "Explore goal alignment",
-  ],
-  [
-    "▤",
-    "Continuous Daily Feedback & Reflection",
-    "Turn everyday feedback into lasting growth. Capture insights, recognize contributions, and make development a regular conversation.",
-    "Discover continuous feedback",
-  ],
-  [
-    "⇄",
-    "360° Multi-Rater Review Cycles",
-    "Bring together feedback from peers, managers, and team members for a fuller picture of performance and potential.",
-    "Explore 360° reviews",
-  ],
-  [
-    "◇",
-    "Competency Gaps & Upskilling",
-    "Understand your team’s strengths and development needs. Build focused learning paths that support the next step in every career.",
-    "See development pathways",
-  ],
-  [
-    "▥",
-    "People Analytics & Retention Intelligence",
-    "Connect performance, engagement, and growth insights so leaders can make more informed decisions about their teams.",
-    "Explore people insights",
-  ],
-  [
-    "◈",
-    "Enterprise Governance & Security",
-    "Keep access aligned with responsibilities through dedicated employee and HR workspaces and role-based permissions.",
-    "Discover team workspaces",
-  ],
+  ["01", "Organization & Employee Management", "Manage employee profiles and invitations in the application. Departments, teams, employment types and reporting hierarchies are supported by backend endpoints.", "Available / backend supported"],
+  ["02", "Goals & OKRs", "Planned organization, team and individual goals with progress tracking and alignment.", "Planned"],
+  ["03", "Performance Review Cycles", "The backend creates draft department-manager cycles with dates, selected participants and an approved template snapshot. Broader cycle execution is planned.", "Backend supported · limited scope"],
+  ["04", "Configurable Review Workflows", "Planned review stages and reviewer sequences, including optional peer review and calibration. A dynamic workflow builder is not available today.", "Planned"],
+  ["05", "Performance Frameworks", "Configure competencies, KPIs, rating scales, category weights and reusable templates through the backend.", "Backend supported"],
+  ["06", "Performance Scoring", "Preview reviewer-weighted scores using configured competency and KPI weights. Final review-result processing is not yet connected.", "Scoring preview supported"],
+  ["07", "Normalization & Promotion Recommendations", "Planned configurable normalization and promotion eligibility recommendations. No promotion recommendation is currently generated.", "Planned"],
+  ["08", "Calibration & Dispute Resolution", "Planned optional calibration, justified score adjustments and structured dispute outcomes.", "Planned"],
+  ["09", "Dashboards, Notifications & Audit Trails", "Role-based dashboard routes and onboarding emails are available. Performance reporting, review reminders and consolidated audit trails are planned.", "Partially available"],
 ];
+
 export default function PlatformFeatures() {
   return (
     <section id="platform" className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.heading}>
-          <span className={styles.eyebrow}>
-            Enterprise Performance Infrastructure
-          </span>
-          <h2>
-            Everything Required to Scale Engineering &amp; Corporate Excellence
-          </h2>
-          <p>
-            Bring your performance conversations, goals, and development plans
-            together. Give every team the clarity to do their best work.
-          </p>
-        </div>
+        <div className={styles.heading}><span className={styles.eyebrow}>The performance platform</span><h2>Everything you need to manage performance.</h2><p>Manage the performance evaluation lifecycle, from organizational goals and review cycles to scoring, governance, and final outcomes.</p></div>
+        <div className={styles.scopeLegend}><span>Available: connected application functionality</span><span>Backend supported: management screens may be pending</span><span>Planned: not available yet</span></div>
         <div className={styles.grid}>
-          {features.map(([icon, title, description, link]) => (
-            <article className={styles.card} key={title}>
-              <span className={styles.icon} aria-hidden="true">
-                {icon}
-              </span>
-              <h3>{title}</h3>
-              <p>{description}</p>
-              <a href="#solutions">{link} →</a>
-            </article>
+          {features.map(([number, title, description, status]) => (
+            <article className={styles.card} key={title}><span className={styles.icon} aria-hidden="true">{number}</span><h3>{title}</h3><p>{description}</p><span className={status === "Planned" ? styles.plannedLabel : styles.capabilityLabel}>{status}</span></article>
           ))}
         </div>
       </div>

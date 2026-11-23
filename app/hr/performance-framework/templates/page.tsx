@@ -1,5 +1,5 @@
-import UpcomingFrameworkPage from "@/components/performance-framework/upcoming";
+import ReviewTemplatesPage from "@/components/performance-framework/templates";
 
 export default function Page() {
-  return <UpcomingFrameworkPage title="Review Templates" description="Build review templates from frameworks, competencies, KPIs, and scoring settings." />;
+  return <ReviewTemplatesPage />;
 }

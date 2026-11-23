@@ -1,57 +1,41 @@
-﻿"use client";
-
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { clearSession, getCurrentUser } from "@/lib/auth";
-import type { UserRole } from "@/types/auth";
+import { employeeWorkspace } from "./workspaces";
 
-const roleLabels: Record<UserRole, string> = {
-  employee: "Employee",
-  tech_lead: "Tech Lead",
-  department_manager: "Department Manager",
-  hr: "HR",
-  admin: "Admin",
-};
+const tones = [
+  "bg-blue-50 text-blue-700",
+  "bg-emerald-50 text-emerald-700",
+  "bg-violet-50 text-violet-700",
+  "bg-amber-50 text-amber-700",
+];
 
-export default function DashboardHome({ role }: { role: UserRole }) {
-  const router = useRouter();
-  const user = getCurrentUser();
-
-  function logout() {
-    clearSession();
-    router.replace("/login");
-  }
-
+export default function DashboardHome() {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 sm:px-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
-          <div>
-            <p className="text-sm font-semibold text-blue-600">360 Performance</p>
-            <h1 className="mt-1 text-2xl font-bold text-slate-900">{roleLabels[role]} Dashboard</h1>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            {role === "admin" && <Link href="/admin/configuration" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Administration</Link>}
-            <Link href="/settings" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">Settings</Link>
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-            >
-              Log out
-            </button>
-          </div>
-        </header>
-
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <p className="text-sm text-slate-500">Signed in as</p>
-          <p className="mt-1 font-semibold text-slate-900">{user?.email}</p>
-          <h2 className="mt-8 text-xl font-bold text-slate-900">Welcome to your dashboard</h2>
-          <p className="mt-2 text-slate-600">
-            Your role-based dashboard is protected and ready for its feature modules.
-          </p>
-        </section>
+    <main className="mx-auto max-w-7xl">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{employeeWorkspace.title}</h1>
+          <p className="mt-2 text-slate-600">{employeeWorkspace.description}</p>
+        </div>
+        <Link href="/employee/profile" className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+          View my profile
+        </Link>
       </div>
+
+      <section aria-labelledby="workspace-areas" className="mt-8">
+        <h2 id="workspace-areas" className="text-lg font-bold text-slate-900">My workspace</h2>
+        <p className="mt-1 text-sm text-slate-600">Live goals, reviews, feedback, and development data are awaiting integration.</p>
+        <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {employeeWorkspace.areas.map((area, index) => (
+            <li key={area.title} className="flex flex-col items-start rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className={`rounded-lg px-2.5 py-1 text-sm font-bold ${tones[index]}`}>{area.title}</h3>
+              <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{area.description}</p>
+              <Link href={area.href} className="mt-4 text-sm font-semibold text-blue-700 hover:underline">
+                View {area.title.toLowerCase()}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
     </main>
   );
 }

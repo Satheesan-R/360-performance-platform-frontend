@@ -17,7 +17,7 @@ export interface OrganizationSummary {
   totalEmployees: number;
   departments: number;
   teams: number;
-  activeReviewFrameworks: number;
+  activeReviewFrameworks: number | null;
 }
 
 export interface StructureRecord {
@@ -41,6 +41,11 @@ export interface HierarchyEmployee {
   fullName: string;
   designation?: string;
   departmentName?: string;
+  departmentId?: string;
+  teamName?: string;
+  teamId?: string;
+  employeeNumber?: string;
+  reportingManagerName?: string;
   reportingManagerId: string | null;
 }
 

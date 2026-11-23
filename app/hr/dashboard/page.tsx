@@ -1,66 +1,229 @@
-﻿const summaryCards = [
-  { label: "Total employees", value: "—", detail: "Employee directory", tone: "bg-blue-50 text-blue-700" },
-  { label: "Pending onboarding", value: "—", detail: "Awaiting activation", tone: "bg-amber-50 text-amber-700" },
-  { label: "Active review cycles", value: "—", detail: "Currently in progress", tone: "bg-emerald-50 text-emerald-700" },
-  { label: "Reviews to normalise", value: "—", detail: "Action required", tone: "bg-violet-50 text-violet-700" },
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { getCurrentUser, getToken } from "@/lib/auth";
+import { getApiErrorMessage } from "@/lib/api";
+import { getEmployees } from "@/services/employee.service";
+import type { Employee } from "@/types/employee";
+
+const moduleShortcuts = [
+  { icon: "♙", title: "Employee & Structure", href: "/hr/organization", description: "Manage departments, teams, and reporting relationships." },
+  { icon: "▤", title: "Review Templates", href: "/hr/performance-framework/templates", description: "Configure review sections, questions, and evaluation criteria." },
+  { icon: "⟳", title: "Review Cycles", href: "/hr/review-cycles", description: "Plan review cycles, schedules, and milestones." },
+  { icon: "∿", title: "Review Monitoring", href: "/hr/review-cycles", description: "Open the review-cycle workspace for submission tracking." },
+  { icon: "☆", title: "Score & 360° Feedback", href: "/hr/normalisation", description: "Open normalisation to align performance ratings across teams." },
+  { icon: "▥", title: "Reports & Analytics", href: "/hr/analytics", description: "Open the workspace for workforce performance reporting." },
+  { icon: "↗", title: "Promotion & Development", href: "/hr/promotion-development", description: "Open the workspace for promotion readiness and employee growth." },
+  { icon: "◇", title: "Audit & Investigation", href: "/hr/audit", description: "Open the audit workspace for HR actions and system activity." },
 ];
 
 export default function HrDashboardPage() {
-  return (
-    <main className="mx-auto max-w-7xl">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm font-semibold text-blue-600">OVERVIEW</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">HR Dashboard</h1>
-          <p className="mt-2 text-slate-500">Track onboarding, review cycles, and workforce activity.</p>
-        </div>
-        <a href="/hr/onboarding" className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
-          Add employee
-        </a>
-      </div>
+  const [employees, setEmployees] = useState<Employee[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [request, setRequest] = useState(0);
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadEmployees() {
+      try {
+        const token = getToken();
+        if (!token) throw new Error("Please sign in to view employee data.");
+
+        const records = await getEmployees(token, controller.signal);
+        if (!controller.signal.aborted) setEmployees(records);
+      } catch (cause) {
+        if (!controller.signal.aborted) setError(getApiErrorMessage(cause));
+      }
+    }
+
+    void loadEmployees();
+    return () => controller.abort();
+  }, [request]);
+
+  function refreshEmployees() {
+    setEmployees(null);
+    setError(null);
+    setRequest((value) => value + 1);
+  }
+
+  const accountEmail = getCurrentUser()?.email.trim().toLowerCase();
+  const profile = accountEmail
+    ? employees?.find((employee) => employee.workEmail?.trim().toLowerCase() === accountEmail)
+    : undefined;
+  const hrName = profile?.fullName?.trim()
+    || [profile?.firstName?.trim(), profile?.lastName?.trim()].filter(Boolean).join(" ")
+    || "HR team";
+
+  const placeholder = error ? "Unavailable" : "…";
+  const summaryCards = [
+    {
+      label: "Total employees",
+      value: employees ? employees.length.toLocaleString() : placeholder,
+      detail: "Employee directory",
+      tone: "bg-blue-50 text-blue-700",
+    },
+    {
+      label: "Pending onboarding",
+      value: employees
+        ? employees.filter((employee) => employee.onboardingStatus === "pending").length.toLocaleString()
+        : placeholder,
+      detail: "Awaiting activation",
+      tone: "bg-amber-50 text-amber-700",
+    },
+    {
+      label: "Active review cycles",
+      value: "—",
+      detail: "Review data not connected yet",
+      tone: "bg-emerald-50 text-emerald-700",
+    },
+    {
+      label: "Reviews to normalise",
+      value: "—",
+      detail: "Review data not connected yet",
+      tone: "bg-violet-50 text-violet-700",
+    },
+  ];
+
+  return (
+    <main>
+      <header className="flex flex-col items-start gap-6 rounded-2xl bg-linear-to-br from-blue-700 to-blue-900 p-6 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div>
+          <p className="text-sm font-semibold text-blue-100">HR Dashboard</p>
+          <h1 className="mt-2 break-words text-3xl font-bold tracking-tight sm:text-4xl">
+            Welcome, {hrName}
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-blue-100 sm:text-base">
+            Track onboarding, review cycles, and workforce activity.
+          </p>
+        </div>
+        <Link
+          href="/hr/onboarding"
+          className="shrink-0 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-blue-800 transition hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+        >
+          Onboard an employee
+        </Link>
+      </header>
+
+      <section
+        aria-label="Dashboard summary"
+        className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
         {summaryCards.map((card) => (
-          <article key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className={`mb-5 inline-flex rounded-lg px-2.5 py-1 text-xs font-bold ${card.tone}`}>{card.label}</div>
-            <p className="text-3xl font-bold text-slate-900">{card.value}</p>
+          <article
+            key={card.label}
+            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
+            <h2 className={`mb-4 inline-flex rounded-lg px-2.5 py-1 text-xs font-bold ${card.tone}`}>
+              {card.label}
+            </h2>
+            <p className="text-3xl font-bold tabular-nums text-slate-900">{card.value}</p>
             <p className="mt-2 text-sm text-slate-500">{card.detail}</p>
           </article>
         ))}
       </section>
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-3">
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Employee onboarding</h2>
-              <p className="mt-1 text-sm text-slate-500">Recently invited employees will appear here.</p>
-            </div>
-            <a href="/hr/onboarding" className="text-sm font-semibold text-blue-600 hover:text-blue-700">View onboarding</a>
-          </div>
-          <div className="mt-8 rounded-xl border border-dashed border-slate-300 px-6 py-12 text-center">
-            <p className="font-semibold text-slate-700">No onboarding activity loaded yet</p>
-            <p className="mt-2 text-sm text-slate-500">We will connect employee data after completing the onboarding page.</p>
-          </div>
-        </article>
+      <section aria-labelledby="hr-modules" className="mt-8">
+        <h2 id="hr-modules" className="text-lg font-bold text-slate-900">Modules &amp; System Management</h2>
+        <p className="mt-1 text-sm text-slate-500">Open HR administration tools and review workflows.</p>
+        <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {moduleShortcuts.map((shortcut) => (
+            <li key={shortcut.title}>
+              <Link
+                href={shortcut.href}
+                className="group block h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                <div aria-hidden="true" className="flex items-center justify-between">
+                  <span className="flex size-10 items-center justify-center rounded-lg bg-blue-100 text-xl font-semibold text-blue-700">{shortcut.icon}</span>
+                  <span className="text-sm text-slate-400 group-hover:text-blue-700">↗</span>
+                </div>
+                <h3 className="mt-3 text-sm font-bold text-slate-900">{shortcut.title}</h3>
+                <p className="mt-1 text-sm leading-5 text-slate-600">{shortcut.description}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">Quick actions</h2>
-          <div className="mt-5 space-y-3">
-            <a href="/hr/onboarding" className="block rounded-xl border border-slate-200 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50">
-              <p className="font-semibold text-slate-800">Onboard an employee</p>
-              <p className="mt-1 text-sm text-slate-500">Create a profile and send activation mail.</p>
-            </a>
-            <a href="/hr/review-cycles" className="block rounded-xl border border-slate-200 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50">
-              <p className="font-semibold text-slate-800">Create review cycle</p>
-              <p className="mt-1 text-sm text-slate-500">Prepare the next performance review.</p>
-            </a>
-            <a href="/hr/analytics" className="block rounded-xl border border-slate-200 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50">
-              <p className="font-semibold text-slate-800">View analytics</p>
-              <p className="mt-1 text-sm text-slate-500">Explore workforce performance trends.</p>
-            </a>
+      {error && (
+        <div
+          role="alert"
+          className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
+          <p>Unable to load employee data: {error}</p>
+          <button
+            type="button"
+            onClick={refreshEmployees}
+            className="mt-2 font-semibold underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      <section aria-labelledby="dashboard-employee-details" className="mt-6">
+        <h2 id="dashboard-employee-details" className="mb-3 text-lg font-bold text-slate-900">
+          Employee details
+        </h2>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {!employees ? (
+            <p role="status" className="py-12 text-center text-sm text-slate-500">
+              {error ? "Employee data could not be loaded." : "Loading employee data…"}
+            </p>
+          ) : employees.length === 0 ? (
+            <p className="py-12 text-center text-sm text-slate-500">
+              No employees yet. Add an employee to begin onboarding.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-slate-200 bg-slate-50 text-slate-800">
+                  <tr>
+                    <th scope="col" className="px-5 py-3 font-bold">Employee</th>
+                    <th scope="col" className="px-5 py-3 font-bold">Employee number</th>
+                    <th scope="col" className="px-5 py-3 font-bold">Onboarding</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {employees.slice(0, 3).map((employee) => (
+                    <tr key={employee._id}>
+                      <td className="px-5 py-4">
+                        <p className="font-semibold text-slate-800">
+                          {[employee.firstName, employee.lastName].filter(Boolean).join(" ") || employee.workEmail}
+                        </p>
+                        <p className="mt-1 text-slate-500">{employee.workEmail}</p>
+                      </td>
+                      <td className="px-5 py-4 text-slate-600">
+                        {employee.employeeNumber || "—"}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            employee.onboardingStatus === "completed"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-amber-50 text-amber-700"
+                          }`}
+                        >
+                          {employee.onboardingStatus === "completed" ? "Completed" : "Pending"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="flex justify-end border-t border-slate-100 px-5 py-4">
+            <Link
+              href="/hr/onboarding#employee-details"
+              aria-label="See more employee onboarding records"
+              className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+            >
+              See more
+            </Link>
           </div>
-        </article>
+        </div>
       </section>
     </main>
   );

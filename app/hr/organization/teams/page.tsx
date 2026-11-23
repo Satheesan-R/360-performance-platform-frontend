@@ -1,5 +1,5 @@
-import StructureManager from "@/components/organization/structure-manager";
+import StructureDirectory from "@/components/organization/structure-directory";
 
 export default function Page() {
-  return <StructureManager kind="teams" />;
+  return <StructureDirectory kind="teams" />;
 }
