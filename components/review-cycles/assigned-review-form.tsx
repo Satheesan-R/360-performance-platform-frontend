@@ -92,12 +92,12 @@ function ResponseEditor({ cycleId, participantId, review, initial, onReload }: P
                       <>
                         <p className="text-sm text-slate-600">Target {criterion.targetValue} {criterion.measurementUnit}{criterion.targetPeriod ? ` · ${criterion.targetPeriod}` : ""}</p>
                         <Field label={`Actual result (${criterion.measurementUnit})`}>
-                          <input name={`${sectionId}:result:${criterion._id}`} type="number" step="any" className={inputClass} defaultValue={previous?.kpiResults[criterion._id]} />
+                          <input name={`${sectionId}:result:${criterion._id}`} type="number" step="any" className={inputClass} defaultValue={previous?.kpiResults?.[criterion._id]} />
                         </Field>
                       </>
                     )}
                     <Field label={`Rating for ${criterion.name}`}>
-                      <select name={`${sectionId}:rating:${criterion._id}`} className={inputClass} defaultValue={previous?.ratings[criterion._id] ?? ""}>
+                      <select name={`${sectionId}:rating:${criterion._id}`} className={inputClass} defaultValue={previous?.ratings?.[criterion._id] ?? ""}>
                         <option value="">Choose a rating</option>
                         {review.ratingScale?.levels.map((level) => <option key={level.value} value={level.value}>{level.value} · {level.label}</option>)}
                       </select>
@@ -107,7 +107,7 @@ function ResponseEditor({ cycleId, participantId, review, initial, onReload }: P
               ))}
               {section.questions.map((question) => (
                 <Field key={question._id} label={`${question.prompt}${question.required ? " *" : ""}`}>
-                  <textarea name={`${sectionId}:answer:${question._id}`} maxLength={4000} rows={3} className={inputClass} defaultValue={question._id ? previous?.answers[question._id] : undefined} />
+                  <textarea name={`${sectionId}:answer:${question._id}`} maxLength={4000} rows={3} className={inputClass} defaultValue={question._id ? previous?.answers?.[question._id] : undefined} />
                 </Field>
               ))}
               {section.allowComments && (
