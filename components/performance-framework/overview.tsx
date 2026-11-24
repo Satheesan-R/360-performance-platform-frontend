@@ -638,28 +638,6 @@ export default function FrameworkOverview() {
           </dl>
         )}
       </section>
-      {!editor && (
-        <section
-          aria-label="Framework setup guidance"
-          className="mb-6 flex flex-col gap-4 rounded-2xl border border-blue-200 bg-blue-50 p-5 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div>
-            <p className="text-sm font-semibold text-blue-900">
-              Set up a review-ready framework
-            </p>
-            <p className="mt-1 max-w-2xl text-sm text-blue-800/70">
-              Start with your audience, then add criteria, configure scoring,
-              and finish with a review template.
-            </p>
-          </div>
-          <Link
-            href="/hr/performance-framework/competencies"
-            className="whitespace-nowrap text-sm font-semibold text-blue-700 hover:underline"
-          >
-            Configure criteria
-          </Link>
-        </section>
-      )}
       {success && (
         <p
           role="status"
