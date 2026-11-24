@@ -46,6 +46,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(null);
 
   function logout() {
     clearSession();
