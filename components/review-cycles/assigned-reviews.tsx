@@ -7,11 +7,6 @@ import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { reviewerRoleLabels } from "@/lib/reviewer-assignments";
 import { getAssignedReview, getAssignedReviewCycles } from "@/services/review-cycle.service";
 import AssignedReviewForm from "./assigned-review-form";
-import { ResourceState, secondaryClass } from "@/components/organization/ui";
-import ReviewFormPreview from "@/components/performance-framework/review-form-preview";
-import { useOrganizationResource } from "@/hooks/use-organization-resource";
-import { reviewerRoleLabels } from "@/lib/reviewer-assignments";
-import { getAssignedReview, getAssignedReviewCycles } from "@/services/review-cycle.service";
 
 function ReviewDetails({ id, onBack }: { id: string; onBack: () => void }) {
   const load = useCallback((signal: AbortSignal) => getAssignedReview(id, signal), [id]);
@@ -42,7 +37,6 @@ function ReviewDetails({ id, onBack }: { id: string; onBack: () => void }) {
             <p className="mt-4 text-sm font-semibold">{assignment.participantName || "Participant"} · {reviewerRoleLabels[assignment.role]}</p>
           )}
           <AssignedReviewForm key={assignment.employeeId} cycleId={id} participantId={assignment.employeeId} review={data} />
-          <ReviewFormPreview key={assignment.employeeId} sections={data.sections} scale={data.ratingScale} readOnly />
         </>
       )}
     </>
@@ -94,15 +88,12 @@ export default function AssignedReviews({ title = "My Reviews", initialCycleId =
     setSelected("");
     if (initialCycleId) router.replace(pathname);
   }
-export default function AssignedReviews({ title = "My Reviews" }: { title?: string }) {
-  const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState("");
+
   return (
     <div className="mx-auto max-w-5xl">
       <h1 className="mb-6 text-3xl font-bold tracking-tight">{title}</h1>
       {selected
         ? <ReviewDetails key={selected} id={selected} onBack={back} />
-        ? <ReviewDetails key={selected} id={selected} onBack={() => setSelected("")} />
         : <ReviewList key={page} page={page} onPage={setPage} onOpen={setSelected} />}
     </div>
   );
