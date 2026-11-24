@@ -131,7 +131,7 @@ export default function WorkspaceShell({
               </div>
             </div>
           </header>
-          <div className="p-5 sm:p-8">{children}</div>
+          <div className={role === "employee" ? "px-4 py-5 sm:px-5 sm:py-8 lg:px-6" : "p-5 sm:p-8"}>{children}</div>
         </div>
       </div>
   );

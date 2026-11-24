@@ -51,7 +51,7 @@ export interface ReviewSectionResponse {
 export interface ReviewResponse {
   version: number | null;
   submittedAt: string | null;
-  sections: ReviewSectionResponse[];
+  sections: Array<Pick<ReviewSectionResponse, "sectionId"> & Partial<ReviewSectionResponse>>;
 }
 
 export interface ReviewCycleResults {

@@ -78,7 +78,9 @@ function ReviewList({ page, onPage, onOpen }: { page: number; onPage: (page: num
   );
 }
 
-export default function AssignedReviews({ title = "My Reviews", initialCycleId = "" }: { title?: string; initialCycleId?: string }) {
+export default function AssignedReviews({
+  title = "My Reviews", initialCycleId = "", fullWidth = false,
+}: { title?: string; initialCycleId?: string; fullWidth?: boolean }) {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(initialCycleId);
   const pathname = usePathname();
@@ -90,7 +92,7 @@ export default function AssignedReviews({ title = "My Reviews", initialCycleId =
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className={fullWidth ? undefined : "mx-auto max-w-5xl"}>
       <h1 className="mb-6 text-3xl font-bold tracking-tight">{title}</h1>
       {selected
         ? <ReviewDetails key={selected} id={selected} onBack={back} />
