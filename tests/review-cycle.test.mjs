@@ -82,12 +82,26 @@ const helperContext = { exports: {} };
 vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL("../lib/reviewer-assignments.ts", import.meta.url), "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS },
 }).outputText, helperContext);
-const { eligibleReviewers, assignmentConflict } = helperContext.exports;
+const { eligibleReviewers, assignmentConflict, participantsWithoutReviewers } = helperContext.exports;
+
+test("publication checks reviewer coverage for every participant", () => {
+  const participants = ["roshi", "dev"];
+  const assignments = [
+    { employeeId: "roshi", reviewerEmployeeId: "roshi", role: "self" },
+    { employeeId: "roshi", reviewerEmployeeId: "dev", role: "peer" },
+  ];
+
+  assert.deepEqual(Array.from(participantsWithoutReviewers(participants)), participants);
+  assert.deepEqual(Array.from(participantsWithoutReviewers(participants, assignments)), ["dev"]);
+  assert.deepEqual(Array.from(participantsWithoutReviewers(participants, [
+    ...assignments, { employeeId: "dev", reviewerEmployeeId: "dev", role: "self" },
+  ])), []);
+});
 
 test("reviewer options follow enabled role eligibility without limiting reviewers to participants", () => {
   const employee = (_id, role, status = "active") => ({ _id, user: { role, status } });
   const participant = { ...employee("person", "department_manager"), managerId: { _id: "manager" } };
-  const employees = [participant, employee("peer", "department_manager"), employee("lead", "tech_lead"), employee("manager", "admin"), employee("disabled", "department_manager", "disabled")];
+  const employees = [participant, employee("peer", "employee"), employee("other-manager", "department_manager"), employee("lead", "tech_lead"), employee("manager", "admin"), employee("disabled", "employee", "disabled")];
   const ids = role => Array.from(eligibleReviewers(participant, role, employees), employee => employee._id);
   assert.deepEqual(ids("self"), ["person"]);
   assert.deepEqual(ids("peer"), ["peer"]);
@@ -96,6 +110,18 @@ test("reviewer options follow enabled role eligibility without limiting reviewer
   assert.equal(eligibleReviewers(undefined, "self", employees).length, 0);
   assert.equal(eligibleReviewers({ ...participant, managerId: null }, "manager", employees).length, 0);
   assert.equal(eligibleReviewers({ ...participant, managerId: "manager" }, "manager", employees)[0]._id, "manager");
+});
+
+test("reviewer options list people in the participant's department first", () => {
+  const participant = { _id: "person", departmentId: { _id: "engineering" }, user: { role: "employee", status: "active" } };
+  const leads = [
+    { _id: "other-lead", departmentId: "product", user: { role: "tech_lead", status: "active" } },
+    { _id: "engineering-lead", departmentId: "engineering", user: { role: "tech_lead", status: "active" } },
+  ];
+
+  assert.deepEqual(Array.from(eligibleReviewers(participant, "tech_lead", leads), employee => employee._id), [
+    "engineering-lead", "other-lead",
+  ]);
 });
 
 test("duplicate reviewers and single-role slots are blocked while distinct peers are allowed", () => {

@@ -29,7 +29,7 @@ persistence verification remains required with the backend running.
 
 The draft editor loads the selected template detail and uses its frozen framework's
 `enabledReviewers`. HR selects a participant, an enabled role, and an active reviewer.
-Self uses the participant automatically. Peers require department_manager accounts;
+Self uses the participant automatically. Peers require active Employee accounts;
 Team Lead requires tech_lead; manager uses the participant's managerId reporting link.
 Reviewers can be outside the selected participant list. The backend remains the
 source of truth for organization and account eligibility.
