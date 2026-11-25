@@ -41,9 +41,13 @@ export interface CreateEmployeeResponse {
 }
 
 export type Employee = CreateEmployeeResponse["employee"] &
-  Omit<Partial<CreateEmployeeRequest>, "departmentId" | "managerId"> & {
+  Omit<Partial<CreateEmployeeRequest>, "departmentId" | "managerId" | "employmentTypeId"> & {
     departmentId?: string | { _id: string; name: string } | null;
-    managerId?: string | { _id: string; firstName?: string; lastName?: string } | null;
+    managerId?: string | { _id: string; firstName?: string; lastName?: string; jobTitle?: string } | null;
+    teamId?: string | { _id: string; name: string } | null;
+    employmentTypeId?: string | { _id: string; name: string } | null;
+    employmentType?: EmploymentType;
+    JoiningDate?: string | null;
     jobTitle?: string;
     previousJobTitle?: string;
     previousCompany?: string;
