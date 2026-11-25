@@ -5,6 +5,7 @@ import axios from "axios";
 import { getToken } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { templateTargetRoleLabels } from "@/lib/review-template";
+import { participantsWithoutReviewers } from "@/lib/reviewer-assignments";
 import { getEmployees } from "@/services/employee.service";
 import { getActiveDepartments, type DepartmentOption } from "@/services/department.service";
 import ReviewerAssignments from "./reviewer-assignments";
@@ -38,6 +39,7 @@ export default function ReviewCycles() {
   const [busy, setBusy] = useState(false);
   const [conflict, setConflict] = useState(false);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const templateRequestKey = `${values.templateId}:${refresh}:${roleRetry}`;
@@ -49,7 +51,7 @@ export default function ReviewCycles() {
       try {
         const data = await getReviewCycles(page, controller.signal);
         if (!controller.signal.aborted) setList(data);
-      } catch (e) { if (!controller.signal.aborted) { setList(null); setError(getApiErrorMessage(e)); } }
+      } catch (e) { if (!controller.signal.aborted) { setList(null); setLoadError(getApiErrorMessage(e)); } }
       finally { if (!controller.signal.aborted) setLoading(false); }
     }
     void load();
@@ -81,7 +83,7 @@ export default function ReviewCycles() {
           setEmployees(es);
           setReady(true);
         }
-      } catch (e) { if (!controller.signal.aborted) setError(getApiErrorMessage(e)); }
+      } catch (e) { if (!controller.signal.aborted) setLoadError(getApiErrorMessage(e)); }
     }
     void loadOptions();
     return () => controller.abort();
@@ -156,7 +158,12 @@ export default function ReviewCycles() {
   }
 
   async function publish(saved: ReviewCycle) {
-    if (busy || !window.confirm(`Publish “${saved.name}”? Assigned reviewers will be able to open their review forms.`)) return;
+    if (busy) return;
+    if (participantsWithoutReviewers(saved.employeeIds, saved.reviewerAssignments).length) {
+      await open(saved._id);
+      return;
+    }
+    if (!window.confirm(`Publish “${saved.name}”? Assigned reviewers will be able to open their review forms.`)) return;
     setBusy(true);
     setError("");
     setMessage("");
@@ -176,7 +183,8 @@ export default function ReviewCycles() {
       <div><h1 className="text-2xl font-bold">Review Cycles</h1><p className="mt-2 text-slate-500">Prepare draft reviews using an admin-approved template.</p></div>
       <button className={button} disabled={busy || editing || Boolean(resultsId) || !ready} onClick={() => { setCycle(undefined); setValues(empty()); setConflict(false); setError(""); setMessage(""); setSearch(""); setEditing(true); }}>Create draft</button>
     </div>
-    {error && <div role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">{error} <button className={button} disabled={busy} onClick={() => { setError(""); setRefresh(x => x + 1); }}>Retry loading</button></div>}
+    {loadError && <div role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">{loadError} <button className={button} disabled={busy} onClick={() => { setLoadError(""); setRefresh(x => x + 1); }}>Retry loading</button></div>}
+    {error && <p role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">{error}</p>}
     {message && <p role="status" className="rounded-lg bg-green-50 p-4 text-green-800">{message}</p>}
     {resultsId ? <CycleResults key={resultsId} id={resultsId} onBack={() => setResultsId("")} /> : editing ? <form onSubmit={submit} className="space-y-5 rounded-xl border border-slate-200 bg-white p-6">
       <h2 className="text-lg font-bold">{cycle ? "Review cycle details" : "New draft cycle"}</h2>
