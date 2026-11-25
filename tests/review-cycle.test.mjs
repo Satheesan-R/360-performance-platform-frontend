@@ -34,6 +34,29 @@ test("create unwraps the saved draft without adding publication fields", async (
   } });
   assert.equal(await client.saveReviewCycle(input), cycle);
 });
+
+test("assigned review responses use authenticated, versioned requests scoped to the participant", async () => {
+  const saved = { sections: [], version: 1, submittedAt: "2026-11-23T10:00:00.000Z" };
+  const input = { sections: [], version: 0, submit: true };
+  const signal = new AbortController().signal;
+  const endpoint = "/review-cycles/assigned/cycle%2Fid/participants/employee%2Fid/response";
+  const client = service({
+    get: async (path, config) => {
+      assert.equal(path, endpoint);
+      assert.equal(config.signal, signal);
+      assert.equal(config.headers.Authorization, "Bearer token");
+      return { data: { response: saved } };
+    },
+    put: async (path, body, config) => {
+      assert.equal(path, endpoint);
+      assert.equal(body, input);
+      assert.equal(config.headers.Authorization, "Bearer token");
+      return { data: { response: saved } };
+    },
+  });
+  assert.equal(await client.getAssignedReviewResponse("cycle/id", "employee/id", signal), saved);
+  assert.equal(await client.saveAssignedReviewResponse("cycle/id", "employee/id", input), saved);
+});
 test("missing session blocks cycle requests", async () => {
   const client = service({ get: () => assert.fail("must not request") }, null);
   await assert.rejects(client.getReviewCycle("cycle"), /session has expired/);

@@ -1,14 +1,13 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import TemplateApprovalNotificationBell, { TemplateApprovalNotificationsProvider } from "./template-approval-notifications";
 import { useState, type ReactNode } from "react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { clearSession } from "@/lib/auth";
 import HrProfileMenu from "./hr-profile-menu";
-import { organizationNavigation } from "@/components/organization/navigation";
-import { frameworkNavigation } from "@/components/performance-framework/navigation";
 
 const navigation = [
   { label: "Dashboard", href: "/hr/dashboard", icon: "▦" },
@@ -20,6 +19,7 @@ const navigation = [
     icon: "▤",
   },
   { label: "Review Cycles", href: "/hr/review-cycles", icon: "⟳" },
+  { label: "My Reviews", href: "/hr/assigned-reviews", icon: "MR" },
   { label: "Normalisation", href: "/hr/normalisation", icon: "⇄" },
   {
     label: "Promotion & Development",
@@ -45,10 +45,6 @@ export default function HrShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [organizationExpanded, setOrganizationExpanded] = useState<boolean | null>(null);
-  const [frameworkExpanded, setFrameworkExpanded] = useState<boolean | null>(
-    null,
-  );
 
   function logout() {
     clearSession();
@@ -57,6 +53,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
 
   return (
     <ProtectedRoute role="hr">
+      <TemplateApprovalNotificationsProvider role="hr">
       <div className="min-h-screen bg-slate-50 text-slate-900 lg:flex">
         {menuOpen && (
           <button
@@ -92,64 +89,11 @@ export default function HrShell({ children }: { children: ReactNode }) {
             {navigation.map((item) => {
               const active =
                 pathname === item.href || pathname.startsWith(item.href + "/");
-              if (item.href === "/hr/organization" || item.href === "/hr/performance-framework") {
-                const isOrganization = item.href === "/hr/organization";
-                const open = (isOrganization ? organizationExpanded : frameworkExpanded) ?? active;
-                const setExpanded = isOrganization ? setOrganizationExpanded : setFrameworkExpanded;
-                const submenu = isOrganization ? organizationNavigation : frameworkNavigation;
-                const submenuId = isOrganization ? "organization-submenu" : "framework-submenu";
-                return (
-                  <div key={item.href}>
-                    <button
-                      type="button"
-                      aria-expanded={open}
-                      aria-controls={submenuId}
-                      onClick={() => {
-                        setExpanded(!open);
-                        if (!open && !active) router.push(item.href);
-                      }}
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition ${active ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
-                    >
-                      <SidebarIcon icon={item.icon} active={active} />
-                      <span className="flex-1">{item.label}</span>
-                      <span
-                        aria-hidden="true"
-                        className={`transition-transform ${open ? "rotate-180" : ""}`}
-                      >
-                        ⌄
-                      </span>
-                    </button>
-                    <div
-                      id={submenuId}
-                      hidden={!open}
-                      className="ml-7 mt-2 space-y-1 border-l border-slate-200 pl-3"
-                    >
-                      {submenu.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={() => setMenuOpen(false)}
-                          aria-current={
-                            pathname === child.href ? "page" : undefined
-                          }
-                          className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${pathname === child.href || (child.href !== "/hr/organization" && pathname.startsWith(child.href + "/")) ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setOrganizationExpanded(null);
-                    setFrameworkExpanded(null);
-                  }}
+                  onClick={() => setMenuOpen(false)}
                   aria-current={pathname === item.href ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${active ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
                 >
@@ -172,23 +116,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
               ☰
             </button>
             <div className="flex min-w-0 items-center gap-2">
-              <button
-                type="button"
-                aria-label="Notifications"
-                popoverTarget="hr-notifications"
-                className="relative grid size-10 shrink-0 place-items-center rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-blue-600"
-              >
-                <span aria-hidden="true" className="relative block h-3.5 w-3 rounded-t-full border-2 border-current before:absolute before:-bottom-0.5 before:-left-1 before:h-0.5 before:w-4 before:rounded-full before:bg-current after:absolute after:-bottom-1.5 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-current" />
-              </button>
-              <div
-                id="hr-notifications"
-                popover="auto"
-                aria-labelledby="hr-notifications-title"
-                className="fixed inset-auto top-16 right-4 m-0 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-lg sm:right-8"
-              >
-                <h2 id="hr-notifications-title" className="text-sm font-bold">Notifications</h2>
-                <p className="mt-2 text-sm text-slate-600">In-app notifications are not available yet.</p>
-              </div>
+              <TemplateApprovalNotificationBell role="hr" />
               <span aria-hidden="true" className="h-6 w-px shrink-0 bg-slate-200" />
               <HrProfileMenu onLogout={logout} />
             </div>
@@ -197,6 +125,7 @@ export default function HrShell({ children }: { children: ReactNode }) {
           <div className="px-4 py-5 sm:px-5 sm:py-8 lg:px-12">{children}</div>
         </div>
       </div>
+      </TemplateApprovalNotificationsProvider>
     </ProtectedRoute>
   );
 }

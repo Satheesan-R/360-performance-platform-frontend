@@ -22,11 +22,13 @@ export interface TemplateSection {
   evidenceRequired: boolean;
 }
 export type ReviewType = "annual" | "probation" | "internship";
+export type TemplateTargetRole = "employee" | "tech_lead" | "department_manager";
+export type TemplateApprovalStatus = "not_submitted" | "pending" | "approved" | "rejected";
 export interface TemplateDepartment { _id: string; name: string; code?: string; status?: string }
 export interface TemplateInput {
   reviewType?: ReviewType | null;
   departmentIds?: string[];
-  targetRole?: "department_manager" | null;
+  targetRole?: TemplateTargetRole | null;
   name: string;
   description: string;
   frameworkId: string;
@@ -36,6 +38,7 @@ export interface TemplateInput {
   status: FrameworkStatus;
 }
 export interface TemplateFramework {
+  applicableJobRoles?: string[];
   enabledReviewers?: import("./review-cycle").ReviewerRole[];
   name: string;
   status?: FrameworkStatus;
@@ -45,7 +48,10 @@ export interface TemplateFramework {
   ratingScale: RatingScale | null;
 }
 export interface ReviewTemplate extends TemplateInput {
-  approvalStatus?: "not_submitted" | "pending" | "approved" | "rejected";
+  approvalStatus?: TemplateApprovalStatus;
+  approvalComment?: string;
+  submittedAt?: string | null;
+  approvedAt?: string | null;
   _id: string;
   __v?: number;
   frameworkVersion: number | null;
@@ -53,10 +59,11 @@ export interface ReviewTemplate extends TemplateInput {
 }
 export interface TemplateListItem extends Omit<
   ReviewTemplate,
-  "frameworkId" | "employmentTypeIds" | "frameworkSnapshot"
+  "frameworkId" | "employmentTypeIds" | "frameworkSnapshot" | "departmentIds"
 > {
   frameworkId: { _id: string; name: string; status: FrameworkStatus } | null;
   employmentTypeIds: FrameworkEmploymentType[];
+  departmentIds?: TemplateDepartment[];
 }
 export interface TemplateList {
   templates: TemplateListItem[];
@@ -73,9 +80,10 @@ export interface ResolvedTemplateSection extends TemplateSection {
   kpis: (Kpi | MissingCriterion)[];
 }
 export interface TemplatePreview {
+  approvalStatus?: TemplateApprovalStatus;
   reviewType?: ReviewType | null;
   departmentIds?: string[];
-  targetRole?: "department_manager" | null;
+  targetRole?: TemplateTargetRole | null;
   templateId: string;
   name: string;
   description: string;

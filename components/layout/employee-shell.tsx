@@ -8,6 +8,7 @@ const navigation = [
   { label: "My Reviews", href: "/employee/reviews", short: "RV" },
   { label: "Feedback", href: "/employee/feedback", short: "FB" },
   { label: "Development", href: "/employee/development", short: "DV" },
+  { label: "Settings", href: "/settings", short: "ST" },
 ];
 
 export default function EmployeeShell({ children }: { children: ReactNode }) {

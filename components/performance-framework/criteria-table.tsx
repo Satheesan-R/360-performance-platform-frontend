@@ -128,25 +128,31 @@ export default function CriteriaTable({
                 </span>
               </td>
               <td className="whitespace-nowrap px-5 py-4">
-                <div className="flex gap-4">
+                <div className="flex items-center gap-1">
                   <button
                     type="button"
                     disabled={disabled}
                     aria-label={`Edit ${item.name}`}
-                    className="font-semibold text-blue-600 hover:underline disabled:opacity-50"
+                    title="Edit"
+                    className="rounded-lg p-2 text-blue-700 enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
                     onClick={() => onEdit(item)}
                   >
-                    Edit
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-5">
+                      <path d="m13.5 6.5 4 4M4 20l4.5-1 11-11a2.8 2.8 0 0 0-4-4l-11 11L4 20Z" />
+                    </svg>
                   </button>
                   {item.status === "active" && (
                     <button
                       type="button"
                       disabled={disabled}
                       aria-label={`Deactivate ${item.name}`}
-                      className="font-semibold text-red-600 hover:underline disabled:opacity-50"
+                      title="Deactivate"
+                      className="rounded-lg p-2 text-red-700 enabled:hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
                       onClick={() => onDeactivate(item)}
                     >
-                      Deactivate
+                      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="size-5">
+                        <path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5" />
+                      </svg>
                     </button>
                   )}
                 </div>

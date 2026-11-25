@@ -1,4 +1,9 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@import "./theme.css";
+
+/* Scan application code only; temporary tools can contain locked files. */
+@source "./";
+@source "../components";
 
 @layer base {
   button:enabled,
@@ -8,8 +13,8 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--app-background);
+  --foreground: var(--app-text);
 }
 
 html {
@@ -25,13 +30,6 @@ html::-webkit-scrollbar {
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

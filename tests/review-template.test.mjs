@@ -17,7 +17,8 @@ function module(file, imports = {}) {
   vm.runInNewContext(compiled, context);
   return context.exports;
 }
-const { templateDraft, templateInput, templatePatch, newTemplateSection } = module("../lib/review-template.ts");
+const reviewTemplate = module("../lib/review-template.ts");
+const { templateDraft, templateInput, templatePatch, newTemplateSection } = reviewTemplate;
 const ids = { template: "a".repeat(24), framework: "b".repeat(24), section: "c".repeat(24), question: "d".repeat(24), competency: "e".repeat(24), type: "f".repeat(24) };
 const plain = (value) => JSON.parse(JSON.stringify(value));
 function original() {
@@ -33,7 +34,10 @@ test("HR targeting defaults and write fields follow the template API", () => {
   assert.equal(values.targetRole, "department_manager");
   assert.deepEqual(plain(values.departmentIds), [ids.type]);
   assert.throws(() => templateInput({ ...createDraft(), reviewType: "monthly" }), /Choose annual/);
-  assert.throws(() => templateInput({ ...createDraft(), targetRole: "tech_lead" }), /Department Managers only/);
+  for (const targetRole of ["employee", "tech_lead", "department_manager"]) {
+    assert.equal(templateInput({ ...createDraft(), targetRole }).targetRole, targetRole);
+  }
+  assert.throws(() => templateInput({ ...createDraft(), targetRole: "admin" }), /Choose Employee, Tech Lead, or Department Manager/);
   assert.throws(() => templateInput({ ...createDraft(), departmentIds: [ids.type, ids.type] }), /unique references/);
 });
 
@@ -42,7 +46,13 @@ test("legacy and unchanged targeting are omitted from metadata edits", () => {
   const patch = templatePatch({ ...templateDraft(legacy), name: "Renamed" }, legacy);
   for (const field of ["reviewType", "targetRole", "departmentIds"]) assert.equal(field in patch, false);
   const configured = { ...legacy, reviewType: "probation", targetRole: "department_manager", departmentIds: [ids.type] };
-  const changed = templatePatch({ ...templateDraft(configured), reviewType: "internship", departmentIds: [] }, configured);
+  const draft = templateDraft(configured);
+  assert.equal(draft.reviewType, "probation");
+  assert.equal(draft.targetRole, "department_manager");
+  assert.deepEqual(plain(draft.departmentIds), [ids.type]);
+  const unchanged = templatePatch({ ...draft, name: "Renamed" }, configured);
+  for (const field of ["reviewType", "targetRole", "departmentIds"]) assert.equal(field in unchanged, false);
+  const changed = templatePatch({ ...draft, reviewType: "internship", departmentIds: [] }, configured);
   assert.equal(changed.reviewType, "internship");
   assert.deepEqual(plain(changed.departmentIds), []);
   assert.equal("targetRole" in changed, false);
@@ -155,11 +165,13 @@ test("template departments load all active pages with auth and cancellation", as
     assert.equal(config.headers.Authorization, "Bearer test-token");
     assert.equal(config.signal, signal);
     assert.equal(config.params.status, "active");
+    assert.equal(config.params.limit, 100);
     pages.push(config.params.page);
     return { data: { departments: [departments[config.params.page - 1]], pagination: { totalPages: 2 } } };
   } });
   assert.deepEqual(plain(await client.getTemplateDepartments(signal)), departments);
   assert.deepEqual(pages, [1, 2]);
+  await assert.rejects(service({}, null).getTemplateDepartments(), /session has expired/);
 });
 
 test("list sends server pagination search and filters with Bearer auth", async () => {
@@ -177,6 +189,35 @@ test("list sends server pagination search and filters with Bearer auth", async (
     return { data: body };
   } });
   assert.equal(await client.getReviewTemplates({ search: "Annual", status: "", frameworkId: "", page: 2 }, signal), body);
+});
+
+test("approval queue and decisions use the authenticated template approval API", async () => {
+  const calls = [];
+  const client = service({
+    get: async (path, config) => {
+      assert.equal(config.headers.Authorization, "Bearer test-token");
+      assert.equal(config.params.approvalStatus, "pending");
+      assert.equal(config.params.status, "active");
+      assert.equal(config.params.page, 2);
+      calls.push(path);
+      return { data: { templates: [], pagination: { total: 0 } } };
+    },
+    post: async (path, body, config) => {
+      assert.equal(config.headers.Authorization, "Bearer test-token");
+      calls.push([path, plain(body)]);
+      return { data: { template: original() } };
+    },
+  });
+  await client.getPendingTemplateApprovals(2);
+  await client.submitTemplateApproval("template/id");
+  await client.decideTemplateApproval("template/id", "approve", "");
+  await client.decideTemplateApproval("template/id", "reject", "Update the criteria");
+  assert.deepEqual(calls, [
+    "/review-templates",
+    ["/review-templates/template%2Fid/submit-approval", {}],
+    ["/review-templates/template%2Fid/approve", { comment: "" }],
+    ["/review-templates/template%2Fid/reject", { comment: "Update the criteria" }],
+  ]);
 });
 
 test("detail loads raw references and create/edit forward only the supplied body", async () => {
@@ -233,6 +274,7 @@ const reviewForm = module("../components/performance-framework/review-form-previ
   react: React, "react/jsx-runtime": jsx,
 });
 const { TemplatePreviewContent } = module("../components/performance-framework/template-preview.tsx", {
+  "@/lib/review-template": reviewTemplate,
   react: React, "react/jsx-runtime": jsx, "./review-form-preview": reviewForm, "@/hooks/use-organization-resource": {}, "@/lib/api": {}, "@/services/review-template.service": {}, "@/components/organization/ui": {},
 });
 

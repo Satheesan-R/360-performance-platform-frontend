@@ -16,6 +16,7 @@ export interface CreateEmployeeRequest {
   officeLocation?: string;
   companyEmail: string;
   employmentTypeId?: string;
+  employmentType?: EmploymentType;
   contractStartDate?: string;
   role?: UserRole;
 }
@@ -45,7 +46,7 @@ export type Employee = CreateEmployeeResponse["employee"] &
     departmentId?: string | { _id: string; name: string } | null;
     managerId?: string | { _id: string; firstName?: string; lastName?: string; jobTitle?: string } | null;
     teamId?: string | { _id: string; name: string } | null;
-    employmentTypeId?: string | { _id: string; name: string } | null;
+    employmentTypeId?: string | { _id: string; name: string; code?: string } | null;
     employmentType?: EmploymentType;
     JoiningDate?: string | null;
     jobTitle?: string;

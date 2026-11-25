@@ -29,44 +29,25 @@ export const frameworkNavigation = [
 export default function FrameworkNavigation() {
   const pathname = usePathname();
   return (
-    <div className="mb-8 border-b border-slate-200">
-      <div className="mb-3 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-            Framework setup
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Build the structure used in your review cycles
-          </p>
-        </div>
-        <span className="whitespace-nowrap text-xs font-medium text-slate-400">
-          4 steps
-        </span>
-      </div>
-      <nav
-        aria-label="Performance Framework pages"
-        className="flex gap-1 overflow-x-auto"
-      >
-        {frameworkNavigation.map((item, index) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`group flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium transition ${active ? "border-blue-600 text-blue-700" : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"}`}
-            >
-              <span
-                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${active ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200"}`}
-              >
-                {index + 1}
-              </span>
-              <span className="hidden sm:inline">{item.label}</span>
-              <span className="sm:hidden">{item.shortLabel}</span>
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
+    <nav
+      aria-label="Performance Framework pages"
+      className="mb-8 grid grid-cols-2 gap-x-2 border-b border-slate-300 sm:flex sm:flex-wrap lg:gap-x-4"
+    >
+      {frameworkNavigation.map((item, index) => {
+        const current = pathname === item.href;
+        const active = current || (index > 0 && pathname.startsWith(item.href + "/"));
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={current ? "page" : active ? "location" : undefined}
+            className={`border-b-2 px-3 py-3 text-center text-sm font-semibold transition sm:px-4 lg:text-base ${active ? "border-blue-600 text-blue-700" : "border-transparent text-slate-900 hover:border-slate-300 hover:text-blue-700"}`}
+          >
+            <span className="hidden sm:inline">{item.label}</span>
+            <span className="sm:hidden">{item.shortLabel}</span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
