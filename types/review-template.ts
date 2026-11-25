@@ -36,6 +36,7 @@ export interface TemplateInput {
   status: FrameworkStatus;
 }
 export interface TemplateFramework {
+  enabledReviewers?: import("./review-cycle").ReviewerRole[];
   name: string;
   status?: FrameworkStatus;
   competencies: Competency[];
@@ -44,6 +45,7 @@ export interface TemplateFramework {
   ratingScale: RatingScale | null;
 }
 export interface ReviewTemplate extends TemplateInput {
+  approvalStatus?: "not_submitted" | "pending" | "approved" | "rejected";
   _id: string;
   __v?: number;
   frameworkVersion: number | null;
@@ -99,3 +101,4 @@ export interface TemplateSnapshot {
     framework: TemplateFramework;
   };
 }
+
