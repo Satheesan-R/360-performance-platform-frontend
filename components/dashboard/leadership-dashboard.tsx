@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DashboardWelcome from "./dashboard-welcome";
 import { leadershipWorkspaces, type LeadershipRole } from "./leadership-workspaces";
 
 const tones = ["bg-blue-50 text-blue-700", "bg-violet-50 text-violet-700", "bg-emerald-50 text-emerald-700"];
@@ -9,8 +10,7 @@ export default function LeadershipDashboard({ role }: { role: LeadershipRole }) 
 
   return (
     <main className="mx-auto max-w-7xl">
-      <h1 className="text-3xl font-bold tracking-tight text-slate-950">{workspace.title} Dashboard</h1>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{workspace.description}</p>
+      <DashboardWelcome title={`${workspace.title} Dashboard`} description={workspace.description} />
 
       <section aria-label="Workspace areas" className="mt-7 grid gap-4 md:grid-cols-3">
         {areas.map(([slug, area], index) => (

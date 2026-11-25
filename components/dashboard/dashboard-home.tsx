@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DashboardWelcome from "./dashboard-welcome";
 import { employeeWorkspace } from "./workspaces";
 
 const tones = [
@@ -11,15 +12,11 @@ const tones = [
 export default function DashboardHome() {
   return (
     <main className="mx-auto max-w-7xl">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{employeeWorkspace.title}</h1>
-          <p className="mt-2 text-slate-600">{employeeWorkspace.description}</p>
-        </div>
-        <Link href="/employee/profile" className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50">
-          View my profile
-        </Link>
-      </div>
+      <DashboardWelcome
+        title={employeeWorkspace.title}
+        description={employeeWorkspace.description}
+        action={{ href: "/employee/profile", label: "View my profile" }}
+      />
 
       <section aria-labelledby="workspace-areas" className="mt-8">
         <h2 id="workspace-areas" className="text-lg font-bold text-slate-900">My workspace</h2>

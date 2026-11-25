@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import DashboardWelcome from "@/components/dashboard/dashboard-welcome";
 import { getCurrentUser, getToken } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { getEmployees } from "@/services/employee.service";
@@ -53,8 +54,7 @@ export default function HrDashboardPage() {
     ? employees?.find((employee) => employee.workEmail?.trim().toLowerCase() === accountEmail)
     : undefined;
   const hrName = profile?.fullName?.trim()
-    || [profile?.firstName?.trim(), profile?.lastName?.trim()].filter(Boolean).join(" ")
-    || "HR team";
+    || [profile?.firstName?.trim(), profile?.lastName?.trim()].filter(Boolean).join(" ");
 
   const placeholder = error ? "Unavailable" : "…";
   const summaryCards = [
@@ -88,23 +88,12 @@ export default function HrDashboardPage() {
 
   return (
     <main>
-      <header className="flex flex-col items-start gap-6 rounded-2xl bg-linear-to-br from-blue-700 to-blue-900 p-6 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
-        <div>
-          <p className="text-sm font-semibold text-blue-100">HR Dashboard</p>
-          <h1 className="mt-2 break-words text-3xl font-bold tracking-tight sm:text-4xl">
-            Welcome, {hrName}
-          </h1>
-          <p className="mt-3 text-sm leading-6 text-blue-100 sm:text-base">
-            Track onboarding, review cycles, and workforce activity.
-          </p>
-        </div>
-        <Link
-          href="/hr/onboarding"
-          className="shrink-0 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-blue-800 transition hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-        >
-          Onboard an employee
-        </Link>
-      </header>
+      <DashboardWelcome
+        title="HR Dashboard"
+        description="Track onboarding, review cycles, and workforce activity."
+        fallbackName={hrName}
+        action={{ href: "/hr/onboarding", label: "Onboard an employee" }}
+      />
 
       <section
         aria-label="Dashboard summary"

@@ -5,7 +5,7 @@ import { useOrganizationResource } from "@/hooks/use-organization-resource";
 import { ResourceState } from "@/components/organization/ui";
 import { getOrganizationSummary } from "@/services/organization.service";
 import { getReviewTemplates } from "@/services/review-template.service";
-import AdminPageHeading from "./admin-page-heading";
+import DashboardWelcome from "./dashboard-welcome";
 
 function loadTemplates(signal: AbortSignal) {
   return getReviewTemplates({ page: 1, search: "", status: "", frameworkId: "" }, signal);
@@ -29,7 +29,7 @@ export default function AdminOverview() {
 
   return (
     <main className="mx-auto max-w-7xl">
-      <AdminPageHeading title="Admin Dashboard" description="Monitor your organization and open the tools you use to administer the platform." />
+      <DashboardWelcome title="Admin Dashboard" description="Monitor your organization and open the tools you use to administer the platform." />
 
       <section aria-label="Platform summary" className="mt-7">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
