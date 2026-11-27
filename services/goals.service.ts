@@ -1,6 +1,6 @@
 import api from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import type { Pagination } from "@/types/organization-views";
+import type { DirectoryPerson, Pagination, TeamRecord } from "@/types/organization-views";
 import type { Goal, GoalCheckIn, GoalFilters, GoalInput, GoalKeyResult, GoalList, GoalPlan, KeyResultInput, PlanInput, PlanStatus } from "@/types/goals-api";
 
 function config(signal?: AbortSignal) {
@@ -48,4 +48,20 @@ export async function recordGoalCheckIn(keyId: string, values: { value: number; 
 }
 export async function getGoalCheckIns(keyId: string, page: number, signal?: AbortSignal) {
   return (await api.get<{ checkIns: GoalCheckIn[]; pagination: Pagination }>(`/key-results/${id(keyId)}/check-ins`, { ...config(signal), params: { page, limit: 20 } })).data;
+}
+export async function getGoalOwners(signal?: AbortSignal) {
+  const { data } = await api.get<DirectoryPerson[] | { employees: DirectoryPerson[] }>("/employees", config(signal));
+  return (Array.isArray(data) ? data : data.employees).filter(person => person.user?.status === "active");
+}
+export async function getGoalTeams(signal?: AbortSignal) {
+  const teams: TeamRecord[] = [];
+  let page = 1;
+  let totalPages = 1;
+  do {
+    const { data } = await api.get<{ teams: TeamRecord[]; pagination: Pagination }>("/teams", { ...config(signal), params: { page, limit: 100, status: "active" } });
+    teams.push(...data.teams);
+    totalPages = data.pagination.totalPages;
+    page++;
+  } while (page <= totalPages);
+  return teams;
 }
