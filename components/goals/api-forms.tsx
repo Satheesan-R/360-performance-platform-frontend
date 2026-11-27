@@ -3,7 +3,8 @@
 import { useRef, useState, type ReactNode } from "react";
 import { getApiErrorMessage } from "@/lib/api";
 import * as goals from "@/services/goals.service";
-import type { DirectoryPerson } from "@/types/organization-views";
+import type { Goal, GoalKeyResult, GoalLevel, GoalPlan, KeyResultInput } from "@/types/goals-api";
+import type { DirectoryPerson, TeamRecord } from "@/types/organization-views";
 
 export const control = "mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800";
 export const button = "rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50";
@@ -48,3 +49,54 @@ export function PlanForm({ done, cancel }: { done: () => void; cancel: () => voi
   </ActionForm>;
 }
 
+export function GoalForm({ initial, plans, owners, teams, done, cancel }: {
+  initial?: Goal; plans: GoalPlan[]; owners: DirectoryPerson[]; teams: TeamRecord[]; done: () => void; cancel: () => void;
+}) {
+  const [level, setLevel] = useState<GoalLevel>("organization");
+  return <ActionForm title={initial ? "Edit objective" : "Create objective"} done={done} cancel={cancel} submit={async data => {
+    const values = { title: text(data, "title"), description: text(data, "description") };
+    if (initial) await goals.updateGoal(initial._id, values);
+    else await goals.createGoal({ ...values, planId: text(data, "planId"), ownerEmployeeId: text(data, "ownerEmployeeId"), level,
+      ...(level === "team" ? { teamId: text(data, "teamId") } : {}) });
+  }}>
+    <Field label="Objective title"><input name="title" defaultValue={initial?.title} required maxLength={200} className={control} /></Field>
+    <Field label="Description (optional)"><textarea name="description" defaultValue={initial?.description} maxLength={2000} className={control} /></Field>
+    {!initial && <>
+      <Field label="Goal plan"><select name="planId" required className={control} defaultValue=""><option value="" disabled>Select a plan</option>{plans.filter(plan => ["draft", "active"].includes(plan.status)).map(plan => <option key={plan._id} value={plan._id}>{plan.name} ({plan.status})</option>)}</select></Field>
+      <Field label="Scope"><select className={control} value={level} onChange={event => setLevel(event.target.value as GoalLevel)}><option value="organization">Organization</option><option value="team">Team</option><option value="individual">Individual</option></select></Field>
+      <Field label="Owner"><select name="ownerEmployeeId" required className={control} defaultValue=""><option value="" disabled>Select an active employee</option>{owners.map(person => <option key={person._id} value={person._id}>{personName(person)}{person.employeeNumber ? ` (${person.employeeNumber})` : ""}</option>)}</select></Field>
+      {level === "team" && <Field label="Team"><select name="teamId" required defaultValue="" className={control}><option value="" disabled>Select an active team</option>{teams.map(team => <option key={team._id} value={team._id}>{team.name}</option>)}</select></Field>}
+      <p className="text-sm text-slate-600">The plan, scope and owner cannot change after creation. Team owners must belong to or lead the selected team. Save the draft, then add key results.</p>
+    </>}
+  </ActionForm>;
+}
+
+export function KeyResultForm({ goalId, initial, done, cancel }: { goalId: string; initial?: GoalKeyResult; done: () => void; cancel: () => void }) {
+  const [type, setType] = useState<KeyResultInput["type"]>(initial?.type ?? "increase");
+  const locked = !!initial?.checkInCount;
+  return <ActionForm title={initial ? "Edit key result" : "Add key result"} done={done} cancel={cancel} submit={async data => {
+    const common = { title: text(data, "title"), unit: text(data, "unit") };
+    if (locked && initial) { await goals.updateGoalKeyResult(initial._id, common); return; }
+    const startValue = type === "milestone" ? 0 : Number(text(data, "startValue"));
+    const targetValue = type === "milestone" ? 1 : Number(text(data, "targetValue"));
+    if (type === "increase" && targetValue <= startValue || type === "decrease" && targetValue >= startValue) throw new Error("The target must follow the selected measurement direction.");
+    const values = { ...common, type, startValue, targetValue };
+    if (initial) await goals.updateGoalKeyResult(initial._id, values);
+    else await goals.addGoalKeyResult(goalId, values);
+  }}>
+    <Field label="Measurable outcome"><input name="title" required maxLength={200} defaultValue={initial?.title} className={control} /></Field>
+    <Field label="Unit (optional)"><input name="unit" maxLength={40} defaultValue={initial?.unit} className={control} /></Field>
+    <Field label="Measurement"><select value={type} disabled={locked} className={control} onChange={event => setType(event.target.value as KeyResultInput["type"])}><option value="increase">Increase</option><option value="decrease">Decrease</option><option value="milestone">Milestone</option></select></Field>
+    {type !== "milestone" && <div className="grid gap-4 sm:grid-cols-2">{(["startValue", "targetValue"] as const).map(key => <Field key={key} label={key === "startValue" ? "Baseline" : "Target"}><input type="number" step="any" min={-1e12} max={1e12} required disabled={locked} name={key} defaultValue={initial?.[key] ?? (key === "startValue" ? 0 : 100)} className={control} /></Field>)}</div>}
+    <p className="text-sm text-slate-600">{locked ? "Measurement definitions are locked after the first check-in. Title and unit can still change." : "Progress starts at the baseline. Record measurements as check-ins once the plan and objective are active."}</p>
+  </ActionForm>;
+}
+
+export function CheckInForm({ result, done, cancel }: { result: GoalKeyResult; done: () => void; cancel: () => void }) {
+  return <ActionForm title={`Record progress: ${result.title}`} done={done} cancel={cancel} submit={async data => {
+    await goals.recordGoalCheckIn(result._id, { value: Number(text(data, "value")), note: text(data, "note") });
+  }}>
+    <Field label="Current measurement">{result.type === "milestone" ? <select name="value" defaultValue={result.currentValue} className={control}><option value={0}>Not reached</option><option value={1}>Reached</option></select> : <input name="value" type="number" step="any" min={-1e12} max={1e12} required defaultValue={result.currentValue} className={control} />}</Field>
+    <Field label="Note (optional)"><textarea name="note" maxLength={2000} className={control} /></Field>
+  </ActionForm>;
+}
