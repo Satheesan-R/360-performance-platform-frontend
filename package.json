@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:goals": "node --test tests/goals.test.mjs tests/goals-service.test.mjs",
     "test:organization": "node --test tests/organization-hierarchy.test.mjs tests/organization-response.test.mjs",
     "test:framework": "node --test tests/performance-framework-service.test.mjs tests/framework-criteria.test.mjs tests/framework-scoring.test.mjs tests/review-template.test.mjs"
   },
